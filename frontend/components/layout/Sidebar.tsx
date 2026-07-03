@@ -1,54 +1,93 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  Home,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { logout } from "@/lib/slices/authSlice";
 
-interface SidebarItem {
-  label: string;
-  href: string;
-  icon?: React.ReactNode;
-  active?: boolean;
-}
-
-interface SidebarProps {
-  items: SidebarItem[];
-  title?: string;
-}
-
-export function Sidebar({ items, title }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const auth = useAppSelector((state) => state.auth);
+
+  const isAdminRoute = pathname?.startsWith("/admin");
+
+  const adminItems = [
+    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Products", href: "/admin/products", icon: Package },
+    { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+    { label: "Users", href: "/admin/users", icon: Users },
+  ];
+
+  const customerItems = [
+    { label: "Home", href: "/", icon: Home },
+    { label: "Products", href: "/products", icon: Package },
+  ];
+
+  const items = isAdminRoute ? adminItems : customerItems;
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/login");
+  };
+
+  if (!auth.isAuthenticated) {
+    return null;
+  }
 
   return (
-    <aside className="w-full md:w-64 bg-muted/30 border-r border-border p-4 md:p-6">
-      {title && (
-        <h2 className="font-semibold text-lg mb-6 px-2">{title}</h2>
-      )}
-      
-      <nav className="space-y-1">
+    <aside className="hidden md:flex flex-col w-64 bg-sidebar border-r border-border">
+      <div className="p-6 border-b border-border">
+        <h2 className="text-lg font-bold text-sidebar-foreground">
+          {isAdminRoute ? "Admin Panel" : "Commerceflow"}
+        </h2>
+      </div>
+
+      <nav className="flex-1 space-y-1 px-4 py-6">
         {items.map((item) => {
+          const Icon = item.icon;
           const isActive = pathname === item.href;
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
+              onClick={() => router.push(item.href)}
               className={cn(
-                "flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
+                "w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors text-sm font-medium",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-muted"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
               <div className="flex items-center gap-3">
-                {item.icon && <span className="w-5 h-5">{item.icon}</span>}
+                <Icon className="w-4 h-4" />
                 <span>{item.label}</span>
               </div>
               {isActive && <ChevronRight className="w-4 h-4" />}
-            </Link>
+            </button>
           );
         })}
       </nav>
+
+      {/* Logout */}
+      <div className="p-4 border-t border-sidebar-border">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors text-sm font-medium"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }

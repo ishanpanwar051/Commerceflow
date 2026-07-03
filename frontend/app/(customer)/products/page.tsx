@@ -1,16 +1,13 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-
-function ProductsPageContent() {
-import { useProducts, useCategories } from "@/lib/hooks";
+import { useProducts } from "@/lib/hooks";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
-import { Sidebar } from "@/components/layout/Sidebar";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
@@ -24,8 +21,6 @@ export default function ProductsPage() {
     ...filters,
     limit: 12,
   });
-
-  const { data: categoriesData } = useCategories();
 
   const handleCategoryFilter = (categoryId: string) => {
     setFilters({
@@ -56,14 +51,6 @@ export default function ProductsPage() {
 
   const hasActiveFilters =
     filters.search || filters.category || filters.minPrice > 0 || filters.maxPrice < 10000;
-
-  const sidebarItems = categoriesData
-    ? categoriesData.map((cat: any) => ({
-        label: cat.name,
-        href: "#",
-        active: filters.category === cat.id,
-      }))
-    : [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -112,26 +99,6 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Category Filter */}
-          <div className="mb-8 p-4 border border-border rounded-lg bg-muted/30">
-            <h3 className="font-semibold mb-4">Categories</h3>
-            <div className="space-y-2">
-              {categoriesData?.map((cat: any) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategoryFilter(cat.id)}
-                  className={`w-full text-left px-3 py-2 rounded transition ${
-                    filters.category === cat.id
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Clear Filters */}
           {hasActiveFilters && (
             <Button
@@ -154,7 +121,7 @@ export default function ProductsPage() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {productsData?.data?.map((product) => (
+                {productsData?.data?.map((product: any) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
@@ -187,5 +154,13 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

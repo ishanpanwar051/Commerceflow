@@ -24,17 +24,33 @@ export default function AccountLayout({
     return null;
   }
 
-  const sidebarItems = [
-    { label: "My Profile", href: "/account/profile", icon: <User className="w-5 h-5" /> },
-    { label: "My Orders", href: "/account/orders", icon: <Package className="w-5 h-5" /> },
-    { label: "Addresses", href: "/account/addresses", icon: <MapPin className="w-5 h-5" /> },
-    { label: "Settings", href: "/account/settings", icon: <Settings className="w-5 h-5" /> },
+  const accountNavItems = [
+    { label: "My Profile", href: "/account/profile" },
+    { label: "My Orders", href: "/account/orders" },
+    { label: "Addresses", href: "/account/addresses" },
+    { label: "Settings", href: "/account/settings" },
   ];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-8">
-        <Sidebar items={sidebarItems} title="My Account" />
+        {/* Account Sidebar */}
+        <aside className="w-full md:w-48">
+          <h2 className="font-semibold text-lg mb-4 px-2">My Account</h2>
+          <nav className="space-y-1">
+            {accountNavItems.map((item) => (
+              <button
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className={`w-full text-left px-4 py-2.5 rounded-lg transition text-sm font-medium ${
+                  true ? "text-foreground hover:bg-muted" : "bg-primary text-primary-foreground"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
         <div className="flex-1">{children}</div>
       </div>
     </div>
