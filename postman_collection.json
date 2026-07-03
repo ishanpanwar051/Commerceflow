@@ -1,0 +1,61 @@
+{
+  "info": {
+    "name": "CommerceFlow API",
+    "description": "Production-grade e-commerce backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Register", "request": { "method": "POST", "url": "{{baseUrl}}/auth/register", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"user@example.com\",\"password\":\"UserPass123\",\"firstName\":\"John\",\"lastName\":\"Doe\"}" } }, "event": [{ "listen": "test", "script": { "exec": ["var json = JSON.parse(responseBody);","pm.collectionVariables.set('token', json.data.accessToken);"] } }] },
+        { "name": "Login", "request": { "method": "POST", "url": "{{baseUrl}}/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"admin@commerceflow.dev\",\"password\":\"Admin@123\"}" } }, "event": [{ "listen": "test", "script": { "exec": ["var json = JSON.parse(responseBody);","pm.collectionVariables.set('adminToken', json.data.accessToken);"] } }] },
+        { "name": "Refresh Token", "request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"refreshToken\":\"{{token}}\"}" } } },
+        { "name": "Forgot Password", "request": { "method": "POST", "url": "{{baseUrl}}/auth/forgot-password", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"user@example.com\"}" } } },
+        { "name": "Change Password", "request": { "method": "POST", "url": "{{baseUrl}}/auth/change-password", "header": [{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"currentPassword\":\"UserPass123\",\"newPassword\":\"NewPass456\"}" } } }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "Get All Categories", "request": { "method": "GET", "url": "{{baseUrl}}/categories" } },
+        { "name": "Create Category", "request": { "method": "POST", "url": "{{baseUrl}}/categories", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"name\":\"New Category\",\"description\":\"Category description\"}" } } }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        { "name": "List Products", "request": { "method": "GET", "url": "{{baseUrl}}/products?page=1&limit=10" } },
+        { "name": "Search Products", "request": { "method": "GET", "url": "{{baseUrl}}/products?search=headphones" } },
+        { "name": "Create Product", "request": { "method": "POST", "url": "{{baseUrl}}/products", "header": [{"key":"Authorization","value":"Bearer {{adminToken}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"name\":\"Wireless Mouse\",\"basePrice\":49.99,\"sku\":\"WM-001\",\"categoryId\":\"REPLACE_WITH_CATEGORY_ID\",\"stock\":100}" } } }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        { "name": "Get Cart", "request": { "method": "GET", "url": "{{baseUrl}}/cart", "header": [{"key":"Authorization","value":"Bearer {{token}}"}] } },
+        { "name": "Add to Cart", "request": { "method": "POST", "url": "{{baseUrl}}/cart/items", "header": [{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"productId\":\"REPLACE_WITH_PRODUCT_ID\",\"quantity\":2}" } } },
+        { "name": "Clear Cart", "request": { "method": "DELETE", "url": "{{baseUrl}}/cart", "header": [{"key":"Authorization","value":"Bearer {{token}}"}] } }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        { "name": "My Orders", "request": { "method": "GET", "url": "{{baseUrl}}/orders", "header": [{"key":"Authorization","value":"Bearer {{token}}"}] } }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Health Check", "request": { "method": "GET", "url": "{{baseUrl}}/health" } },
+        { "name": "Readiness", "request": { "method": "GET", "url": "{{baseUrl}}/health/ready" } },
+        { "name": "Metrics", "request": { "method": "GET", "url": "{{baseUrl}}/metrics" } }
+      ]
+    }
+  ]
+}

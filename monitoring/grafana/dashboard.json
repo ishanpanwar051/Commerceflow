@@ -1,0 +1,61 @@
+{
+  "dashboard": {
+    "title": "CommerceFlow API",
+    "tags": ["commerceflow"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "HTTP Request Rate",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "expr": "rate(commerceflow_http_requests_total[5m])",
+            "legendFormat": "{{method}} {{route}} {{status_code}}"
+          }
+        ]
+      },
+      {
+        "title": "HTTP Request Duration (p95)",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(commerceflow_http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95 {{method}} {{route}}"
+          }
+        ]
+      },
+      {
+        "title": "Active Connections",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+        "targets": [
+          { "expr": "commerceflow_active_connections" }
+        ]
+      },
+      {
+        "title": "Queue Jobs",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          {
+            "expr": "rate(commerceflow_queue_jobs_total[5m])",
+            "legendFormat": "{{queue}} {{status}}"
+          }
+        ]
+      },
+      {
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"commerceflow-api\"}",
+            "legendFormat": "RSS"
+          }
+        ]
+      }
+    ]
+  }
+}
