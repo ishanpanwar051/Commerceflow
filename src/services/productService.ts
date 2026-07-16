@@ -1,8 +1,50 @@
 import { ProductRepository, CategoryRepository } from '../repositories';
 import { NotFoundError, BadRequestError } from '../utils/errors';
-import { slugify } from '../utils/helpers';
+import { slugify, dollarsToCents } from '../utils/helpers';
 import { invalidateCache } from '../middleware/cache';
 import { Prisma } from '@prisma/client';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_REGEX.test(value);
+}
+
+interface UpdateProductData {
+  name?: string;
+  description?: string;
+  longDescription?: string;
+  basePrice?: number;
+  originalPrice?: number;
+  sku?: string;
+  barcode?: string;
+  categoryId?: string;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  stock?: number;
+  lowStockThreshold?: number;
+  brand?: string;
+  weight?: number;
+  dimensions?: string;
+  material?: string;
+  warranty?: string;
+  countryOfOrigin?: string;
+  sellerName?: string;
+  returnPolicy?: string;
+  deliveryEstimate?: string;
+  freeDelivery?: boolean;
+  cashOnDelivery?: boolean;
+  emiAvailable?: boolean;
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
+  isTopRated?: boolean;
+  tags?: string[];
+  keyFeatures?: string[];
+  specifications?: Record<string, string>;
+  whatsInTheBox?: string[];
+  videoUrl?: string;
+  discountPercent?: number;
+}
 
 export class ProductService {
   private productRepo: ProductRepository;
@@ -19,62 +61,90 @@ export class ProductService {
     sort?: string;
     order?: 'asc' | 'desc';
     search?: string;
+    brand?: string;
     categoryId?: string;
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
     isFeatured?: boolean;
+    isBestSeller?: boolean;
+    isNewArrival?: boolean;
+    isTopRated?: boolean;
+    freeDelivery?: boolean;
+    cashOnDelivery?: boolean;
+    emiAvailable?: boolean;
     cursor?: string;
   }) {
     const skip = params.page && params.limit ? (params.page - 1) * params.limit : undefined;
 
+    const priceFilter = params.minPrice || params.maxPrice
+      ? {
+          minPrice: params.minPrice ? dollarsToCents(params.minPrice) : undefined,
+          maxPrice: params.maxPrice ? dollarsToCents(params.maxPrice) : undefined,
+        }
+      : {};
+
     const [products, total] = await Promise.all([
       this.productRepo.findAll({
         skip,
-        take: params.limit || 10,
+        take: params.limit || 20,
         sort: params.sort,
         order: params.order,
         search: params.search,
+        brand: params.brand,
         categoryId: params.categoryId,
-        minPrice: params.minPrice,
-        maxPrice: params.maxPrice,
+        ...priceFilter,
         minRating: params.minRating,
         isFeatured: params.isFeatured,
+        isBestSeller: params.isBestSeller,
+        isNewArrival: params.isNewArrival,
+        isTopRated: params.isTopRated,
+        freeDelivery: params.freeDelivery,
+        cashOnDelivery: params.cashOnDelivery,
+        emiAvailable: params.emiAvailable,
         cursor: params.cursor,
       }),
       this.productRepo.count({
         search: params.search,
+        brand: params.brand,
         categoryId: params.categoryId,
-        minPrice: params.minPrice,
-        maxPrice: params.maxPrice,
+        ...priceFilter,
+        minRating: params.minRating,
+        isFeatured: params.isFeatured,
+        isBestSeller: params.isBestSeller,
+        isNewArrival: params.isNewArrival,
+        isTopRated: params.isTopRated,
+        freeDelivery: params.freeDelivery,
+        cashOnDelivery: params.cashOnDelivery,
+        emiAvailable: params.emiAvailable,
       }),
     ]);
 
     const productsWithRating = products.map((p) => {
-      const reviews = p.reviews as any[];
-      const avgRating = reviews.length > 0
-        ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
-        : 0;
-      const { reviews: _, ...rest } = p;
-      return { ...rest, averageRating: avgRating, reviewCount: (p as any)._count?.reviews || 0 };
+      const { reviews: _, _count: count, ...rest } = p as Record<string, unknown> & { reviews?: unknown; _count?: unknown };
+      return {
+        ...rest,
+        averageRating: rest.averageRating || 0,
+        reviewCount: ((count as { reviews?: number })?.reviews || 0),
+      };
     });
 
     return { products: productsWithRating, total };
   }
 
   async getProduct(idOrSlug: string) {
-    const product = idOrSlug.includes('-')
-      ? await this.productRepo.findBySlug(idOrSlug)
-      : await this.productRepo.findById(idOrSlug);
+    const product = isUuid(idOrSlug)
+      ? await this.productRepo.findById(idOrSlug)
+      : await this.productRepo.findBySlug(idOrSlug);
 
     if (!product || product.deletedAt) throw new NotFoundError('Product');
 
-    const reviews = product.reviews as any[];
-    const avgRating = reviews.length > 0
-      ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
-      : 0;
-    const { reviews: _, ...rest } = product;
-    return { ...rest, averageRating: avgRating, reviewCount: (product as any)._count?.reviews || 0 };
+    const { reviews: _, _count: count, ...rest } = product as Record<string, unknown> & { reviews?: unknown; _count?: unknown };
+    return {
+      ...rest,
+      averageRating: rest.averageRating || 0,
+      reviewCount: ((count as { reviews?: number })?.reviews || 0),
+    };
   }
 
   async createProduct(data: {
@@ -94,13 +164,13 @@ export class ProductService {
     const existingSku = await this.productRepo.findBySku(data.sku);
     if (existingSku) throw new BadRequestError('SKU already exists');
 
-    const slug = slugify(data.name);
+    const generatedSlug = slugify(data.name);
 
     const product = await this.productRepo.create({
       name: data.name,
-      slug,
+      slug: generatedSlug,
       description: data.description,
-      basePrice: data.basePrice,
+      basePrice: dollarsToCents(data.basePrice),
       sku: data.sku,
       barcode: data.barcode,
       isFeatured: data.isFeatured || false,
@@ -117,7 +187,7 @@ export class ProductService {
     return product;
   }
 
-  async updateProduct(id: string, data: any) {
+  async updateProduct(id: string, data: UpdateProductData) {
     const product = await this.productRepo.findById(id);
     if (!product) throw new NotFoundError('Product');
 
@@ -127,12 +197,35 @@ export class ProductService {
       updateData.slug = slugify(data.name);
     }
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.basePrice !== undefined) updateData.basePrice = data.basePrice;
+    if (data.basePrice !== undefined) updateData.basePrice = dollarsToCents(data.basePrice);
+    if (data.originalPrice !== undefined) updateData.originalPrice = dollarsToCents(data.originalPrice);
     if (data.sku !== undefined) updateData.sku = data.sku;
     if (data.barcode !== undefined) updateData.barcode = data.barcode;
     if (data.categoryId !== undefined) updateData.category = { connect: { id: data.categoryId } };
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+    if (data.brand !== undefined) updateData.brand = data.brand;
+    if (data.weight !== undefined) updateData.weight = data.weight;
+    if (data.dimensions !== undefined) updateData.dimensions = data.dimensions;
+    if (data.material !== undefined) updateData.material = data.material;
+    if (data.warranty !== undefined) updateData.warranty = data.warranty;
+    if (data.countryOfOrigin !== undefined) updateData.countryOfOrigin = data.countryOfOrigin;
+    if (data.sellerName !== undefined) updateData.sellerName = data.sellerName;
+    if (data.returnPolicy !== undefined) updateData.returnPolicy = data.returnPolicy;
+    if (data.deliveryEstimate !== undefined) updateData.deliveryEstimate = data.deliveryEstimate;
+    if (data.freeDelivery !== undefined) updateData.freeDelivery = data.freeDelivery;
+    if (data.cashOnDelivery !== undefined) updateData.cashOnDelivery = data.cashOnDelivery;
+    if (data.emiAvailable !== undefined) updateData.emiAvailable = data.emiAvailable;
+    if (data.isNewArrival !== undefined) updateData.isNewArrival = data.isNewArrival;
+    if (data.isBestSeller !== undefined) updateData.isBestSeller = data.isBestSeller;
+    if (data.isTopRated !== undefined) updateData.isTopRated = data.isTopRated;
+    if (data.discountPercent !== undefined) updateData.discountPercent = data.discountPercent;
+    if (data.tags !== undefined) updateData.tags = data.tags;
+    if (data.keyFeatures !== undefined) updateData.keyFeatures = data.keyFeatures;
+    if (data.specifications !== undefined) updateData.specifications = data.specifications;
+    if (data.whatsInTheBox !== undefined) updateData.whatsInTheBox = data.whatsInTheBox;
+    if (data.videoUrl !== undefined) updateData.videoUrl = data.videoUrl;
+    if (data.longDescription !== undefined) updateData.longDescription = data.longDescription;
 
     const updated = await this.productRepo.update(id, updateData);
 

@@ -11,10 +11,12 @@ import reviewRoutes from './reviewRoutes';
 import paymentRoutes from './paymentRoutes';
 import healthRoutes from './healthRoutes';
 import metricsRoutes from './metricsRoutes';
+import churnRoutes from './churnRoutes';
 
 const router = Router();
 
 router.use('/metrics', metricsRoutes);
+router.use('/churn', churnRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/products', productRoutes);

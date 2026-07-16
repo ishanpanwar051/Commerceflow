@@ -64,4 +64,11 @@ export class AuthController {
       sendSuccess(res, null, 'Password changed successfully');
     } catch (error) { next(error); }
   }
+
+  async resendVerification(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await authService.resendVerification(req.user!.userId);
+      sendSuccess(res, null, 'Verification email sent');
+    } catch (error) { next(error); }
+  }
 }

@@ -1,6 +1,6 @@
 import client from 'prom-client';
 import { config } from './index';
-import { getRedis } from './redis';
+import { getRedis, isRedisAvailable } from './redis';
 import { getPrisma } from './database';
 import { logger } from './logger';
 
@@ -59,15 +59,17 @@ export async function getMetrics() {
     activeUsers.set(userCount);
   } catch {}
 
-  try {
-    const redis = getRedis();
-    const queueLengths = await redis.keys('bull:*:id');
-    for (const key of queueLengths) {
-      const name = key.split(':')[1];
-      const count = await redis.llen(key);
-      queueSize.set({ queue: name }, count);
-    }
-  } catch {}
+  if (isRedisAvailable()) {
+    try {
+      const redis = getRedis();
+      const queueLengths = await redis.keys('bull:*:id');
+      for (const key of queueLengths) {
+        const name = key.split(':')[1];
+        const count = await redis.llen(key);
+        queueSize.set({ queue: name }, count);
+      }
+    } catch {}
+  }
 
   return register.metrics();
 }

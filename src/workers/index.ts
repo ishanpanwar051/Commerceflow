@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import { config } from '../config';
 import { logger } from '../config/logger';
 import { connectDatabase, disconnectDatabase } from '../config/database';
-import { connectRedis, disconnectRedis } from '../config/redis';
+import { connectRedis, disconnectRedis, isRedisAvailable } from '../config/redis';
 import { processEmailJob, processInvoiceJob, processNotificationJob, processCouponJob } from './processors';
 
 const connection = {
@@ -15,6 +15,11 @@ const workers: Worker[] = [];
 async function startWorkers() {
   await connectDatabase();
   await connectRedis();
+
+  if (!isRedisAvailable()) {
+    logger.warn('Redis not available, workers will not start');
+    return;
+  }
 
   const emailWorker = new Worker('email', processEmailJob, {
     connection,

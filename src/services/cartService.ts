@@ -84,18 +84,18 @@ export class CartService {
     const cart = await this.getCart(userId);
     const subtotal = (cart as any).subtotal || 0;
 
-    if (coupon.minOrderAmount && subtotal < Number(coupon.minOrderAmount)) {
-      throw new BadRequestError(`Minimum order amount of $${coupon.minOrderAmount} required`);
+    if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) {
+      throw new BadRequestError(`Minimum order amount of $${(coupon.minOrderAmount / 100).toFixed(2)} required`);
     }
 
     let discount = 0;
     if (coupon.discountType === 'PERCENTAGE') {
-      discount = subtotal * (Number(coupon.discountValue) / 100);
+      discount = Math.round(subtotal * (coupon.discountValue / 100));
       if (coupon.maxDiscount) {
-        discount = Math.min(discount, Number(coupon.maxDiscount));
+        discount = Math.min(discount, coupon.maxDiscount);
       }
     } else {
-      discount = Number(coupon.discountValue);
+      discount = coupon.discountValue;
     }
 
     return { ...cart, coupon: coupon, discount };
@@ -105,12 +105,12 @@ export class CartService {
     if (!cart || !cart.items) return cart;
 
     const subtotal = cart.items.reduce((sum: number, item: any) => {
-      return sum + Number(item.product.basePrice) * item.quantity;
+      return sum + item.product.basePrice * item.quantity;
     }, 0);
 
     return {
       ...cart,
-      subtotal: Math.round(subtotal * 100) / 100,
+      subtotal,
       itemCount: cart.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
     };
   }

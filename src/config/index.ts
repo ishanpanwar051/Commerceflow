@@ -13,6 +13,7 @@ const envSchema = z.object({
   HOST: z.string().default('localhost'),
 
   DATABASE_URL: z.string(),
+  DATABASE_POOL_URL: z.string().optional(),
 
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().default(6379),
@@ -34,6 +35,8 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default('noreply@commerceflow.dev'),
+
+  FRONTEND_URL: z.string().default('http://localhost:3000'),
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
@@ -58,6 +61,7 @@ export const config = {
 
   database: {
     url: parsed.data.DATABASE_URL,
+    poolUrl: parsed.data.DATABASE_POOL_URL,
   },
 
   redis: {
@@ -91,6 +95,8 @@ export const config = {
     pass: parsed.data.SMTP_PASS,
     from: parsed.data.EMAIL_FROM,
   },
+
+  frontendUrl: parsed.data.FRONTEND_URL,
 
   rateLimit: {
     windowMs: parsed.data.RATE_LIMIT_WINDOW_MS,

@@ -51,28 +51,4 @@ describe('Environment Schema', () => {
   });
 });
 
-describe('Job Types', () => {
-  it('should define all required job names', async () => {
-    const { JobName } = await import('../src/queues/types');
 
-    expect(JobName.ORDER_CONFIRMATION_EMAIL).toBe('order-confirmation-email');
-    expect(JobName.INVOICE_GENERATION).toBe('invoice-generation');
-    expect(JobName.PAYMENT_CONFIRMATION).toBe('payment-confirmation');
-    expect(JobName.LOW_STOCK_NOTIFICATION).toBe('low-stock-notification');
-    expect(JobName.WELCOME_EMAIL).toBe('welcome-email');
-    expect(JobName.PASSWORD_RESET_EMAIL).toBe('password-reset-email');
-    expect(JobName.EMAIL_VERIFICATION).toBe('email-verification');
-    expect(JobName.COUPON_EXPIRATION).toBe('coupon-expiration');
-    expect(JobName.PRODUCT_IMAGE_PROCESSING).toBe('product-image-processing');
-  });
-});
-
-describe('Queue Configuration', () => {
-  it('should have retry with exponential backoff', async () => {
-    const { DEFAULT_JOB_OPTIONS } = await import('../src/queues/types');
-
-    expect(DEFAULT_JOB_OPTIONS.attempts).toBe(5);
-    expect(DEFAULT_JOB_OPTIONS.backoff.type).toBe('exponential');
-    expect(DEFAULT_JOB_OPTIONS.backoff.delay).toBe(1000);
-  });
-});

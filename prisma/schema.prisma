@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -28,6 +27,20 @@ enum DiscountType {
   FLAT
 }
 
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
@@ -43,6 +56,7 @@ model User {
   role            Role      @default(CUSTOMER)
   lastLoginAt     DateTime?
   isActive        Boolean   @default(true)
+  passwordChangedAt DateTime?
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -55,7 +69,6 @@ model User {
   payments    Payment[]
   refreshTokens RefreshToken[]
 
-  @@index([email])
   @@index([role])
   @@map("users")
 }
@@ -69,7 +82,6 @@ model RefreshToken {
   isRevoked Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  @@index([token])
   @@index([userId])
   @@map("refresh_tokens")
 }
@@ -115,26 +127,58 @@ model Category {
 
   products Product[]
 
-  @@index([slug])
   @@index([parentId])
   @@map("categories")
 }
 
 model Product {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
-  description String?
-  basePrice   Decimal   @db.Decimal(10, 2)
-  sku         String    @unique
-  barcode     String?
-  categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  isActive    Boolean   @default(true)
-  isFeatured  Boolean   @default(false)
-  deletedAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  longDescription String?
+  basePrice       Int
+  originalPrice   Int?
+  discountPercent Float?
+  brand           String?
+  sku             String    @unique
+  barcode         String?
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id])
+  weight          Float?
+  dimensions      String?
+  material        String?
+  warranty        String?
+  countryOfOrigin String?
+  sellerName      String?
+  returnPolicy    String?
+  deliveryEstimate String?
+  gstPercent      Float     @default(0)
+  cashOnDelivery  Boolean   @default(false)
+  emiAvailable    Boolean   @default(false)
+  freeDelivery    Boolean   @default(false)
+  specifications  Json?
+  keyFeatures     Json?
+  whatsInTheBox   Json?
+  tags            Json?
+  videoUrl        String?
+  isActive        Boolean   @default(true)
+  isFeatured      Boolean   @default(false)
+  isNewArrival    Boolean   @default(false)
+  isBestSeller    Boolean   @default(false)
+  isTopRated      Boolean   @default(false)
+  soldCount       Int       @default(0)
+  wishlistCount   Int       @default(0)
+  questionsCount  Int       @default(0)
+  trendingScore   Float     @default(0)
+  averageRating   Float     @default(0)
+  reviewCount     Int       @default(0)
+  seoMetaTitle    String?
+  seoDescription  String?
+  seoKeywords     String?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   images     ProductImage[]
   inventory  Inventory?
@@ -144,14 +188,14 @@ model Product {
   reviews    Review[]
 
   @@index([name])
-  @@index([slug])
-  @@index([sku])
+  @@index([brand])
   @@index([categoryId])
   @@index([basePrice])
-  @@index([isActive])
-  @@index([isFeatured])
   @@index([name, categoryId])
   @@index([categoryId, basePrice])
+  @@index([soldCount])
+  @@index([trendingScore])
+  @@index([isActive, isFeatured, isBestSeller, isNewArrival, isTopRated])
   @@map("products")
 }
 
@@ -227,9 +271,9 @@ model Coupon {
   code            String       @unique
   description     String?
   discountType    DiscountType
-  discountValue   Decimal      @db.Decimal(10, 2)
-  minOrderAmount  Decimal?     @db.Decimal(10, 2)
-  maxDiscount     Decimal?     @db.Decimal(10, 2)
+  discountValue   Int
+  minOrderAmount  Int?
+  maxDiscount     Int?
   usageLimit      Int?
   usedCount       Int          @default(0)
   isActive        Boolean      @default(true)
@@ -240,7 +284,6 @@ model Coupon {
 
   orders Order[]
 
-  @@index([code])
   @@index([expiresAt])
   @@map("coupons")
 }
@@ -251,13 +294,13 @@ model Order {
   userId          String
   user            User         @relation(fields: [userId], references: [id])
   status          OrderStatus  @default(PENDING)
-  subtotal        Decimal      @db.Decimal(10, 2)
-  taxAmount       Decimal      @db.Decimal(10, 2)
-  shippingCharge  Decimal      @db.Decimal(10, 2) @default(0)
-  discountAmount  Decimal      @db.Decimal(10, 2) @default(0)
+  subtotal        Int
+  taxAmount       Int
+  shippingCharge  Int          @default(0)
+  discountAmount  Int          @default(0)
   couponId        String?
   coupon          Coupon?      @relation(fields: [couponId], references: [id])
-  grandTotal      Decimal      @db.Decimal(10, 2)
+  grandTotal      Int
   shippingAddressId String?
   shippingAddress Address?     @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   billingAddressId  String?
@@ -275,7 +318,6 @@ model Order {
   payments   Payment[]
   idempotency IdempotencyRecord?
 
-  @@index([orderNumber])
   @@index([userId])
   @@index([status])
   @@index([userId, status])
@@ -290,9 +332,9 @@ model OrderItem {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   name       String
-  price      Decimal  @db.Decimal(10, 2)
+  price      Int
   quantity   Int
-  total      Decimal  @db.Decimal(10, 2)
+  total      Int
   createdAt  DateTime @default(now())
 
   @@index([orderId])
@@ -301,50 +343,64 @@ model OrderItem {
 }
 
 model Payment {
-  id                  String   @id @default(uuid())
+  id                  String        @id @default(uuid())
   orderId             String
-  order               Order    @relation(fields: [orderId], references: [id])
+  order               Order         @relation(fields: [orderId], references: [id])
   userId              String
-  user                User     @relation(fields: [userId], references: [id])
-  stripePaymentId     String   @unique
+  user                User          @relation(fields: [userId], references: [id])
+  stripePaymentId     String        @unique
   stripeIntentId      String?
-  amount              Decimal  @db.Decimal(10, 2)
-  currency            String   @default("usd")
-  status              String
+  amount              Int
+  currency            String        @default("usd")
+  status              PaymentStatus @default(PENDING)
   paymentMethod       String?
   receiptUrl          String?
   idempotencyKey      String?
   failureMessage      String?
   paidAt              DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   @@index([orderId])
-  @@index([stripePaymentId])
   @@index([userId])
   @@index([idempotencyKey])
   @@map("payments")
 }
 
 model Review {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rating    Int
-  title     String?
-  comment   String?
-  isActive  Boolean  @default(true)
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating         Int
+  title          String?
+  comment        String?
+  isVerified     Boolean      @default(false)
+  helpfulCount   Int          @default(0)
+  isActive       Boolean      @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  images ReviewImage[]
 
   @@unique([userId, productId])
   @@index([productId])
   @@index([productId, rating])
   @@index([userId])
   @@map("reviews")
+}
+
+model ReviewImage {
+  id        String   @id @default(uuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  url       String
+  createdAt DateTime @default(now())
+
+  @@index([reviewId])
+  @@map("review_images")
 }
 
 model IdempotencyRecord {
@@ -359,7 +415,6 @@ model IdempotencyRecord {
   expiresAt   DateTime
   createdAt   DateTime @default(now())
 
-  @@index([key])
   @@index([expiresAt])
   @@map("idempotency_records")
 }
@@ -383,20 +438,19 @@ model AuditLog {
 }
 
 model JobRecord {
-  id        String   @id @default(uuid())
-  jobId     String   @unique
-  name      String
-  status    String
-  data      Json?
-  result    Json?
-  error     String?
-  attempts  Int      @default(0)
-  maxAttempts Int    @default(3)
+  id          String    @id @default(uuid())
+  jobId       String    @unique
+  name        String
+  status      JobStatus @default(QUEUED)
+  data        Json?
+  result      Json?
+  error       String?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
   processedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  @@index([jobId])
   @@index([name])
   @@index([status])
   @@map("job_records")

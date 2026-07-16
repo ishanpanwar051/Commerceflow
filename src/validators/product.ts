@@ -28,14 +28,21 @@ export const updateProductSchema = z.object({
 export const productQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
-  sort: z.enum(['name', 'basePrice', 'createdAt', 'rating']).optional().default('createdAt'),
+  sort: z.enum(['name', 'basePrice', 'createdAt', 'rating', 'popularity', 'trending', 'discountPercent', 'soldCount']).optional().default('createdAt'),
   order: z.enum(['asc', 'desc']).optional().default('desc'),
   search: z.string().optional(),
+  brand: z.string().optional(),
   categoryId: z.string().uuid().optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
   minRating: z.coerce.number().min(1).max(5).optional(),
   isFeatured: z.coerce.boolean().optional(),
+  isBestSeller: z.coerce.boolean().optional(),
+  isNewArrival: z.coerce.boolean().optional(),
+  isTopRated: z.coerce.boolean().optional(),
+  freeDelivery: z.coerce.boolean().optional(),
+  cashOnDelivery: z.coerce.boolean().optional(),
+  emiAvailable: z.coerce.boolean().optional(),
 });
 
 export const productCursorQuerySchema = z.object({

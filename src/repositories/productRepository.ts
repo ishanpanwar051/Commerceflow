@@ -5,7 +5,13 @@ const productInclude = {
   images: { orderBy: { order: 'asc' as const } },
   inventory: true,
   category: true,
-  reviews: { where: { deletedAt: null, isActive: true }, select: { rating: true } },
+  _count: { select: { reviews: { where: { deletedAt: null, isActive: true } } } },
+} satisfies Prisma.ProductInclude;
+
+const productIncludeListing = {
+  images: { orderBy: { order: 'asc' as const }, take: 2 },
+  inventory: { select: { stock: true, reservedStock: true, lowStockThreshold: true } },
+  category: true,
   _count: { select: { reviews: { where: { deletedAt: null, isActive: true } } } },
 } satisfies Prisma.ProductInclude;
 
@@ -40,11 +46,19 @@ export class ProductRepository {
     sort?: string;
     order?: 'asc' | 'desc';
     search?: string;
+    brand?: string;
     categoryId?: string;
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
+    maxRating?: number;
     isFeatured?: boolean;
+    isBestSeller?: boolean;
+    isNewArrival?: boolean;
+    isTopRated?: boolean;
+    freeDelivery?: boolean;
+    cashOnDelivery?: boolean;
+    emiAvailable?: boolean;
     cursor?: string;
   }) {
     const where: Prisma.ProductWhereInput = {
@@ -54,41 +68,38 @@ export class ProductRepository {
         OR: [
           { name: { contains: params.search, mode: 'insensitive' } },
           { description: { contains: params.search, mode: 'insensitive' } },
+          { brand: { contains: params.search, mode: 'insensitive' } },
           { sku: { contains: params.search, mode: 'insensitive' } },
+          { tags: { path: ['$'], string_contains: params.search } },
         ],
       }),
+      ...(params.brand && { brand: { in: params.brand.split(',') } }),
       ...(params.categoryId && { categoryId: params.categoryId }),
-      ...(params.minPrice !== undefined && { basePrice: { gte: params.minPrice } }),
-      ...(params.maxPrice !== undefined && {
-        basePrice: { ...(params.minPrice !== undefined ? { gte: params.minPrice } : {}), lte: params.maxPrice },
-      }),
+      ...(params.minPrice !== undefined && params.maxPrice !== undefined
+        ? { basePrice: { gte: params.minPrice, lte: params.maxPrice } }
+        : {
+            ...(params.minPrice !== undefined && { basePrice: { gte: params.minPrice } }),
+            ...(params.maxPrice !== undefined && { basePrice: { lte: params.maxPrice } }),
+          }),
       ...(params.isFeatured !== undefined && { isFeatured: params.isFeatured }),
+      ...(params.isBestSeller !== undefined && { isBestSeller: params.isBestSeller }),
+      ...(params.isNewArrival !== undefined && { isNewArrival: params.isNewArrival }),
+      ...(params.isTopRated !== undefined && { isTopRated: params.isTopRated }),
+      ...(params.freeDelivery !== undefined && { freeDelivery: params.freeDelivery }),
+      ...(params.cashOnDelivery !== undefined && { cashOnDelivery: params.cashOnDelivery }),
+      ...(params.emiAvailable !== undefined && { emiAvailable: params.emiAvailable }),
+      ...(params.minRating !== undefined && { averageRating: { gte: params.minRating } }),
     };
 
-    if (params.minRating) {
-      const productsWithRating = await this.prisma.product.findMany({
-        where,
-        select: {
-          id: true,
-          reviews: { where: { deletedAt: null, isActive: true }, select: { rating: true } },
-        },
-      });
-      const validIds = productsWithRating
-        .map(p => ({
-          id: p.id,
-          avgRating: p.reviews.length > 0
-            ? p.reviews.reduce((sum, r) => sum + r.rating, 0) / p.reviews.length
-            : 0,
-        }))
-        .filter(p => p.avgRating >= (params.minRating || 0))
-        .map(p => p.id);
-
-      where.id = { in: validIds };
-    }
-
     const orderBy: Prisma.ProductOrderByWithRelationInput = {};
-    if (params.sort === 'rating') {
-      orderBy.reviews = { _count: params.order || 'desc' };
+    if (params.sort === 'rating' || params.sort === 'averageRating') {
+      orderBy.averageRating = params.order || 'desc';
+    } else if (params.sort === 'popularity' || params.sort === 'soldCount') {
+      orderBy.soldCount = params.order || 'desc';
+    } else if (params.sort === 'trending' || params.sort === 'trendingScore') {
+      orderBy.trendingScore = params.order || 'desc';
+    } else if (params.sort === 'discount' || params.sort === 'discountPercent') {
+      orderBy.discountPercent = params.order || 'desc';
     } else {
       (orderBy as any)[params.sort || 'createdAt'] = params.order || 'desc';
     }
@@ -99,7 +110,7 @@ export class ProductRepository {
         skip: 1,
         cursor: { id: params.cursor },
         where,
-        include: productInclude,
+        include: productIncludeListing,
         orderBy,
       });
     }
@@ -108,12 +119,26 @@ export class ProductRepository {
       skip: params.skip || 0,
       take: params.take || 10,
       where,
-      include: productInclude,
+      include: productIncludeListing,
       orderBy,
     });
   }
 
-  async count(params: { search?: string; categoryId?: string; minPrice?: number; maxPrice?: number }) {
+  async count(params: {
+    search?: string;
+    brand?: string;
+    categoryId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    minRating?: number;
+    isFeatured?: boolean;
+    isBestSeller?: boolean;
+    isNewArrival?: boolean;
+    isTopRated?: boolean;
+    freeDelivery?: boolean;
+    cashOnDelivery?: boolean;
+    emiAvailable?: boolean;
+  }) {
     const where: Prisma.ProductWhereInput = {
       deletedAt: null,
       isActive: true,
@@ -121,11 +146,26 @@ export class ProductRepository {
         OR: [
           { name: { contains: params.search, mode: 'insensitive' } },
           { description: { contains: params.search, mode: 'insensitive' } },
+          { brand: { contains: params.search, mode: 'insensitive' } },
+          { sku: { contains: params.search, mode: 'insensitive' } },
         ],
       }),
+      ...(params.brand && { brand: { in: params.brand.split(',') } }),
       ...(params.categoryId && { categoryId: params.categoryId }),
-      ...(params.minPrice !== undefined && { basePrice: { gte: params.minPrice } }),
-      ...(params.maxPrice !== undefined && { basePrice: { lte: params.maxPrice } }),
+      ...(params.minPrice !== undefined && params.maxPrice !== undefined
+        ? { basePrice: { gte: params.minPrice, lte: params.maxPrice } }
+        : {
+            ...(params.minPrice !== undefined && { basePrice: { gte: params.minPrice } }),
+            ...(params.maxPrice !== undefined && { basePrice: { lte: params.maxPrice } }),
+          }),
+      ...(params.minRating !== undefined && { averageRating: { gte: params.minRating } }),
+      ...(params.isFeatured !== undefined && { isFeatured: params.isFeatured }),
+      ...(params.isBestSeller !== undefined && { isBestSeller: params.isBestSeller }),
+      ...(params.isNewArrival !== undefined && { isNewArrival: params.isNewArrival }),
+      ...(params.isTopRated !== undefined && { isTopRated: params.isTopRated }),
+      ...(params.freeDelivery !== undefined && { freeDelivery: params.freeDelivery }),
+      ...(params.cashOnDelivery !== undefined && { cashOnDelivery: params.cashOnDelivery }),
+      ...(params.emiAvailable !== undefined && { emiAvailable: params.emiAvailable }),
     };
     return this.prisma.product.count({ where });
   }

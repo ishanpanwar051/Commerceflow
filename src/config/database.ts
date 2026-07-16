@@ -6,7 +6,10 @@ let prisma: PrismaClient;
 
 export function getPrisma(): PrismaClient {
   if (!prisma) {
+    const poolUrl = config.database.poolUrl || config.database.url;
+
     prisma = new PrismaClient({
+      datasources: { db: { url: poolUrl } },
       log: config.isDev
         ? [{ emit: 'event', level: 'query' }, { emit: 'event', level: 'info' }, { emit: 'event', level: 'warn' }, { emit: 'event', level: 'error' }]
         : [{ emit: 'event', level: 'error' }, { emit: 'event', level: 'warn' }],

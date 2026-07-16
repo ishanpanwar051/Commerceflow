@@ -29,19 +29,10 @@ export interface PaginationMeta {
   hasPrev: boolean;
 }
 
-export interface CursorPaginationMeta {
-  nextCursor?: string;
-  hasNext: boolean;
-  limit: number;
-  total: number;
-}
-
-export type AnyPaginationMeta = PaginationMeta | CursorPaginationMeta;
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
-  meta?: AnyPaginationMeta;
+  meta?: PaginationMeta;
   errors?: unknown;
 }

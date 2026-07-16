@@ -8,17 +8,26 @@ export class ProductController {
   async getProducts(req: Request, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const validated = req.query as Record<string, unknown>;
       const { products, total } = await productService.getProducts({
-        page, limit,
-        sort: req.query.sort as string,
-        order: req.query.order as 'asc' | 'desc',
-        search: req.query.search as string,
-        categoryId: req.query.categoryId as string,
-        minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
-        maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
-        minRating: req.query.minRating ? Number(req.query.minRating) : undefined,
-        isFeatured: req.query.isFeatured === 'true' ? true : req.query.isFeatured === 'false' ? false : undefined,
+        page: (validated.page as number) || 1,
+        limit: (validated.limit as number) || 20,
+        sort: validated.sort as string,
+        order: validated.order as 'asc' | 'desc',
+        search: validated.search as string,
+        brand: validated.brand as string,
+        categoryId: validated.categoryId as string,
+        minPrice: validated.minPrice as number | undefined,
+        maxPrice: validated.maxPrice as number | undefined,
+        minRating: validated.minRating as number | undefined,
+        isFeatured: validated.isFeatured as boolean | undefined,
+        isBestSeller: validated.isBestSeller as boolean | undefined,
+        isNewArrival: validated.isNewArrival as boolean | undefined,
+        isTopRated: validated.isTopRated as boolean | undefined,
+        freeDelivery: validated.freeDelivery as boolean | undefined,
+        cashOnDelivery: validated.cashOnDelivery as boolean | undefined,
+        emiAvailable: validated.emiAvailable as boolean | undefined,
       });
       sendSuccess(res, products, 'Products fetched successfully', 200, calculatePaginationMeta(total, page, limit));
     } catch (error) { next(error); }

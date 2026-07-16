@@ -45,16 +45,17 @@ export async function sendWelcomeEmail(data: { email: string; firstName: string 
 }
 
 export async function sendPasswordReset(data: { email: string; token: string; firstName: string }) {
-  const resetUrl = `${config.isProd ? 'https://commerceflow.dev' : 'http://localhost:4000'}/auth/reset-password?token=${data.token}`;
+  const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${data.token}`;
   const subject = 'Reset Your Password';
   const html = `<h1>Hi ${data.firstName}</h1><p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`;
   await sendEmail({ to: data.email, subject, html });
   logger.info({ email: data.email }, 'Password reset email sent');
 }
 
-export async function sendEmailVerification(data: { email: string; firstName: string }) {
+export async function sendEmailVerification(data: { email: string; token: string; firstName: string }) {
+  const verificationUrl = `${config.frontendUrl}/auth/verify-email?token=${data.token}`;
   const subject = 'Verify Your Email';
-  const html = `<h1>Hi ${data.firstName}</h1><p>Please verify your email address to complete registration.</p>`;
+  const html = `<h1>Hi ${data.firstName}</h1><p>Please verify your email address by clicking <a href="${verificationUrl}">here</a>.</p>`;
   await sendEmail({ to: data.email, subject, html });
   logger.info({ email: data.email }, 'Verification email sent');
 }
@@ -101,6 +102,8 @@ export async function generateInvoicePdf(data: { orderNumber: string; items: { n
     doc.end();
   });
 }
+
+export { getTransporter };
 
 async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
   const transport = getTransporter();

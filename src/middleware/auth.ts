@@ -6,18 +6,18 @@ import { UnauthorizedError, ForbiddenError } from '../utils/errors';
 import { Role } from '@prisma/client';
 
 export function authenticate(req: AuthRequest, _res: Response, next: NextFunction): void {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new UnauthorizedError('No token provided');
-  }
-
-  const token = authHeader.split(' ')[1];
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedError('No token provided');
+    }
+
+    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
     req.user = decoded;
     next();
   } catch (error) {
-    throw new UnauthorizedError('Invalid or expired token');
+    next(error);
   }
 }
 
@@ -40,12 +40,16 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
 
 export function authorize(...roles: Role[]) {
   return (req: AuthRequest, _res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      throw new UnauthorizedError();
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError();
+      }
+      if (!roles.includes(req.user.role)) {
+        throw new ForbiddenError('Insufficient permissions');
+      }
+      next();
+    } catch (error) {
+      next(error);
     }
-    if (!roles.includes(req.user.role)) {
-      throw new ForbiddenError('Insufficient permissions');
-    }
-    next();
   };
 }

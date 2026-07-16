@@ -10,6 +10,14 @@ const orderInclude = {
   user: { select: { id: true, email: true, firstName: true, lastName: true } },
 } satisfies Prisma.OrderInclude;
 
+const orderListInclude = {
+  items: { select: { id: true, name: true, price: true, quantity: true, total: true } },
+  payments: { select: { amount: true, status: true, createdAt: true } },
+  shippingAddress: true,
+  billingAddress: true,
+  user: { select: { id: true, email: true, firstName: true, lastName: true } },
+} satisfies Prisma.OrderInclude;
+
 export class OrderRepository {
   private prisma: PrismaClient;
 
@@ -28,7 +36,7 @@ export class OrderRepository {
   async findByUser(userId: string, skip = 0, take = 10) {
     return this.prisma.order.findMany({
       where: { userId, deletedAt: null },
-      include: orderInclude,
+      include: orderListInclude,
       orderBy: { createdAt: 'desc' },
       skip,
       take,
@@ -44,7 +52,7 @@ export class OrderRepository {
     if (status) where.status = status as any;
     return this.prisma.order.findMany({
       where,
-      include: orderInclude,
+      include: orderListInclude,
       orderBy: { createdAt: 'desc' },
       skip,
       take,

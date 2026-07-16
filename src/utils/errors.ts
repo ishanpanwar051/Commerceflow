@@ -51,8 +51,8 @@ export class ValidationError extends AppError {
   }
 }
 
-export class RateLimitError extends AppError {
+export class TooManyRequestsError extends AppError {
   constructor(message = 'Too many requests') {
-    super(message, 429, 'RATE_LIMIT_EXCEEDED');
+    super(message, 429, 'TOO_MANY_REQUESTS');
   }
 }

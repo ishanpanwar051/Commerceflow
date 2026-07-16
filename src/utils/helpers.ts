@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Response } from 'express';
-import { ApiResponse, PaginationMeta, CursorPaginationMeta, AnyPaginationMeta } from '../types';
+import { ApiResponse, PaginationMeta } from '../types';
 
 export function generateId(): string {
   return uuidv4();
@@ -27,7 +27,7 @@ export function sendSuccess<T>(
   data: T,
   message = 'Success',
   statusCode = 200,
-  meta?: AnyPaginationMeta
+  meta?: PaginationMeta
 ): void {
   const response: ApiResponse<T> = {
     success: true,
@@ -51,12 +51,20 @@ export function calculatePaginationMeta(total: number, page: number, limit: numb
 }
 
 export function calculateTax(amount: number, rate = 0.08): number {
-  return Math.round(amount * rate * 100) / 100;
+  return Math.round(amount * rate);
 }
 
 export function calculateShipping(amount: number): number {
-  if (amount >= 50) return 0;
-  return 5.99;
+  if (amount >= 5000) return 0;
+  return 599;
+}
+
+export function dollarsToCents(dollars: number): number {
+  return Math.round(dollars * 100);
+}
+
+export function centsToDollars(cents: number): number {
+  return cents / 100;
 }
 
 export function parsePaginationQuery(query: Record<string, unknown>) {
@@ -65,12 +73,4 @@ export function parsePaginationQuery(query: Record<string, unknown>) {
   const sort = (query.sort as string) || 'createdAt';
   const order = ((query.order as string) || 'desc') as 'asc' | 'desc';
   return { page, limit, sort, order };
-}
-
-export function parseCursorPaginationQuery(query: Record<string, unknown>) {
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 10));
-  const cursor = query.cursor as string | undefined;
-  const sort = (query.sort as string) || 'createdAt';
-  const order = ((query.order as string) || 'desc') as 'asc' | 'desc';
-  return { cursor, limit, sort, order };
 }

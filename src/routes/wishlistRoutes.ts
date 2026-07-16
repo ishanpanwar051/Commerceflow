@@ -27,7 +27,7 @@ router.post('/', validate(wishlistItemSchema), async (req: AuthRequest, res: Res
 
 router.delete('/:productId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    await repo.removeItem(req.user!.userId, req.params.productId as string);
+    await repo.removeItem(req.user!.userId, String(req.params.productId));
     sendSuccess(res, null, 'Removed from wishlist');
   } catch (error) { next(error); }
 });
