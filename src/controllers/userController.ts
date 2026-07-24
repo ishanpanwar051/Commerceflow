@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { UserService } from '../services/userService';
 import { AuthRequest } from '../types';
 import { sendSuccess } from '../utils/helpers';
+import { BadRequestError } from '../utils/errors';
 
 const userService = new UserService();
 
@@ -24,6 +25,18 @@ export class UserController {
     try {
       const avatarUrl = req.body.url;
       if (!avatarUrl) return sendSuccess(res, null, 'No avatar provided');
+      if (typeof avatarUrl !== 'string') {
+        throw new BadRequestError('Avatar URL must be a string');
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(avatarUrl);
+      } catch {
+        throw new BadRequestError('Invalid avatar URL');
+      }
+      if (parsed.protocol !== 'https:') {
+        throw new BadRequestError('Avatar URL must use HTTPS');
+      }
       const user = await userService.updateAvatar(req.user!.userId, avatarUrl);
       sendSuccess(res, user, 'Avatar updated successfully');
     } catch (error) { next(error); }

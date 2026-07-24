@@ -62,7 +62,7 @@ export class InventoryRepository {
           "reservedStock" = "reservedStock" + ${quantity},
           "updatedAt" = NOW()
         WHERE "productId" = ${productId}
-          AND "stock" >= ${quantity}
+          AND "stock" - "reservedStock" >= ${quantity}
         RETURNING "stock", "reservedStock"
       `,
     );
@@ -98,7 +98,7 @@ export class InventoryRepository {
           "updatedAt" = NOW()
         FROM (VALUES ${values}) AS v(product_id, quantity)
         WHERE i."productId" = v.product_id
-          AND i."stock" >= v.quantity
+          AND (i."stock" - i."reservedStock") >= v.quantity
       `,
     );
 

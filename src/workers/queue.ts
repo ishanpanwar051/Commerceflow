@@ -79,7 +79,7 @@ export async function addJob(name: string, data: Record<string, unknown>, option
     ...(options?.priority && { priority: options.priority }),
   });
 
-  await getPrisma().jobRecord.create({
+  getPrisma().jobRecord.create({
     data: {
       jobId: job.id || customJobId,
       name,

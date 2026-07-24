@@ -1,5 +1,5 @@
 import client from 'prom-client';
-import { config } from './index';
+
 import { getRedis, isRedisAvailable } from './redis';
 import { getPrisma } from './database';
 import { logger } from './logger';
@@ -62,10 +62,18 @@ export async function getMetrics() {
   if (isRedisAvailable()) {
     try {
       const redis = getRedis();
-      const queueLengths = await redis.keys('bull:*:id');
-      for (const key of queueLengths) {
-        const name = key.split(':')[1];
-        const count = await redis.llen(key);
+      const queueNames = new Set<string>();
+      let cursor = '0';
+      do {
+        const result = await redis.scan(cursor, 'MATCH', 'bull:*:id', 'COUNT', 100);
+        cursor = result[0];
+        for (const key of result[1]) {
+          queueNames.add(key.split(':')[1]);
+        }
+      } while (cursor !== '0');
+
+      for (const name of queueNames) {
+        const count = await redis.llen(`bull:${name}:id`);
         queueSize.set({ queue: name }, count);
       }
     } catch {}

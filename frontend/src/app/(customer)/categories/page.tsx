@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -54,6 +55,17 @@ function CategoriesContent() {
                 className="cursor-pointer hover:shadow-lg transition-all group h-full"
                 onClick={() => router.push(`/categories/${category.slug}`)}
               >
+                {category.image && (
+                  <div className="relative aspect-[16/7] overflow-hidden rounded-t-xl bg-muted">
+                    <Image
+                      src={category.image}
+                      alt={`${category.name} collection`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">

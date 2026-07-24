@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { getProductImages } from './product-images';
+import { getCategoryImage, getProductImages } from './product-images';
 
 const prisma = new PrismaClient();
 
@@ -222,8 +222,8 @@ async function main() {
   for (const cat of categories) {
     const existing = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: { description: cat.description },
-      create: { name: cat.name, slug: cat.slug, description: cat.description },
+      update: { description: cat.description, image: getCategoryImage(cat.slug) },
+      create: { name: cat.name, slug: cat.slug, description: cat.description, image: getCategoryImage(cat.slug) },
     });
     categoryMap[cat.slug] = existing.id;
     console.log(`  ✓ Category: ${cat.name}`);
@@ -242,6 +242,19 @@ async function main() {
     for (const product of products) {
       const existing = await prisma.product.findUnique({ where: { sku: product.sku } });
       if (existing) {
+        const existingImages = getProductImages(
+          {
+            name: existing.name,
+            brand: existing.brand || 'CommerceFlow',
+            categorySlug: catSlug,
+            subcategory: getSubcategoryForProduct(catSlug, existing.name),
+          },
+          totalSkipped,
+        );
+        await prisma.productImage.deleteMany({ where: { productId: existing.id } });
+        await prisma.productImage.createMany({
+          data: existingImages.map((image) => ({ ...image, productId: existing.id })),
+        });
         totalSkipped++;
         continue;
       }

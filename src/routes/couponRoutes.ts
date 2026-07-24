@@ -4,7 +4,7 @@ import { validate } from '../middleware/validate';
 import { couponSchema } from '../validators';
 import { CouponRepository } from '../repositories';
 import { AuthRequest } from '../types';
-import { sendSuccess } from '../utils/helpers';
+import { sendSuccess, calculatePaginationMeta } from '../utils/helpers';
 import { BadRequestError, NotFoundError } from '../utils/errors';
 
 const router = Router();
@@ -19,8 +19,14 @@ router.post('/', authenticate, authorize('ADMIN'), validate(couponSchema), async
 
 router.get('/', authenticate, authorize('ADMIN'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const coupons = await repo.findAll();
-    sendSuccess(res, coupons, 'Coupons fetched successfully');
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 50));
+    const skip = (page - 1) * limit;
+    const [coupons, total] = await Promise.all([
+      repo.findAll(skip, limit),
+      repo.countAll(),
+    ]);
+    sendSuccess(res, coupons, 'Coupons fetched successfully', 200, calculatePaginationMeta(total, page, limit));
   } catch (error) { next(error); }
 });
 

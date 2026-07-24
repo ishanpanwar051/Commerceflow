@@ -72,27 +72,31 @@ export class UserRepository {
   }
 
   async createAddress(userId: string, data: Prisma.AddressCreateInput) {
-    if (data.isDefault) {
-      await this.prisma.address.updateMany({
-        where: { userId, isDefault: true },
-        data: { isDefault: false },
+    return this.prisma.$transaction(async (tx) => {
+      if (data.isDefault) {
+        await tx.address.updateMany({
+          where: { userId, isDefault: true },
+          data: { isDefault: false },
+        });
+      }
+      return tx.address.create({
+        data: { ...data, user: { connect: { id: userId } } },
       });
-    }
-    return this.prisma.address.create({
-      data: { ...data, user: { connect: { id: userId } } },
     });
   }
 
   async updateAddress(id: string, userId: string, data: Prisma.AddressUpdateInput) {
     const address = await this.findAddressById(id, userId);
     if (!address) return null;
-    if (data.isDefault) {
-      await this.prisma.address.updateMany({
-        where: { userId, isDefault: true, id: { not: id } },
-        data: { isDefault: false },
-      });
-    }
-    return this.prisma.address.update({ where: { id }, data });
+    return this.prisma.$transaction(async (tx) => {
+      if (data.isDefault) {
+        await tx.address.updateMany({
+          where: { userId, isDefault: true, id: { not: id } },
+          data: { isDefault: false },
+        });
+      }
+      return tx.address.update({ where: { id }, data });
+    });
   }
 
   async deleteAddress(id: string, userId: string) {

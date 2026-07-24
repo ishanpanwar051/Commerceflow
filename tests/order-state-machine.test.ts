@@ -98,6 +98,12 @@ describe('Order State Machine', () => {
       },
     });
     testOrderId = order.id;
+
+    // Reserve inventory so PROCESSING->SHIPPED fulfillment succeeds
+    await prisma.inventory.update({
+      where: { productId: 'sm-test-product' },
+      data: { reservedStock: { increment: 1 } },
+    });
   });
 
   afterAll(async () => {

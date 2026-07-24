@@ -57,7 +57,6 @@ export const couponSchema = z.object({
 
 export const applyCouponSchema = z.object({
   code: z.string().min(1, 'Coupon code is required').transform(v => v.toUpperCase()),
-  subtotal: z.number().positive('Subtotal must be positive'),
 });
 
 export const checkoutSchema = z.object({

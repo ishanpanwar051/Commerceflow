@@ -45,13 +45,13 @@ export default function AddressesPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: z.input<typeof addressSchema>) => addressService.createAddress(data),
+    mutationFn: (data: z.input<typeof addressSchema>) => addressService.createAddress(data as Parameters<typeof addressService.createAddress>[0]),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['addresses'] }); toast.success('Address added'); setShowForm(false); form.reset(); },
     onError: () => toast.error('Failed to add address'),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: z.input<typeof addressSchema> }) => addressService.updateAddress(id, data),
+    mutationFn: ({ id, data }: { id: string; data: z.input<typeof addressSchema> }) => addressService.updateAddress(id, data as Parameters<typeof addressService.updateAddress>[1]),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['addresses'] }); toast.success('Address updated'); setEditingId(null); form.reset(); },
     onError: () => toast.error('Failed to update address'),
   });

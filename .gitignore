@@ -2,7 +2,8 @@ node_modules/
 dist/
 coverage/
 .env
-.env.local
+.env.*
+!.env.example
 *.log
 .DS_Store
 .nyc_output/
@@ -13,14 +14,10 @@ coverage/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
-node_modules/
-.env
-env/
+
 frontend/node_modules/
 frontend/.next/
-dist/
 *.db
 dump.rdb
-env/
-frontend/node_modules/
-node_modules/
+
+.vercel

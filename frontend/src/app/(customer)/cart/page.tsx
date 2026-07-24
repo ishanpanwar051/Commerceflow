@@ -14,6 +14,7 @@ import { useAppDispatch } from '@/store/hooks';
 import { setCart } from '@/store/slices/cartSlice';
 import { formatPrice } from '@/lib/utils';
 import { cartService } from '@/services/cart.service';
+import type { Coupon } from '@/types/api';
 import { toast } from 'sonner';
 
 export default function CartPage() {
@@ -24,7 +25,7 @@ export default function CartPage() {
   const [couponCode, setCouponCode] = useState('');
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [discount, setDiscount] = useState<number | null>(null);
-  const [coupon, setCoupon] = useState<{ code: string } | null>(null);
+  const [coupon, setCoupon] = useState<Coupon | null>(null);
 
   useEffect(() => { if (isAuthenticated) loadCart(); }, [isAuthenticated, loadCart]);
 
@@ -35,7 +36,7 @@ export default function CartPage() {
       const result = await cartService.applyCoupon(couponCode);
       dispatch(setCart(result));
       setDiscount(result.discount ?? null);
-      setCoupon(result.coupon);
+      setCoupon(result.coupon ?? null);
       toast.success('Coupon applied!');
     } catch {
       toast.error('Invalid or expired coupon');

@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 export default function AdminCouponsPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ code: '', discountType: 'PERCENTAGE' as const, discountValue: 0, minOrderAmount: '', usageLimit: '', expiresAt: '' });
+  const [form, setForm] = useState<{ code: string; discountType: 'PERCENTAGE' | 'FLAT'; discountValue: number; minOrderAmount: string; usageLimit: string; expiresAt: string }>({ code: '', discountType: 'PERCENTAGE', discountValue: 0, minOrderAmount: '', usageLimit: '', expiresAt: '' });
 
   const { data: coupons, isLoading } = useQuery({
     queryKey: ['admin', 'coupons'],
@@ -28,6 +28,7 @@ export default function AdminCouponsPage() {
       code: form.code,
       discountType: form.discountType,
       discountValue: form.discountValue,
+      isActive: true,
       minOrderAmount: form.minOrderAmount ? Number(form.minOrderAmount) : undefined,
       usageLimit: form.usageLimit ? Number(form.usageLimit) : undefined,
       expiresAt: form.expiresAt || undefined,

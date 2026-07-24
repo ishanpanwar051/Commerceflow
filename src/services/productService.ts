@@ -2,6 +2,7 @@ import { ProductRepository, CategoryRepository } from '../repositories';
 import { NotFoundError, BadRequestError } from '../utils/errors';
 import { slugify, dollarsToCents } from '../utils/helpers';
 import { invalidateCache } from '../middleware/cache';
+import { getPrisma } from '../config/database';
 import { Prisma } from '@prisma/client';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -227,11 +228,21 @@ export class ProductService {
     if (data.videoUrl !== undefined) updateData.videoUrl = data.videoUrl;
     if (data.longDescription !== undefined) updateData.longDescription = data.longDescription;
 
-    const updated = await this.productRepo.update(id, updateData);
+    const prisma = getPrisma();
 
-    if (data.stock !== undefined) {
-      await this.productRepo.updateInventory(id, data.stock, data.lowStockThreshold);
-    }
+    const updated = await prisma.$transaction(async (tx) => {
+      const productUpdate = await this.productRepo.update(id, updateData);
+
+      if (data.stock !== undefined) {
+        await tx.inventory.upsert({
+          where: { productId: id },
+          update: { stock: data.stock, ...(data.lowStockThreshold !== undefined && { lowStockThreshold: data.lowStockThreshold }) },
+          create: { productId: id, stock: data.stock, lowStockThreshold: data.lowStockThreshold || 5 },
+        });
+      }
+
+      return productUpdate;
+    });
 
     await invalidateCache('products:*');
     return updated;
@@ -245,6 +256,18 @@ export class ProductService {
   }
 
   async addImage(productId: string, url: string, alt?: string, order = 0) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new BadRequestError('Invalid image URL');
+    }
+    if (parsed.protocol !== 'https:') {
+      throw new BadRequestError('Image URL must use HTTPS');
+    }
+    if (url.length > 2048) {
+      throw new BadRequestError('Image URL is too long');
+    }
     return this.productRepo.createImage({
       url,
       alt,
@@ -255,5 +278,6 @@ export class ProductService {
 
   async deleteImage(imageId: string) {
     await this.productRepo.deleteImage(imageId);
+    await invalidateCache('products:*');
   }
 }

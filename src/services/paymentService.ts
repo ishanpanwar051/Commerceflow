@@ -25,35 +25,62 @@ export class PaymentService {
     if (order.userId !== userId) throw new NotFoundError('Order');
 
     const existingPayment = await prisma.payment.findFirst({
-      where: { orderId, status: { not: 'FAILED' as any } },
+      where: { orderId, status: { not: 'FAILED' } },
     });
     if (existingPayment) {
+      const clientSecret = existingPayment.clientSecret ||
+        (await stripe.paymentIntents.retrieve(existingPayment.stripePaymentId)).client_secret;
+      if (!clientSecret) throw new BadRequestError('Failed to retrieve payment client secret');
       return {
-        clientSecret: null,
+        clientSecret,
         paymentIntentId: existingPayment.stripeIntentId,
         amount: order.grandTotal,
         existing: true,
       };
     }
 
+    const idempotencyKey = `order:${orderId}:${order.grandTotal}`;
     const paymentIntent = await stripe.paymentIntents.create({
       amount: order.grandTotal,
       currency: 'usd',
       metadata: { orderId: order.id, orderNumber: order.orderNumber, userId },
+    }, {
+      idempotencyKey,
     });
 
-    await prisma.payment.create({
-      data: {
-        orderId: order.id,
-        userId,
-        stripePaymentId: paymentIntent.id,
-        stripeIntentId: paymentIntent.id,
-        amount: order.grandTotal,
-        currency: 'usd',
-        status: 'PENDING',
-        idempotencyKey: paymentIntent.id,
-      },
-    });
+    try {
+      await prisma.payment.create({
+        data: {
+          orderId: order.id,
+          userId,
+          stripePaymentId: paymentIntent.id,
+          stripeIntentId: paymentIntent.id,
+          amount: order.grandTotal,
+          currency: 'usd',
+          status: 'PENDING',
+          clientSecret: paymentIntent.client_secret,
+          idempotencyKey: paymentIntent.id,
+        },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        const existing = await prisma.payment.findFirst({
+          where: { orderId, status: { not: 'FAILED' } },
+        });
+        if (existing) {
+          const clientSecret = existing.clientSecret ||
+            (await stripe.paymentIntents.retrieve(existing.stripePaymentId)).client_secret;
+          if (!clientSecret) throw new BadRequestError('Failed to retrieve payment client secret');
+          return {
+            clientSecret,
+            paymentIntentId: existing.stripeIntentId,
+            amount: order.grandTotal,
+            existing: true,
+          };
+        }
+      }
+      throw err;
+    }
 
     return {
       clientSecret: paymentIntent.client_secret,
@@ -63,7 +90,7 @@ export class PaymentService {
     };
   }
 
-  async confirmPayment(paymentIntentId: string) {
+  async confirmPayment(paymentIntentId: string, userId: string) {
     const stripe = getStripe();
     if (!stripe) throw new BadRequestError('Stripe not configured');
 
@@ -73,6 +100,7 @@ export class PaymentService {
       where: { stripePaymentId: paymentIntentId },
     });
     if (!payment) throw new NotFoundError('Payment');
+    if (payment.userId !== userId) throw new NotFoundError('Payment');
 
     if (payment.status === 'COMPLETED') {
       logger.info({ paymentIntentId }, 'Payment already confirmed, skipping duplicate');
@@ -131,20 +159,33 @@ export class PaymentService {
       return { received: true, duplicate: true };
     }
 
-    await prisma.idempotencyRecord.create({
-      data: {
-        key: `stripe:webhook:${eventId}`,
-        method: 'WEBHOOK',
-        path: `/payments/webhook`,
-        expiresAt: new Date(Date.now() + WEBHOOK_EVENT_TTL),
-      },
-    });
+    try {
+      await prisma.idempotencyRecord.create({
+        data: {
+          key: `stripe:webhook:${eventId}`,
+          method: 'WEBHOOK',
+          path: `/payments/webhook`,
+          expiresAt: new Date(Date.now() + WEBHOOK_EVENT_TTL),
+        },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        logger.info({ eventId, eventType: event.type }, 'Duplicate webhook event (concurrent), skipping');
+        return { received: true, duplicate: true };
+      }
+      throw err;
+    }
 
     try {
       switch (event.type) {
         case 'payment_intent.succeeded': {
           const paymentIntent = event.data.object;
-          await this.confirmPayment(paymentIntent.id);
+          const payment = await prisma.payment.findFirst({
+            where: { stripePaymentId: paymentIntent.id },
+          });
+          if (payment) {
+            await this.confirmPayment(paymentIntent.id, payment.userId);
+          }
           break;
         }
         case 'payment_intent.payment_failed': {

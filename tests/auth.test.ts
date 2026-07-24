@@ -8,7 +8,7 @@ const prisma = getPrisma();
 describe('Auth API', () => {
   const testUser = {
     email: 'test-auth@example.com',
-    password: 'TestPass123',
+    password: 'TestPass123!',
     firstName: 'Auth',
     lastName: 'Test',
   };
@@ -85,11 +85,11 @@ describe('Auth API', () => {
     const login = await request(app).post('/api/v1/auth/login').send({ email: testUser.email, password: testUser.password });
     const res = await request(app).post('/api/v1/auth/change-password')
       .set('Authorization', `Bearer ${login.body.data.accessToken}`)
-      .send({ currentPassword: testUser.password, newPassword: 'NewPass123' });
+      .send({ currentPassword: testUser.password, newPassword: 'NewPass123!' });
     expect(res.status).toBe(200);
     await request(app).post('/api/v1/auth/change-password')
       .set('Authorization', `Bearer ${login.body.data.accessToken}`)
-      .send({ currentPassword: 'NewPass123', newPassword: testUser.password });
+      .send({ currentPassword: 'NewPass123!', newPassword: testUser.password });
   });
 
   it('should reject unauthenticated requests', async () => {

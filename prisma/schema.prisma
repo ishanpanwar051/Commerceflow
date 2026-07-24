@@ -10,6 +10,8 @@ datasource db {
 enum Role {
   ADMIN
   CUSTOMER
+  SELLER
+  DELIVERY_BOY
 }
 
 enum OrderStatus {
@@ -350,6 +352,7 @@ model Payment {
   user                User          @relation(fields: [userId], references: [id])
   stripePaymentId     String        @unique
   stripeIntentId      String?
+  clientSecret        String?
   amount              Int
   currency            String        @default("usd")
   status              PaymentStatus @default(PENDING)

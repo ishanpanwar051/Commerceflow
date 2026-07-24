@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
+import bcrypt from 'bcryptjs';
 import { app } from '../src/app';
 import { getPrisma } from '../src/config/database';
 
@@ -11,13 +12,11 @@ describe('Product API', () => {
   let productId: string;
 
   beforeAll(async () => {
-    const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
-    if (!admin) {
-      const bcrypt = require('bcryptjs');
-      await prisma.user.create({
-        data: { email: 'test-admin@example.com', password: await bcrypt.hash('Admin123', 12), firstName: 'Test', lastName: 'Admin', role: 'ADMIN', isEmailVerified: true },
-      });
-    }
+    await prisma.user.upsert({
+      where: { email: 'test-admin@example.com' },
+      update: { password: await bcrypt.hash('Admin123', 12), role: 'ADMIN', isActive: true, deletedAt: null },
+      create: { email: 'test-admin@example.com', password: await bcrypt.hash('Admin123', 12), firstName: 'Test', lastName: 'Admin', role: 'ADMIN', isEmailVerified: true },
+    });
     const login = await request(app).post('/api/v1/auth/login').send({ email: 'test-admin@example.com', password: 'Admin123' });
     adminToken = login.body.data.accessToken;
 
@@ -26,9 +25,17 @@ describe('Product API', () => {
   });
 
   afterAll(async () => {
-    await prisma.productImage.deleteMany({ where: { product: { name: { startsWith: 'Test' } } } });
-    await prisma.product.deleteMany({ where: { name: { startsWith: 'Test' } } });
-    await prisma.category.deleteMany({ where: { name: { startsWith: 'Test' } } });
+    const categories = await prisma.category.findMany({
+      where: { slug: { startsWith: 'test-category-' } },
+      select: { id: true },
+    });
+    const categoryIds = categories.map((category) => category.id);
+    if (categoryIds.length) {
+      await prisma.productImage.deleteMany({ where: { product: { categoryId: { in: categoryIds } } } });
+      await prisma.inventory.deleteMany({ where: { product: { categoryId: { in: categoryIds } } } });
+      await prisma.product.deleteMany({ where: { categoryId: { in: categoryIds } } });
+      await prisma.category.deleteMany({ where: { id: { in: categoryIds } } });
+    }
     await prisma.user.deleteMany({ where: { email: 'test-admin@example.com' } });
   });
 

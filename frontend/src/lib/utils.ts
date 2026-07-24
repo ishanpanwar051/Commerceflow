@@ -27,24 +27,6 @@ export function formatDateTime(date: string | Date): string {
   }).format(new Date(date));
 }
 
-export function slugify(text: string): string {
-  return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-}
-
-export function truncate(text: string, length: number): string {
-  if (text.length <= length) return text;
-  return text.slice(0, length) + '...';
-}
-
 export function getInitials(firstName: string, lastName?: string): string {
   return ((firstName?.[0] || '') + (lastName?.[0] || '')).toUpperCase();
-}
-
-export function calculateTax(amount: number, rate = 0.18): number {
-  return Math.round(amount * rate * 100) / 100;
-}
-
-export function calculateShipping(amount: number): number {
-  if (amount >= 49900) return 0;
-  return 4900;
 }

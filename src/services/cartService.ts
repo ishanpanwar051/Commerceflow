@@ -1,7 +1,7 @@
 import { CartRepository, CouponRepository } from '../repositories';
 import { ProductRepository } from '../repositories';
 import { NotFoundError, BadRequestError } from '../utils/errors';
-import { calculateTax, calculateShipping } from '../utils/helpers';
+
 
 export class CartService {
   private cartRepo: CartRepository;

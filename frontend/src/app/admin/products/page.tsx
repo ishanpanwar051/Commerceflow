@@ -64,15 +64,11 @@ export default function AdminProductsPage() {
     }
   };
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ProductForm>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<ProductForm>({
+    resolver: zodResolver(productSchema) as any,
     defaultValues: { isActive: true, isFeatured: false, lowStockThreshold: 5 },
   });
+  const { register, handleSubmit, reset, formState: { errors } } = form;
 
   const openCreate = () => {
     setEditingProduct(null);
@@ -107,6 +103,8 @@ export default function AdminProductsPage() {
       categoryId: formData.categoryId,
       isActive: formData.isActive,
       isFeatured: formData.isFeatured,
+      stock: formData.stock,
+      lowStockThreshold: formData.lowStockThreshold,
     }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin', 'products'] }); setShowForm(false); setEditingProduct(null); toast.success('Product created'); },
     onError: (err: unknown) => {
@@ -116,8 +114,8 @@ export default function AdminProductsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: ProductForm }) =>
-      productService.updateProduct(id, data),
+    mutationFn: ({ id, data: productData }: { id: string; data: ProductForm }) =>
+      productService.updateProduct(id, productData),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin', 'products'] }); setShowForm(false); setEditingProduct(null); toast.success('Product updated'); },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } } };
@@ -125,7 +123,7 @@ export default function AdminProductsPage() {
     },
   });
 
-  const onSubmit: SubmitHandler<ProductForm> = async (formData) => {
+  const onSubmit = async (formData: ProductForm) => {
     if (editingProduct) {
       updateMutation.mutate({
         id: editingProduct.id,
@@ -134,9 +132,12 @@ export default function AdminProductsPage() {
           description: formData.description,
           basePrice: formData.basePrice,
           sku: formData.sku,
+          barcode: formData.barcode,
           categoryId: formData.categoryId,
           isActive: formData.isActive,
           isFeatured: formData.isFeatured,
+          stock: formData.stock,
+          lowStockThreshold: formData.lowStockThreshold,
         },
       });
     } else {

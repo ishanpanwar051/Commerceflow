@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth';
+import { paymentLimiter } from '../middleware/rateLimiter';
 import { PaymentService } from '../services/paymentService';
 import { sendSuccess } from '../utils/helpers';
 import { AuthRequest } from '../types';
@@ -7,7 +8,7 @@ import { AuthRequest } from '../types';
 const router = Router();
 const paymentService = new PaymentService();
 
-router.post('/create-payment-intent', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post('/create-payment-intent', paymentLimiter, authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { orderId } = req.body;
     const result = await paymentService.createPaymentIntent(orderId, req.user!.userId);
@@ -15,10 +16,10 @@ router.post('/create-payment-intent', authenticate, async (req: AuthRequest, res
   } catch (error) { next(error); }
 });
 
-router.post('/confirm', authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post('/confirm', paymentLimiter, authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { paymentIntentId } = req.body;
-    const result = await paymentService.confirmPayment(paymentIntentId);
+    const result = await paymentService.confirmPayment(paymentIntentId, req.user!.userId);
     sendSuccess(res, result, 'Payment confirmed');
   } catch (error) { next(error); }
 });
@@ -28,7 +29,7 @@ router.post('/webhook', async (req: Request, res: Response, next: NextFunction) 
     const signature = req.headers['stripe-signature'] as string;
     const rawBody = (req as { rawBody?: string }).rawBody || '';
     const result = await paymentService.handleWebhook(rawBody, signature);
-    res.json(result);
+    sendSuccess(res, result, 'Webhook processed');
   } catch (error) { next(error); }
 });
 

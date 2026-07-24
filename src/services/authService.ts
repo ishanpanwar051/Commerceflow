@@ -103,12 +103,20 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
-    const storedToken = await this.userRepo.findRefreshToken(refreshToken);
-    if (!storedToken || storedToken.isRevoked || storedToken.expiresAt < new Date()) {
+    const prisma = getPrisma();
+
+    const storedToken = await prisma.$transaction(async (tx) => {
+      const token = await tx.refreshToken.findFirst({
+        where: { token: refreshToken, isRevoked: false, expiresAt: { gt: new Date() } },
+      });
+      if (!token) return null;
+      await tx.refreshToken.update({ where: { id: token.id }, data: { isRevoked: true } });
+      return token;
+    });
+
+    if (!storedToken) {
       throw new UnauthorizedError('Invalid or expired refresh token');
     }
-
-    await this.userRepo.revokeRefreshToken(storedToken.id);
 
     const user = await this.userRepo.findById(storedToken.userId);
     if (!user || !user.isActive || user.deletedAt) {
@@ -255,13 +263,9 @@ export class AuthService {
     const redis = getRedis();
     const lockoutKey = `lockout:${email}`;
 
-    const current = await redis.get(lockoutKey);
-    const attempts = current ? parseInt(current, 10) : 0;
-
-    if (attempts === 0) {
-      await redis.setex(lockoutKey, LOCKOUT_DURATION_MS / 1000, '1');
-    } else {
-      await redis.incr(lockoutKey);
+    const attempts = await redis.incr(lockoutKey);
+    if (attempts === 1) {
+      await redis.expire(lockoutKey, Math.ceil(LOCKOUT_DURATION_MS / 1000));
     }
   }
 

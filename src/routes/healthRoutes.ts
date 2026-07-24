@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getPrisma } from '../config/database';
 import { getRedis } from '../config/redis';
-import { config } from '../config';
+
 
 const router = Router();
 const startTime = Date.now();

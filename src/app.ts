@@ -13,13 +13,14 @@ import { swaggerSpec } from './config/swagger';
 import { metricsMiddleware } from './config/metrics';
 import router from './routes';
 
+const allowedCorsOrigins = (process.env.CORS_ORIGIN?.split(',') || [config.frontendUrl]).filter(Boolean);
+
 const app = express();
 
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [config.frontendUrl];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1 || !config.isProd) {
+    if (!origin || allowedCorsOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -28,23 +29,38 @@ app.use(cors({
   credentials: true,
 }));
 app.use(compression());
-app.use(express.json({ limit: '10mb', verify: (req: any, _res, buf) => { req.rawBody = buf.toString(); } }));
+app.use(express.json({
+  limit: '10mb',
+  verify: (req: any, _res, buf) => {
+    if (req.path?.includes('webhook')) {
+      req.rawBody = buf.toString();
+    }
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestIdMiddleware);
 app.use(metricsMiddleware);
 
 app.use(timeout(30000));
 
-app.use(rateLimit({
+const apiLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
   message: { success: false, message: 'Too many requests, please try again later', code: 'RATE_LIMIT_EXCEEDED' },
   standardHeaders: true,
   legacyHeaders: false,
-}));
+});
+
+// Vitest applies its NODE_ENV after some modules have been evaluated. Checking
+// at request time prevents the production in-memory store from leaking into
+// integration tests while retaining rate limiting for every deployed request.
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST) return next();
+  return apiLimiter(req, res, next);
+});
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  logger.info({ req: { method: req.method, url: req.url, requestId: (req as any).requestId } }, 'Incoming request');
+  logger.debug({ req: { method: req.method, url: req.url, requestId: (req as any).requestId } }, 'Incoming request');
   next();
 });
 

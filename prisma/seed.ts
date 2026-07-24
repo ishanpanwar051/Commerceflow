@@ -258,6 +258,18 @@ async function main() {
     create: { email: 'customer@example.com', password: hashedPassword, firstName: 'John', lastName: 'Doe', role: Role.CUSTOMER, isEmailVerified: true, avatar: REVIEWER_AVATARS[1] },
   });
 
+  const seller = await prisma.user.upsert({
+    where: { email: 'seller@example.com' },
+    update: {},
+    create: { email: 'seller@example.com', password: hashedPassword, firstName: 'Jane', lastName: 'Baker', role: Role.SELLER, isEmailVerified: true, avatar: REVIEWER_AVATARS[2] },
+  });
+
+  const deliveryBoy = await prisma.user.upsert({
+    where: { email: 'delivery@example.com' },
+    update: {},
+    create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: Role.DELIVERY_BOY, isEmailVerified: true, avatar: REVIEWER_AVATARS[3] },
+  });
+
   // Create more reviewer users
   const reviewerUsers = await Promise.all(
     FIRST_NAMES.slice(0, 20).map((first, i) =>
@@ -474,6 +486,8 @@ async function main() {
   console.log(`📁 Categories: ${CATEGORIES.length} parent categories, ${CATEGORIES.reduce((s, c) => s + c.subcategories.length, 0)} subcategories`);
   console.log(`👤 Admin: admin@commerceflow.dev / Admin@123`);
   console.log(`👤 Customer: customer@example.com / Admin@123`);
+  console.log(`👤 Seller: seller@example.com / Admin@123`);
+  console.log(`👤 Delivery Boy: delivery@example.com / Admin@123`);
 }
 
 main()

@@ -236,8 +236,8 @@ export class OrderService {
       orderId: order.id,
       orderNumber: order.orderNumber,
       userId: order.userId,
-      email: '',
-      firstName: '',
+      email: order.user?.email ?? '',
+      firstName: order.user?.firstName ?? '',
       total: order.grandTotal,
     }).catch((err) =>
       logger.error({ err }, 'Failed to enqueue order confirmation job'),
@@ -271,10 +271,14 @@ export class OrderService {
   async cancelOrder(userId: string, orderId: string, reason?: string) {
     const prisma = getPrisma();
 
-    return prisma.$transaction(async (tx) => {
+    let wasPaid = false;
+    let completedPaymentId: string | null = null;
+    let completedPaymentStripeId: string | null = null;
+
+    const result = await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
-        include: { items: true },
+        include: { items: true, payments: true },
       });
 
       if (!order) throw new NotFoundError('Order');
@@ -282,6 +286,15 @@ export class OrderService {
 
       if (!['PENDING', 'CONFIRMED'].includes(order.status)) {
         throw new BadRequestError('Order cannot be cancelled');
+      }
+
+      if (order.status === 'CONFIRMED') {
+        wasPaid = true;
+        const completedPayment = order.payments.find((p) => p.status === 'COMPLETED');
+        if (completedPayment) {
+          completedPaymentId = completedPayment.id;
+          completedPaymentStripeId = completedPayment.stripePaymentId;
+        }
       }
 
       const productIds = order.items.map((item) => item.productId);
@@ -307,6 +320,31 @@ export class OrderService {
         },
       });
     });
+
+    if (wasPaid && completedPaymentStripeId) {
+      try {
+        const stripe = require('stripe')(config.stripe.secretKey);
+        await stripe.refunds.create({
+          payment_intent: completedPaymentStripeId,
+        });
+        if (completedPaymentId) {
+          await prisma.payment.update({
+            where: { id: completedPaymentId },
+            data: { status: 'REFUNDED' },
+          });
+        }
+        logger.info({ orderId, paymentId: completedPaymentId }, 'Refund processed for cancelled order');
+      } catch (err) {
+        logger.error({ orderId, err }, 'Refund failed for cancelled order — manual review required');
+        throw new BadRequestError('Order cancelled but refund could not be processed. Please contact support.');
+      }
+    }
+
+    invalidateCache('products:*').catch((err) =>
+      logger.error({ err }, 'Cache invalidation failed after order cancellation'),
+    );
+
+    return result;
   }
 
   async updateOrderStatus(
@@ -323,7 +361,7 @@ export class OrderService {
 
     const prisma = getPrisma();
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: { items: true },
@@ -359,7 +397,6 @@ export class OrderService {
       };
       if (newStatus === 'DELIVERED') updateData.deliveredAt = new Date();
       if (newStatus === 'CANCELLED') updateData.cancelledAt = new Date();
-      if (newStatus === 'CONFIRMED') updateData.paidAt = new Date();
 
       return tx.order.update({
         where: { id: orderId },
@@ -371,6 +408,15 @@ export class OrderService {
         },
       });
     });
+
+    const fulfillmentStatuses = ['SHIPPED', 'DELIVERED'];
+    if (fulfillmentStatuses.includes(newStatus)) {
+      invalidateCache('products:*').catch((err) =>
+        logger.error({ err }, 'Cache invalidation failed after order status update'),
+      );
+    }
+
+    return result;
   }
 
   async getAllOrders(page = 1, limit = 10, status?: string) {

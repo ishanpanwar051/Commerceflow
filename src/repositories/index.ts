@@ -129,7 +129,7 @@ export class CouponRepository {
   private prisma = getPrisma();
 
   async findByCode(code: string) {
-    return this.prisma.coupon.findUnique({ where: { code } });
+    return this.prisma.coupon.findFirst({ where: { code, deletedAt: null } });
   }
 
   async create(data: Prisma.CouponCreateInput) {
@@ -140,13 +140,21 @@ export class CouponRepository {
     return this.prisma.coupon.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } });
   }
 
-  async findAll() {
-    return this.prisma.coupon.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'desc' } });
+  async findAll(skip = 0, take = 50) {
+    return this.prisma.coupon.findMany({ where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, skip, take });
+  }
+
+  async countAll() {
+    return this.prisma.coupon.count({ where: { deletedAt: null } });
   }
 }
 
 export class ReviewRepository {
   private prisma = getPrisma();
+
+  async findById(id: string) {
+    return this.prisma.review.findUnique({ where: { id } });
+  }
 
   async findByProduct(productId: string, skip = 0, take = 10) {
     return this.prisma.review.findMany({
