@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import Stripe from 'stripe';
 import { OrderRepository, CouponRepository } from '../repositories';
 import { UserRepository } from '../repositories';
 import { InventoryRepository } from '../repositories/inventoryRepository';
@@ -6,6 +7,7 @@ import { NotFoundError, BadRequestError } from '../utils/errors';
 import { generateOrderNumber, calculateTax, calculateShipping } from '../utils/helpers';
 import { logger } from '../config/logger';
 import { getPrisma } from '../config/database';
+import { config } from '../config';
 import { addJob } from '../workers/queue';
 import { invalidateCache } from '../middleware/cache';
 
@@ -67,6 +69,18 @@ export class OrderService {
 
       if (!cart || cart.items.length === 0) {
         throw new BadRequestError('Cart is empty');
+      }
+
+      // Validate that the shipping address belongs to the current user
+      const shippingAddress = await tx.address.findUnique({
+        where: { id: data.shippingAddressId },
+        select: { userId: true, deletedAt: true },
+      });
+      if (!shippingAddress) {
+        throw new BadRequestError('Shipping address not found');
+      }
+      if (shippingAddress.deletedAt || shippingAddress.userId !== userId) {
+        throw new BadRequestError('Invalid shipping address');
       }
 
       for (const item of cart.items) {
@@ -228,7 +242,7 @@ export class OrderService {
       return order;
     });
 
-    invalidateCache('products:*').catch((err) =>
+    invalidateCache('/api/v1/products*').catch((err) =>
       logger.error({ err }, 'Cache invalidation failed after checkout'),
     );
 
@@ -323,11 +337,12 @@ export class OrderService {
 
     if (wasPaid && completedPaymentStripeId) {
       try {
-        const stripe = require('stripe')(config.stripe.secretKey);
+        const stripe = new Stripe(config.stripe.secretKey!, { apiVersion: '2025-02-24.acacia' });
         await stripe.refunds.create({
           payment_intent: completedPaymentStripeId,
         });
         if (completedPaymentId) {
+          const prisma = getPrisma();
           await prisma.payment.update({
             where: { id: completedPaymentId },
             data: { status: 'REFUNDED' },
@@ -340,7 +355,8 @@ export class OrderService {
       }
     }
 
-    invalidateCache('products:*').catch((err) =>
+    // Use a broader cache pattern to clear all product-related caches
+    invalidateCache('/api/v1/products*').catch((err) =>
       logger.error({ err }, 'Cache invalidation failed after order cancellation'),
     );
 
@@ -393,7 +409,7 @@ export class OrderService {
       }
 
       const updateData: Prisma.OrderUpdateInput = {
-        status: newStatus as Prisma.EnumOrderStatusFieldUpdateOperationsInput['set'],
+        status: newStatus,
       };
       if (newStatus === 'DELIVERED') updateData.deliveredAt = new Date();
       if (newStatus === 'CANCELLED') updateData.cancelledAt = new Date();
@@ -411,7 +427,7 @@ export class OrderService {
 
     const fulfillmentStatuses = ['SHIPPED', 'DELIVERED'];
     if (fulfillmentStatuses.includes(newStatus)) {
-      invalidateCache('products:*').catch((err) =>
+      invalidateCache('/api/v1/products*').catch((err) =>
         logger.error({ err }, 'Cache invalidation failed after order status update'),
       );
     }

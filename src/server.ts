@@ -3,8 +3,9 @@ import { config } from './config';
 import { logger } from './config/logger';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { connectRedis, disconnectRedis } from './config/redis';
+import http from 'http';
 
-let server: any;
+let server: http.Server | undefined;
 
 async function start() {
   await connectDatabase();
@@ -20,7 +21,7 @@ async function shutdown(signal: string) {
 
   if (server) {
     await new Promise<void>((resolve) => {
-      server.close(async () => {
+      server!.close(async () => {
         logger.info('HTTP server closed');
         await disconnectDatabase();
         await disconnectRedis();

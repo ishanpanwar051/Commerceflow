@@ -25,15 +25,15 @@ const navLinks = [
 
 const categoryLinks = [
   { name: 'Electronics', slug: 'electronics', icon: '🔌' },
-  { name: 'Fashion', slug: 'fashion', icon: '👗' },
-  { name: 'Mobiles', slug: 'mobiles', icon: '📱' },
-  { name: 'Laptops', slug: 'laptops', icon: '💻' },
-  { name: 'Gaming', slug: 'gaming', icon: '🎮' },
-  { name: 'Accessories', slug: 'accessories', icon: '⌚' },
-  { name: 'Home', slug: 'home', icon: '🏠' },
+  { name: 'Fashion Men', slug: 'fashion-men', icon: '👔' },
+  { name: 'Fashion Women', slug: 'fashion-women', icon: '👗' },
+  { name: 'Home Decor', slug: 'home-decor', icon: '🏠' },
   { name: 'Beauty', slug: 'beauty', icon: '💄' },
   { name: 'Sports', slug: 'sports', icon: '⚽' },
   { name: 'Books', slug: 'books', icon: '📚' },
+  { name: 'Kids', slug: 'kids', icon: '🧸' },
+  { name: 'Furniture', slug: 'furniture', icon: '🛋️' },
+  { name: 'Automotive', slug: 'automotive', icon: '🚗' },
 ];
 
 export function Navbar() {

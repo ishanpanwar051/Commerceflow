@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { getProductImages } from './product-images';
@@ -249,25 +249,25 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { email: 'admin@commerceflow.dev' },
     update: {},
-    create: { email: 'admin@commerceflow.dev', password: hashedPassword, firstName: 'Admin', lastName: 'User', role: Role.ADMIN, isEmailVerified: true, avatar: REVIEWER_AVATARS[0] },
+    create: { email: 'admin@commerceflow.dev', password: hashedPassword, firstName: 'Admin', lastName: 'User', role: 'ADMIN', isEmailVerified: true, avatar: REVIEWER_AVATARS[0] },
   });
 
   const customer = await prisma.user.upsert({
     where: { email: 'customer@example.com' },
     update: {},
-    create: { email: 'customer@example.com', password: hashedPassword, firstName: 'John', lastName: 'Doe', role: Role.CUSTOMER, isEmailVerified: true, avatar: REVIEWER_AVATARS[1] },
+    create: { email: 'customer@example.com', password: hashedPassword, firstName: 'John', lastName: 'Doe', role: 'CUSTOMER', isEmailVerified: true, avatar: REVIEWER_AVATARS[1] },
   });
 
   const seller = await prisma.user.upsert({
     where: { email: 'seller@example.com' },
     update: {},
-    create: { email: 'seller@example.com', password: hashedPassword, firstName: 'Jane', lastName: 'Baker', role: Role.SELLER, isEmailVerified: true, avatar: REVIEWER_AVATARS[2] },
+    create: { email: 'seller@example.com', password: hashedPassword, firstName: 'Jane', lastName: 'Baker', role: 'SELLER', isEmailVerified: true, avatar: REVIEWER_AVATARS[2] },
   });
 
   const deliveryBoy = await prisma.user.upsert({
     where: { email: 'delivery@example.com' },
     update: {},
-    create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: Role.DELIVERY_BOY, isEmailVerified: true, avatar: REVIEWER_AVATARS[3] },
+    create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: 'DELIVERY_BOY', isEmailVerified: true, avatar: REVIEWER_AVATARS[3] },
   });
 
   // Create more reviewer users
@@ -278,7 +278,7 @@ async function main() {
         update: {},
       create: {
         email: `reviewer${i}@example.com`, password: hashedPassword,
-        firstName: first, lastName: LAST_NAMES[i], role: Role.CUSTOMER,
+        firstName: first, lastName: LAST_NAMES[i], role: 'CUSTOMER',
           isEmailVerified: true, avatar: REVIEWER_AVATARS[i],
         },
       })
@@ -393,10 +393,10 @@ async function main() {
         cashOnDelivery: Math.random() > 0.3,
         emiAvailable: Math.random() > 0.4,
         freeDelivery: Math.random() > 0.3,
-        specifications: p.specs,
-        keyFeatures: p.features,
-        whatsInTheBox: p.box,
-        tags: [p.subcategory, p.brand, item.categorySlug, ...(isFeatured ? ['featured'] : []), ...(isBestSeller ? ['best-seller'] : []), ...(isNewArrival ? ['new-arrival'] : [])],
+        specifications: JSON.stringify(p.specs),
+        keyFeatures: JSON.stringify(p.features),
+        whatsInTheBox: JSON.stringify(p.box),
+        tags: JSON.stringify([p.subcategory, p.brand, item.categorySlug, ...(isFeatured ? ['featured'] : []), ...(isBestSeller ? ['best-seller'] : []), ...(isNewArrival ? ['new-arrival'] : [])]),
         videoUrl: Math.random() > 0.8 ? `https://www.youtube.com/watch?v=example${productIndex}` : null,
         isFeatured,
         isNewArrival,

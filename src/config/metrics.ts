@@ -1,4 +1,5 @@
 import client from 'prom-client';
+import { Request, Response, NextFunction } from 'express';
 
 import { getRedis, isRedisAvailable } from './redis';
 import { getPrisma } from './database';
@@ -42,7 +43,7 @@ export function trackRequest(method: string, route: string, statusCode: number, 
   httpRequestsTotal.inc({ method, route, status_code: statusCode.toString() });
 }
 
-export async function metricsMiddleware(req: any, res: any, next: any) {
+export function metricsMiddleware(req: Request, res: Response, next: NextFunction): void {
   const start = Date.now();
   res.on('finish', () => {
     const duration = (Date.now() - start) / 1000;

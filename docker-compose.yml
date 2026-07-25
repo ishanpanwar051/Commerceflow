@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: commerceflow
-      POSTGRES_PASSWORD: commerceflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: commerceflow_dev
     ports:
-      - "5435:5432"
+      - "5432:5432"
     volumes:
       - postgres_data_v2:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U commerceflow -d commerceflow_dev"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d commerceflow_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,7 +20,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6382:6379"
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -40,7 +40,7 @@ services:
       - .env
     environment:
       # Docker-specific overrides (service names, not localhost)
-      - DATABASE_URL=postgresql://commerceflow:commerceflow@postgres:5432/commerceflow_dev
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/commerceflow_dev
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:

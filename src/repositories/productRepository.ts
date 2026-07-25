@@ -66,11 +66,11 @@ export class ProductRepository {
       isActive: true,
       ...(params.search && {
         OR: [
-          { name: { contains: params.search, mode: 'insensitive' } },
-          { description: { contains: params.search, mode: 'insensitive' } },
-          { brand: { contains: params.search, mode: 'insensitive' } },
-          { sku: { contains: params.search, mode: 'insensitive' } },
-          { tags: { path: ['$'], string_contains: params.search } },
+          { name: { contains: params.search } },
+          { description: { contains: params.search } },
+          { brand: { contains: params.search } },
+          { sku: { contains: params.search } },
+          { tags: { contains: params.search } },
         ],
       }),
       ...(params.brand && { brand: { in: params.brand.split(',') } }),
@@ -144,10 +144,10 @@ export class ProductRepository {
       isActive: true,
       ...(params.search && {
         OR: [
-          { name: { contains: params.search, mode: 'insensitive' } },
-          { description: { contains: params.search, mode: 'insensitive' } },
-          { brand: { contains: params.search, mode: 'insensitive' } },
-          { sku: { contains: params.search, mode: 'insensitive' } },
+          { name: { contains: params.search } },
+          { description: { contains: params.search } },
+          { brand: { contains: params.search } },
+          { sku: { contains: params.search } },
         ],
       }),
       ...(params.brand && { brand: { in: params.brand.split(',') } }),

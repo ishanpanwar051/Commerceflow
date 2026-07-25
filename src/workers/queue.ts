@@ -79,15 +79,20 @@ export async function addJob(name: string, data: Record<string, unknown>, option
     ...(options?.priority && { priority: options.priority }),
   });
 
-  getPrisma().jobRecord.create({
-    data: {
-      jobId: job.id || customJobId,
-      name,
-      status: 'QUEUED',
-      data: data as any,
-      maxAttempts: 3,
-    },
-  }).catch((err) => logger.error({ err }, 'Failed to save job record'));
+  // Persist job record; do not fail the enqueue if the DB write fails
+  try {
+    await getPrisma().jobRecord.create({
+      data: {
+        jobId: job.id || customJobId,
+        name,
+        status: 'QUEUED',
+        data: data as any,
+        maxAttempts: 3,
+      },
+    });
+  } catch (err) {
+    logger.error({ err, jobId: job.id || customJobId, name }, 'Failed to save job record');
+  }
 
   return job;
 }

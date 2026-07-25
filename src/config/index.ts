@@ -7,6 +7,9 @@ dotenv.config({ path: path.resolve(__dirname, `../../env/${envFile}`) });
 
 dotenv.config({ path: path.resolve(__dirname, '../../env/.env.local'), override: true });
 
+// Also try loading root .env as fallback
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'staging', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
@@ -47,7 +50,12 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  // Logger may not be initialized yet, but we need structured output
+  console.error(JSON.stringify({
+    level: 'fatal',
+    msg: 'Invalid environment variables',
+    errors: parsed.error.flatten().fieldErrors,
+  }));
   process.exit(1);
 }
 

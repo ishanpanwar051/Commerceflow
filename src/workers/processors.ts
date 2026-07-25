@@ -137,5 +137,7 @@ async function saveJobResult(jobId: string, status: 'COMPLETED' | 'FAILED', erro
       update: data,
       create: { jobId, name: 'unknown', status, maxAttempts: 3, data: {} },
     });
-  } catch {}
+  } catch (err) {
+    logger.error({ err, jobId, status }, 'Failed to save job result');
+  }
 }

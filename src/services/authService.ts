@@ -278,7 +278,7 @@ export class AuthService {
 
   private generateTokens(payload: JwtPayload) {
     const accessToken = jwt.sign(payload, config.jwt.accessSecret, {
-      expiresIn: config.jwt.accessExpiresIn as any,
+      expiresIn: config.jwt.accessExpiresIn,
     });
 
     const refreshToken = uuidv4();
@@ -287,8 +287,23 @@ export class AuthService {
   }
 
   private async saveRefreshToken(userId: string, token: string) {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const msMatch = config.jwt.refreshExpiresIn.match(/^(\d+)([smhd])$/);
+    let expiresAt: Date;
+    if (msMatch) {
+      const num = parseInt(msMatch[1], 10);
+      const unit = msMatch[2];
+      expiresAt = new Date();
+      switch (unit) {
+        case 's': expiresAt.setSeconds(expiresAt.getSeconds() + num); break;
+        case 'm': expiresAt.setMinutes(expiresAt.getMinutes() + num); break;
+        case 'h': expiresAt.setHours(expiresAt.getHours() + num); break;
+        case 'd': expiresAt.setDate(expiresAt.getDate() + num); break;
+        default: expiresAt.setDate(expiresAt.getDate() + 7);
+      }
+    } else {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+    }
 
     await this.userRepo.createRefreshToken({
       token,

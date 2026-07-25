@@ -12,6 +12,7 @@ import { timeout } from './middleware/timeout';
 import { swaggerSpec } from './config/swagger';
 import { metricsMiddleware } from './config/metrics';
 import router from './routes';
+import { AuthRequest } from './types';
 
 const allowedCorsOrigins = (process.env.CORS_ORIGIN?.split(',') || [config.frontendUrl]).filter(Boolean);
 
@@ -20,7 +21,8 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedCorsOrigins.indexOf(origin) !== -1) {
+    // Allow requests with no origin (server-to-server, curl, etc.)
+    if (!origin || allowedCorsOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -60,7 +62,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  logger.debug({ req: { method: req.method, url: req.url, requestId: (req as any).requestId } }, 'Incoming request');
+  logger.debug({ req: { method: req.method, url: req.url, requestId: (req as AuthRequest).requestId } }, 'Incoming request');
   next();
 });
 

@@ -49,7 +49,7 @@ export class OrderRepository {
 
   async findAll(skip = 0, take = 10, status?: string) {
     const where: Prisma.OrderWhereInput = { deletedAt: null };
-    if (status) where.status = status as any;
+    if (status) where.status = status;
     return this.prisma.order.findMany({
       where,
       include: orderListInclude,
@@ -61,7 +61,7 @@ export class OrderRepository {
 
   async countAll(status?: string) {
     const where: Prisma.OrderWhereInput = { deletedAt: null };
-    if (status) where.status = status as any;
+    if (status) where.status = status;
     return this.prisma.order.count({ where });
   }
 

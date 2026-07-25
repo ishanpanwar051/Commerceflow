@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { JwtPayload, AuthRequest } from '../types';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
-import { Role } from '@prisma/client';
+type Role = 'ADMIN' | 'CUSTOMER' | 'SELLER' | 'DELIVERY_BOY';
 
 export function authenticate(req: AuthRequest, _res: Response, next: NextFunction): void {
   try {

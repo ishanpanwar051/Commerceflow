@@ -1,3 +1,4 @@
+import Stripe from 'stripe';
 import { config } from '../config';
 import { getPrisma } from '../config/database';
 import { logger } from '../config/logger';
@@ -6,10 +7,10 @@ import { addJob } from '../workers/queue';
 
 const WEBHOOK_EVENT_TTL = 24 * 60 * 60 * 1000;
 
-let stripeInstance: any = null;
-function getStripe() {
+let stripeInstance: Stripe | null = null;
+function getStripe(): Stripe | null {
   if (!stripeInstance && config.stripe.secretKey) {
-    stripeInstance = require('stripe')(config.stripe.secretKey);
+    stripeInstance = new Stripe(config.stripe.secretKey, { apiVersion: '2025-02-24.acacia' });
   }
   return stripeInstance;
 }
@@ -59,11 +60,11 @@ export class PaymentService {
           currency: 'usd',
           status: 'PENDING',
           clientSecret: paymentIntent.client_secret,
-          idempotencyKey: paymentIntent.id,
+          idempotencyKey,
         },
       });
-    } catch (err: any) {
-      if (err?.code === 'P2002') {
+    } catch (err: unknown) {
+      if (err instanceof Error && 'code' in err && (err as any).code === 'P2002') {
         const existing = await prisma.payment.findFirst({
           where: { orderId, status: { not: 'FAILED' } },
         });
@@ -168,8 +169,8 @@ export class PaymentService {
           expiresAt: new Date(Date.now() + WEBHOOK_EVENT_TTL),
         },
       });
-    } catch (err: any) {
-      if (err?.code === 'P2002') {
+    } catch (err: unknown) {
+      if (err instanceof Error && 'code' in err && (err as any).code === 'P2002') {
         logger.info({ eventId, eventType: event.type }, 'Duplicate webhook event (concurrent), skipping');
         return { received: true, duplicate: true };
       }

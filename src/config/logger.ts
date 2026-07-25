@@ -10,7 +10,11 @@ export const logger = pino({
     req: (req) => ({
       method: req.method,
       url: req.url,
-      headers: req.headers,
+      headers: {
+        'content-type': req.headers?.['content-type'],
+        'x-request-id': req.headers?.['x-request-id'],
+        'user-agent': req.headers?.['user-agent'],
+      },
     }),
     res: (res) => ({
       statusCode: res.statusCode,

@@ -11,10 +11,16 @@ export function timeout(ms: number = DEFAULT_TIMEOUT) {
           message: 'Request timed out',
           code: 'TIMEOUT',
         });
+        // Abort the underlying connection to stop further processing
+        req.destroy();
       }
     }, ms);
 
     res.on('finish', () => {
+      clearTimeout(timer);
+    });
+
+    res.on('close', () => {
       clearTimeout(timer);
     });
 

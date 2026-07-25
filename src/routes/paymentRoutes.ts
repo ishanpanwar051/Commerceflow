@@ -1,14 +1,23 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth';
 import { paymentLimiter } from '../middleware/rateLimiter';
+import { validate } from '../middleware/validate';
 import { PaymentService } from '../services/paymentService';
 import { sendSuccess } from '../utils/helpers';
 import { AuthRequest } from '../types';
+import { z } from 'zod';
 
 const router = Router();
 const paymentService = new PaymentService();
 
-router.post('/create-payment-intent', paymentLimiter, authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+const createPaymentIntentSchema = z.object({
+  orderId: z.string().uuid('Invalid order ID'),
+});
+const confirmPaymentSchema = z.object({
+  paymentIntentId: z.string().min(1, 'Payment intent ID is required'),
+});
+
+router.post('/create-payment-intent', paymentLimiter, authenticate, validate(createPaymentIntentSchema), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { orderId } = req.body;
     const result = await paymentService.createPaymentIntent(orderId, req.user!.userId);
@@ -16,7 +25,7 @@ router.post('/create-payment-intent', paymentLimiter, authenticate, async (req: 
   } catch (error) { next(error); }
 });
 
-router.post('/confirm', paymentLimiter, authenticate, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.post('/confirm', paymentLimiter, authenticate, validate(confirmPaymentSchema), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { paymentIntentId } = req.body;
     const result = await paymentService.confirmPayment(paymentIntentId, req.user!.userId);

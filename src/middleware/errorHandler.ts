@@ -4,6 +4,7 @@ import { ZodError } from 'zod';
 import { AppError, ValidationError } from '../utils/errors';
 import { logger } from '../config/logger';
 import { config } from '../config';
+import { AuthRequest } from '../types';
 
 interface ErrorResponse {
   success: false;
@@ -18,7 +19,7 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  logger.error({ err, requestId: (req as any).requestId }, 'Error occurred');
+  logger.error({ err, requestId: (req as AuthRequest).requestId }, 'Error occurred');
 
   let statusCode = 500;
   let message = 'Internal server error';
