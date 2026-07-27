@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { OAuth2Client } from 'google-auth-library';
 import { config } from '../config';
 import { getPrisma } from '../config/database';
 import { getRedis, isRedisAvailable } from '../config/redis';
@@ -11,8 +12,12 @@ import { UnauthorizedError, BadRequestError, ConflictError, NotFoundError, TooMa
 import { logger } from '../config/logger';
 import { addJob } from '../workers/queue';
 
+const googleClient = new OAuth2Client();
+
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
+const memoryLockouts = new Map<string, { attempts: number; lockedAt: number }>();
 
 export class AuthService {
   private userRepo: UserRepository;
@@ -76,7 +81,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password!);
     if (!isValidPassword) {
       await this.recordFailedAttempt(normalizedEmail);
       logger.warn({ email: normalizedEmail }, 'Failed login attempt: invalid password');
@@ -103,6 +108,18 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
+    if (isRedisAvailable()) {
+      const redis = getRedis();
+      const refreshRateKey = `refresh_rate:${refreshToken}`;
+      const attempts = await redis.incr(refreshRateKey);
+      if (attempts === 1) {
+        await redis.expire(refreshRateKey, 60);
+      }
+      if (attempts > 10) {
+        throw new TooManyRequestsError('Too many refresh attempts. Please try again later.');
+      }
+    }
+
     const prisma = getPrisma();
 
     const storedToken = await prisma.$transaction(async (tx) => {
@@ -224,11 +241,66 @@ export class AuthService {
     });
   }
 
+  async googleLogin(idToken: string) {
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: config.google.clientId,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedError('Invalid Google token');
+    }
+
+    if (!payload || !payload.email) {
+      throw new UnauthorizedError('Invalid Google token');
+    }
+
+    const { email, given_name, family_name, picture, sub: googleId } = payload;
+
+    let user = await this.userRepo.findByEmail(email.toLowerCase());
+
+    if (user) {
+      if (!user.isActive || user.deletedAt) {
+        throw new UnauthorizedError('Account is disabled');
+      }
+      await this.userRepo.update(user.id, { lastLoginAt: new Date() });
+    } else {
+      user = await this.userRepo.create({
+        email: email.toLowerCase(),
+        password: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12),
+        firstName: given_name || 'User',
+        lastName: family_name || '',
+        avatar: picture || undefined,
+        isEmailVerified: true,
+        provider: 'google',
+        socialId: googleId,
+      });
+      logger.info({ userId: user.id }, 'User registered via Google');
+    }
+
+    const tokens = this.generateTokens({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    await this.saveRefreshToken(user.id, tokens.refreshToken);
+
+    logger.info({ userId: user.id }, 'User logged in via Google');
+
+    return {
+      user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role },
+      ...tokens,
+    };
+  }
+
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundError('User');
 
-    const isValid = await bcrypt.compare(currentPassword, user.password);
+    const isValid = await bcrypt.compare(currentPassword, user.password!);
     if (!isValid) {
       throw new BadRequestError('Current password is incorrect');
     }
@@ -242,38 +314,60 @@ export class AuthService {
   }
 
   private async checkLockout(email: string): Promise<void> {
-    if (!isRedisAvailable()) return;
-
-    const redis = getRedis();
-    const lockoutKey = `lockout:${email}`;
-
-    const attempts = await redis.get(lockoutKey);
-    if (attempts && parseInt(attempts, 10) >= MAX_LOGIN_ATTEMPTS) {
-      const ttl = await redis.ttl(lockoutKey);
-      logger.warn({ email: '[REDACTED]', attempts, ttl }, 'Account locked due to too many failed attempts');
-      throw new TooManyRequestsError(
-        `Account temporarily locked. Try again in ${Math.ceil(ttl / 60)} minutes.`,
-      );
+    if (isRedisAvailable()) {
+      const redis = getRedis();
+      const lockoutKey = `lockout:${email}`;
+      const attempts = await redis.get(lockoutKey);
+      if (attempts && parseInt(attempts, 10) >= MAX_LOGIN_ATTEMPTS) {
+        const ttl = await redis.ttl(lockoutKey);
+        logger.warn({ email: '[REDACTED]', attempts, ttl }, 'Account locked due to too many failed attempts');
+        throw new TooManyRequestsError(`Account temporarily locked. Try again in ${Math.ceil(ttl / 60)} minutes.`);
+      }
+    } else {
+      const entry = memoryLockouts.get(email);
+      if (entry) {
+        if (entry.attempts >= MAX_LOGIN_ATTEMPTS) {
+          const elapsed = Date.now() - entry.lockedAt;
+          if (elapsed < LOCKOUT_DURATION_MS) {
+            const remainingSec = Math.ceil((LOCKOUT_DURATION_MS - elapsed) / 1000);
+            throw new TooManyRequestsError(`Account temporarily locked. Try again in ${Math.ceil(remainingSec / 60)} minutes.`);
+          }
+          memoryLockouts.delete(email);
+        }
+      }
     }
   }
 
   private async recordFailedAttempt(email: string): Promise<void> {
-    if (!isRedisAvailable()) return;
-
-    const redis = getRedis();
-    const lockoutKey = `lockout:${email}`;
-
-    const attempts = await redis.incr(lockoutKey);
-    if (attempts === 1) {
-      await redis.expire(lockoutKey, Math.ceil(LOCKOUT_DURATION_MS / 1000));
+    if (isRedisAvailable()) {
+      const redis = getRedis();
+      const lockoutKey = `lockout:${email}`;
+      const attempts = await redis.incr(lockoutKey);
+      if (attempts === 1) {
+        await redis.expire(lockoutKey, Math.ceil(LOCKOUT_DURATION_MS / 1000));
+      }
+    } else {
+      const entry = memoryLockouts.get(email);
+      if (entry) {
+        const elapsed = Date.now() - entry.lockedAt;
+        if (elapsed >= LOCKOUT_DURATION_MS) {
+          memoryLockouts.set(email, { attempts: 1, lockedAt: Date.now() });
+        } else {
+          entry.attempts += 1;
+        }
+      } else {
+        memoryLockouts.set(email, { attempts: 1, lockedAt: Date.now() });
+      }
     }
   }
 
   private async invalidateLockout(email: string): Promise<void> {
-    if (!isRedisAvailable()) return;
-
-    const redis = getRedis();
-    await redis.del(`lockout:${email}`);
+    if (isRedisAvailable()) {
+      const redis = getRedis();
+      await redis.del(`lockout:${email}`);
+    } else {
+      memoryLockouts.delete(email);
+    }
   }
 
   private generateTokens(payload: JwtPayload) {

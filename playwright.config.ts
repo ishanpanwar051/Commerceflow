@@ -9,7 +9,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: 'list',
-  use: {j
+  use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     headless: false,

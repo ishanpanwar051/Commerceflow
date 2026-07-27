@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(price: number): string {
-  return '₹' + new Intl.NumberFormat('en-IN').format(Math.round(price) / 100);
+  return '₹' + new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.round(price) / 100);
 }
 
 export function formatDate(date: string | Date): string {

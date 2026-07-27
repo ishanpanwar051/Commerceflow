@@ -20,6 +20,12 @@ export class CategoryService {
     return category;
   }
 
+  async getBySlug(slug: string) {
+    const category = await this.repo.findBySlug(slug);
+    if (!category) throw new NotFoundError('Category');
+    return category;
+  }
+
   async create(data: { name: string; description?: string; parentId?: string | null; image?: string }) {
     const category = await this.repo.create({
       name: data.name,
@@ -28,7 +34,7 @@ export class CategoryService {
       ...(data.parentId && { parent: { connect: { id: data.parentId } } }),
       ...(data.image && { image: data.image }),
     });
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
     return category;
   }
 
@@ -46,7 +52,7 @@ export class CategoryService {
     }
 
     const updated = await this.repo.update(id, updateData);
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
     return updated;
   }
 
@@ -54,6 +60,6 @@ export class CategoryService {
     const category = await this.repo.findById(id);
     if (!category) throw new NotFoundError('Category');
     await this.repo.softDelete(id);
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
   }
 }

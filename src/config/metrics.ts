@@ -58,7 +58,9 @@ export async function getMetrics() {
     const prisma = getPrisma();
     const userCount = await prisma.user.count({ where: { isActive: true } });
     activeUsers.set(userCount);
-  } catch {}
+  } catch (err) {
+    logger.warn({ err }, 'Failed to fetch active user count for metrics');
+  }
 
   if (isRedisAvailable()) {
     try {
@@ -66,7 +68,7 @@ export async function getMetrics() {
       const queueNames = new Set<string>();
       let cursor = '0';
       do {
-        const result = await redis.scan(cursor, 'MATCH', 'bull:*:id', 'COUNT', 100);
+        const result = await redis.scan(cursor, 'MATCH', 'bullmq:*:id', 'COUNT', 100);
         cursor = result[0];
         for (const key of result[1]) {
           queueNames.add(key.split(':')[1]);
@@ -74,10 +76,12 @@ export async function getMetrics() {
       } while (cursor !== '0');
 
       for (const name of queueNames) {
-        const count = await redis.llen(`bull:${name}:id`);
+        const count = await redis.llen(`bullmq:${name}:id`);
         queueSize.set({ queue: name }, count);
       }
-    } catch {}
+    } catch (err) {
+      logger.warn({ err }, 'Failed to fetch queue metrics');
+    }
   }
 
   return register.metrics();

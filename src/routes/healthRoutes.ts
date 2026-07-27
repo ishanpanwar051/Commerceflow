@@ -32,7 +32,7 @@ router.get('/ready', async (_req: Request, res: Response) => {
 
   try {
     const redis = getRedis();
-    await redis.ping();
+    await redis.ping('', 2000);
     checks.redis = 'healthy';
   } catch {
     checks.redis = 'unhealthy';

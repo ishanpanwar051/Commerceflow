@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { JwtPayload, AuthRequest } from '../types';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
+import { logger } from '../config/logger';
 type Role = 'ADMIN' | 'CUSTOMER' | 'SELLER' | 'DELIVERY_BOY';
 
 export function authenticate(req: AuthRequest, _res: Response, next: NextFunction): void {
@@ -32,8 +33,8 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
   try {
     const decoded = jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
     req.user = decoded;
-  } catch {
-    // Ignore invalid tokens for optional auth
+  } catch (err) {
+    logger.warn({ err }, 'Optional auth: token verification failed');
   }
   next();
 }

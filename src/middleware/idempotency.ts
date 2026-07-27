@@ -29,11 +29,11 @@ export async function idempotencyMiddleware(
 
   if (existing) {
     if (existing.response) {
-      const response = existing.response as any;
+      const response = typeof existing.response === 'string' ? JSON.parse(existing.response) : existing.response;
       _res.status(existing.statusCode || 200).json(response);
       return;
     }
-    throw new ConflictError('Request with this idempotency key is already processing');
+    return next(new ConflictError('Request with this idempotency key is already processing'));
   }
 
   await prisma.idempotencyRecord.create({
@@ -58,7 +58,7 @@ export async function markIdempotencyComplete(
   const prisma = getPrisma();
   await prisma.idempotencyRecord.update({
     where: { key },
-    data: { statusCode, response: response as any },
+    data: { statusCode, response: JSON.stringify(response) },
   });
 }
 

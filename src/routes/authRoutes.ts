@@ -17,5 +17,6 @@ router.post('/reset-password', forgotPasswordLimiter, validate(resetPasswordSche
 router.post('/verify-email/:token', authLimiter, controller.verifyEmail.bind(controller));
 router.post('/change-password', authenticate, validate(changePasswordSchema), controller.changePassword.bind(controller));
 router.post('/resend-verification', authenticate, controller.resendVerification.bind(controller));
+router.post('/google', controller.googleLogin.bind(controller));
 
 export default router;

@@ -27,20 +27,15 @@ export class InventoryRepository {
 
     const sortedIds = [...productIds].sort();
 
-    const rows = await tx.$queryRaw<LockedInventoryRow[]>(
-      Prisma.sql`
-        SELECT "id", "productId", "stock", "reservedStock", "lowStockThreshold"
-        FROM "inventory"
-        WHERE "productId" IN (${Prisma.join(sortedIds)})
-        ORDER BY "productId" ASC
-        FOR UPDATE
-      `,
-    );
-
-    logger.debug(
-      { productIds: sortedIds, lockedCount: rows.length },
-      'Inventory rows locked for checkout',
-    );
+    const rows: LockedInventoryRow[] = [];
+    for (const pid of sortedIds) {
+      const rowsRaw = await tx.$queryRawUnsafe<LockedInventoryRow[]>(
+        'SELECT id, productId, stock, reservedStock, lowStockThreshold FROM inventory WHERE productId = ? LIMIT 1',
+        pid,
+      );
+      if (rowsRaw.length === 0) throw new BadRequestError(`Inventory not found for product ${pid}`);
+      rows.push(rowsRaw[0]);
+    }
 
     return rows;
   }
@@ -54,28 +49,41 @@ export class InventoryRepository {
       throw new BadRequestError('Quantity must be positive');
     }
 
-    const updated = await tx.$queryRaw<{ stock: number; reservedStock: number }[]>(
-      Prisma.sql`
-        UPDATE "inventory"
-        SET
-          "stock" = "stock" - ${quantity},
-          "reservedStock" = "reservedStock" + ${quantity},
-          "updatedAt" = NOW()
-        WHERE "productId" = ${productId}
-          AND "stock" - "reservedStock" >= ${quantity}
-        RETURNING "stock", "reservedStock"
-      `,
-    );
+    const inventory = await tx.inventory.findUnique({ where: { productId } });
+    if (!inventory) {
+      throw new BadRequestError('Inventory record not found');
+    }
 
-    if (updated.length === 0) {
-      logger.error(
-        { productId, quantity },
-        'Inventory decrement failed: insufficient stock after lock acquisition',
-      );
+    const available = inventory.stock - inventory.reservedStock;
+    if (available < quantity) {
+      logger.error({ productId, quantity, available }, 'Insufficient stock');
       throw new BadRequestError('Insufficient stock for this product');
     }
 
-    return updated[0];
+    const updated = await tx.inventory.update({
+      where: { productId },
+      data: {
+        stock: { decrement: quantity },
+        reservedStock: { increment: quantity },
+      },
+    });
+
+    return { stock: updated.stock, reservedStock: updated.reservedStock };
+  }
+
+  async decrementStockAtomic(
+    tx: TransactionClient,
+    productId: string,
+    quantity: number,
+  ): Promise<boolean> {
+    const result = await tx.$executeRawUnsafe(
+      `UPDATE inventory SET stock = stock - ?, reservedStock = reservedStock + ? WHERE productId = ? AND stock - reservedStock >= ?`,
+      quantity,
+      quantity,
+      productId,
+      quantity,
+    );
+    return result > 0;
   }
 
   async batchDecrement(
@@ -84,27 +92,8 @@ export class InventoryRepository {
   ): Promise<void> {
     if (items.length === 0) return;
 
-    const valueTuples = items.map((item) =>
-      Prisma.sql`(${item.productId}::text, ${item.quantity}::int)`,
-    );
-    const values = Prisma.join(valueTuples, ', ');
-
-    const result = await tx.$executeRaw(
-      Prisma.sql`
-        UPDATE "inventory" i
-        SET
-          "stock" = i."stock" - v.quantity,
-          "reservedStock" = i."reservedStock" + v.quantity,
-          "updatedAt" = NOW()
-        FROM (VALUES ${values}) AS v(product_id, quantity)
-        WHERE i."productId" = v.product_id
-          AND (i."stock" - i."reservedStock") >= v.quantity
-      `,
-    );
-
-    if (result < items.length) {
-      logger.error({ items }, 'Batch inventory decrement: some items failed');
-      throw new BadRequestError('Insufficient stock for one or more products');
+    for (const item of items) {
+      await this.decrementStock(tx, item.productId, item.quantity);
     }
   }
 
@@ -117,26 +106,23 @@ export class InventoryRepository {
       throw new BadRequestError('Quantity must be positive');
     }
 
-    const updated = await tx.$queryRaw<{ stock: number; reservedStock: number }[]>(
-      Prisma.sql`
-        UPDATE "inventory"
-        SET
-          "stock" = "stock" + ${quantity},
-          "reservedStock" = "reservedStock" - ${quantity},
-          "updatedAt" = NOW()
-        WHERE "productId" = ${productId}
-          AND "reservedStock" >= ${quantity}
-        RETURNING "stock", "reservedStock"
-      `,
-    );
+    const inventory = await tx.inventory.findUnique({ where: { productId } });
+    if (!inventory) {
+      throw new BadRequestError('Inventory record not found');
+    }
 
-    if (updated.length === 0) {
-      logger.error(
-        { productId, quantity },
-        'Failed to release inventory reservation: reservedStock may be insufficient',
-      );
+    if (inventory.reservedStock < quantity) {
+      logger.error({ productId, quantity, reservedStock: inventory.reservedStock }, 'Insufficient reserved stock');
       throw new BadRequestError('Failed to release inventory reservation');
     }
+
+    await tx.inventory.update({
+      where: { productId },
+      data: {
+        stock: { increment: quantity },
+        reservedStock: { decrement: quantity },
+      },
+    });
   }
 
   async batchReleaseReservation(
@@ -145,27 +131,8 @@ export class InventoryRepository {
   ): Promise<void> {
     if (items.length === 0) return;
 
-    const valueTuples = items.map((item) =>
-      Prisma.sql`(${item.productId}::text, ${item.quantity}::int)`,
-    );
-    const values = Prisma.join(valueTuples, ', ');
-
-    const result = await tx.$executeRaw(
-      Prisma.sql`
-        UPDATE "inventory" i
-        SET
-          "stock" = i."stock" + v.quantity,
-          "reservedStock" = i."reservedStock" - v.quantity,
-          "updatedAt" = NOW()
-        FROM (VALUES ${values}) AS v(product_id, quantity)
-        WHERE i."productId" = v.product_id
-          AND i."reservedStock" >= v.quantity
-      `,
-    );
-
-    if (result < items.length) {
-      logger.error({ items }, 'Batch inventory release: some items failed');
-      throw new BadRequestError('Batch inventory release failed: reserved stock insufficient for one or more products');
+    for (const item of items) {
+      await this.releaseReservation(tx, item.productId, item.quantity);
     }
   }
 
@@ -178,25 +145,22 @@ export class InventoryRepository {
       throw new BadRequestError('Quantity must be positive');
     }
 
-    const updated = await tx.$queryRaw<{ stock: number; reservedStock: number }[]>(
-      Prisma.sql`
-        UPDATE "inventory"
-        SET
-          "reservedStock" = "reservedStock" - ${quantity},
-          "updatedAt" = NOW()
-        WHERE "productId" = ${productId}
-          AND "reservedStock" >= ${quantity}
-        RETURNING "stock", "reservedStock"
-      `,
-    );
+    const inventory = await tx.inventory.findUnique({ where: { productId } });
+    if (!inventory) {
+      throw new BadRequestError('Inventory record not found');
+    }
 
-    if (updated.length === 0) {
-      logger.error(
-        { productId, quantity },
-        'Failed to fulfill reservation: reservedStock may be insufficient',
-      );
+    if (inventory.reservedStock < quantity) {
+      logger.error({ productId, quantity, reservedStock: inventory.reservedStock }, 'Insufficient reserved stock for fulfillment');
       throw new BadRequestError('Failed to fulfill inventory reservation');
     }
+
+    await tx.inventory.update({
+      where: { productId },
+      data: {
+        reservedStock: { decrement: quantity },
+      },
+    });
   }
 
   async batchFulfillReservation(
@@ -205,26 +169,8 @@ export class InventoryRepository {
   ): Promise<void> {
     if (items.length === 0) return;
 
-    const valueTuples = items.map((item) =>
-      Prisma.sql`(${item.productId}::text, ${item.quantity}::int)`,
-    );
-    const values = Prisma.join(valueTuples, ', ');
-
-    const result = await tx.$executeRaw(
-      Prisma.sql`
-        UPDATE "inventory" i
-        SET
-          "reservedStock" = i."reservedStock" - v.quantity,
-          "updatedAt" = NOW()
-        FROM (VALUES ${values}) AS v(product_id, quantity)
-        WHERE i."productId" = v.product_id
-          AND i."reservedStock" >= v.quantity
-      `,
-    );
-
-    if (result < items.length) {
-      logger.error({ items }, 'Batch inventory fulfill: some items failed');
-      throw new BadRequestError('Batch inventory fulfill failed: reserved stock insufficient for one or more products');
+    for (const item of items) {
+      await this.fulfillReservation(tx, item.productId, item.quantity);
     }
   }
 }

@@ -15,13 +15,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { register as registerUser } from '@/store/slices/userSlice';
 import { toast } from 'sonner';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Must contain an uppercase letter')
     .regex(/[a-z]/, 'Must contain a lowercase letter')
-    .regex(/[0-9]/, 'Must contain a number'),
+    .regex(/[0-9]/, 'Must contain a number')
+    .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
   phone: z.string().optional(),
@@ -98,6 +100,15 @@ export default function RegisterPage() {
               Create Account
             </Button>
           </form>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          <GoogleSignInButton mode="register" />
         </CardContent>
         <CardFooter className="justify-center">
           <p className="text-sm text-muted-foreground">

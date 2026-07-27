@@ -9,7 +9,7 @@ const router = Router();
 const controller = new CategoryController();
 
 router.get('/', cache(60), controller.getAll.bind(controller));
-router.get('/:id', controller.getById.bind(controller));
+router.get('/:idOrSlug', controller.getBySlugOrId.bind(controller));
 
 router.post('/', authenticate, authorize('ADMIN'), validate(categorySchema), controller.create.bind(controller));
 router.patch('/:id', authenticate, authorize('ADMIN'), validate(updateCategorySchema), controller.update.bind(controller));

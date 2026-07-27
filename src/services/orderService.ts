@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client';
-import Stripe from 'stripe';
 import { OrderRepository, CouponRepository } from '../repositories';
 import { UserRepository } from '../repositories';
 import { InventoryRepository } from '../repositories/inventoryRepository';
@@ -10,6 +9,7 @@ import { getPrisma } from '../config/database';
 import { config } from '../config';
 import { addJob } from '../workers/queue';
 import { invalidateCache } from '../middleware/cache';
+import { getStripe } from './paymentService';
 
 type TransactionClient = Prisma.TransactionClient;
 
@@ -123,31 +123,16 @@ export class OrderService {
       let discount = 0;
       let couponId: string | null = null;
       if (data.couponCode) {
-        const lockedCoupon = await tx.$queryRaw<Array<{
-          id: string;
-          code: string;
-          discountType: string;
-          discountValue: number;
-          minOrderAmount: number | null;
-          maxDiscount: number | null;
-          usageLimit: number | null;
-          usedCount: number;
-          isActive: boolean;
-          deletedAt: Date | null;
-          expiresAt: Date | null;
-        }>>(
-          Prisma.sql`
-            SELECT "id", "code", "discountType", "discountValue",
-                   "minOrderAmount", "maxDiscount", "usageLimit", "usedCount",
-                   "isActive", "deletedAt", "expiresAt"
-            FROM "coupons"
-            WHERE "code" = ${data.couponCode}
-            FOR UPDATE
-          `,
-        );
+        const coupon = await tx.coupon.findUnique({
+          where: { code: data.couponCode },
+          select: {
+            id: true, code: true, discountType: true, discountValue: true,
+            minOrderAmount: true, maxDiscount: true, usageLimit: true, usedCount: true,
+            isActive: true, deletedAt: true, expiresAt: true,
+          },
+        });
 
-        if (lockedCoupon.length > 0) {
-          const coupon = lockedCoupon[0];
+        if (coupon) {
           if (!coupon.isActive || coupon.deletedAt) {
             throw new BadRequestError('Coupon is not active');
           }
@@ -337,7 +322,8 @@ export class OrderService {
 
     if (wasPaid && completedPaymentStripeId) {
       try {
-        const stripe = new Stripe(config.stripe.secretKey!, { apiVersion: '2025-02-24.acacia' });
+        const stripe = getStripe();
+        if (!stripe) throw new BadRequestError('Stripe not configured');
         await stripe.refunds.create({
           payment_intent: completedPaymentStripeId,
         });

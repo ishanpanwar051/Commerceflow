@@ -3,6 +3,7 @@ import { UserService } from '../services/userService';
 import { AuthRequest } from '../types';
 import { sendSuccess } from '../utils/helpers';
 import { BadRequestError } from '../utils/errors';
+import { logger } from '../config/logger';
 
 const userService = new UserService();
 
@@ -23,22 +24,35 @@ export class UserController {
 
   async uploadAvatar(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const avatarUrl = req.body.url;
-      if (!avatarUrl) return sendSuccess(res, null, 'No avatar provided');
-      if (typeof avatarUrl !== 'string') {
-        throw new BadRequestError('Avatar URL must be a string');
+      if (!req.file) {
+        throw new BadRequestError('No file uploaded');
       }
-      let parsed: URL;
-      try {
-        parsed = new URL(avatarUrl);
-      } catch {
-        throw new BadRequestError('Invalid avatar URL');
+
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        throw new BadRequestError('Invalid file type. Allowed: JPEG, PNG, WebP, AVIF');
       }
-      if (parsed.protocol !== 'https:') {
-        throw new BadRequestError('Avatar URL must use HTTPS');
+
+      if (req.file.size > 5 * 1024 * 1024) {
+        throw new BadRequestError('File too large. Maximum size is 5MB');
       }
-      const user = await userService.updateAvatar(req.user!.userId, avatarUrl);
-      sendSuccess(res, user, 'Avatar updated successfully');
+
+      const { uploadToCloudinary, deleteFromCloudinary } = await import('../utils/cloudinary');
+      const result = await uploadToCloudinary(req.file.path, 'avatars');
+
+      const user = await userService.updateAvatar(req.user!.userId, result.secure_url);
+
+      if (user.avatar && user.avatar !== result.secure_url) {
+        deleteFromCloudinary(user.avatar).catch(err =>
+          logger.warn({ err }, 'Failed to delete old avatar from Cloudinary'),
+        );
+      }
+
+      // Clean up temp file
+      const fs = await import('fs/promises');
+      fs.unlink(req.file.path).catch(() => {});
+
+      sendSuccess(res, { avatarUrl: result.secure_url }, 'Avatar updated successfully');
     } catch (error) { next(error); }
   }
 

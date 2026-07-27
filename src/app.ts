@@ -18,6 +18,7 @@ const allowedCorsOrigins = (process.env.CORS_ORIGIN?.split(',') || [config.front
 
 const app = express();
 
+app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {

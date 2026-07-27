@@ -34,7 +34,25 @@ export default function TrackOrderPage() {
     setSearched(true);
   };
 
-  const trackingSteps = mockSteps;
+  const getOrderStatusProgress = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      PENDING: 'order-placed',
+      CONFIRMED: 'order-placed',
+      PROCESSING: 'packed',
+      SHIPPED: 'shipped',
+      DELIVERED: 'delivered',
+      CANCELLED: 'cancelled',
+    };
+    return statusMap[status] || 'pending';
+  };
+
+  const trackingSteps = order ? [
+    { icon: PackageCheck, label: 'Order Placed', status: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'completed' : 'pending' },
+    { icon: Package, label: 'Packed', status: ['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
+    { icon: Truck, label: 'Shipped', status: ['SHIPPED', 'DELIVERED'].includes(order.status) ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
+    { icon: MapPin, label: 'Out for Delivery', status: order.status === 'DELIVERED' ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
+    { icon: Check, label: 'Delivered', status: order.status === 'DELIVERED' ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
+  ] : mockSteps;
   const isDemo = !order && !isLoading && searched && !error;
 
   return (
@@ -104,6 +122,7 @@ export default function TrackOrderPage() {
                       <div className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full shrink-0 ${
                         step.status === 'completed' ? 'bg-green-500 text-white' :
                         step.status === 'in-progress' ? 'bg-blue-500 text-white ring-4 ring-blue-500/20' :
+                        step.status === 'cancelled' ? 'bg-red-500 text-white' :
                         'bg-muted text-muted-foreground'
                       }`}>
                         <Icon className="h-4 w-4" />
@@ -147,8 +166,8 @@ export default function TrackOrderPage() {
               </h3>
               {order.items?.map((item: any) => (
                 <div key={item.id} className="flex items-center gap-3 py-2 border-b last:border-0">
-                  {item.product?.images?.[0] && (
-                    <img src={item.product.images[0]} alt={item.product.name} className="h-10 w-10 rounded object-cover" />
+                  {item.product?.images?.[0]?.url && (
+                    <img src={item.product.images[0].url} alt={item.product.name} className="h-10 w-10 rounded object-cover" />
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{item.product?.name || 'Product'}</p>

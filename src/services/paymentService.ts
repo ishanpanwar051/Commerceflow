@@ -108,7 +108,7 @@ export class PaymentService {
       return { status: 'succeeded', payment, duplicate: true };
     }
 
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['charges'] });
 
     if (paymentIntent.status === 'succeeded') {
       await prisma.$transaction(async (tx) => {
@@ -210,8 +210,7 @@ export class PaymentService {
         }
       }
     } catch (err) {
-      await prisma.idempotencyRecord.delete({ where: { key: `stripe:webhook:${eventId}` } })
-        .catch(() => {});
+      logger.error({ err, eventId }, 'Webhook processing failed — idempotency record preserved');
       throw err;
     }
 

@@ -1,21 +1,4 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: commerceflow_dev
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data_v2:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d commerceflow_dev"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -38,22 +21,16 @@ services:
       - "4000:4000"
     env_file:
       - .env
-    environment:
-      # Docker-specific overrides (service names, not localhost)
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/commerceflow_dev
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     command: >
       sh -c "
-        npx prisma migrate deploy 2>/dev/null || npx prisma db push --accept-data-loss &&
-        node dist/server.js
+        npx prisma migrate deploy 2>/dev/null || npx prisma db push && node dist/server.js
       "
+    volumes:
+      - db_data:/app/prisma
 
 volumes:
-  postgres_data_v2:
   redis_data:
+  db_data:

@@ -77,8 +77,8 @@ function ProductsContent() {
       order: sort === 'price-desc' || sort === 'name-desc' || sort === 'rating' || sort === 'popularity' || sort === 'discount' || sort === 'trending' ? 'desc' : 'asc',
       brand: brand || undefined,
       categoryId: categoryId || undefined,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      minPrice: minPrice ? Number(minPrice) * 100 : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) * 100 : undefined,
       minRating: minRating ? Number(minRating) : undefined,
       isFeatured,
       isBestSeller,
@@ -112,7 +112,7 @@ function ProductsContent() {
     if (value) params.set(key, value);
     else params.delete(key);
     params.set('page', '1');
-    router.push(`/products?${params.toString()}`);
+    router.replace(`/products?${params.toString()}`);
   };
 
   const toggleFilter = (key: string, value: string) => {

@@ -1,3 +1,4 @@
+import { getPrisma } from '../config/database';
 import { CartRepository, CouponRepository } from '../repositories';
 import { ProductRepository } from '../repositories';
 import { NotFoundError, BadRequestError } from '../utils/errors';
@@ -23,17 +24,21 @@ export class CartService {
   }
 
   async addItem(userId: string, productId: string, quantity: number) {
-    const product = await this.productRepo.findById(productId);
-    if (!product) throw new NotFoundError('Product');
-    if (!product.isActive || product.deletedAt) throw new BadRequestError('Product is not available');
+    // SQLite + Prisma limitation: interactive transactions not well-supported, wrapping for atomicity
+    const prisma = getPrisma();
+    await prisma.$transaction(async () => {
+      const product = await this.productRepo.findById(productId);
+      if (!product) throw new NotFoundError('Product');
+      if (!product.isActive || product.deletedAt) throw new BadRequestError('Product is not available');
 
-    const inventory = product.inventory;
-    if (inventory && inventory.stock - inventory.reservedStock < quantity) {
-      throw new BadRequestError('Insufficient stock');
-    }
+      const inventory = product.inventory;
+      if (inventory && inventory.stock - inventory.reservedStock < quantity) {
+        throw new BadRequestError('Insufficient stock');
+      }
 
-    const cart = await this.cartRepo.upsert(userId);
-    await this.cartRepo.addItem(cart.id, productId, quantity);
+      const cart = await this.cartRepo.upsert(userId);
+      await this.cartRepo.addItem(cart.id, productId, quantity);
+    });
 
     return this.getCart(userId);
   }

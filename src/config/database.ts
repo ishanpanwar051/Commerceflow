@@ -35,7 +35,7 @@ export async function connectDatabase(): Promise<void> {
     logger.info('Database connected successfully');
   } catch (error) {
     logger.fatal(error, 'Failed to connect to database');
-    process.exit(1);
+    throw new Error('Failed to connect to database');
   }
 }
 

@@ -23,6 +23,7 @@ export async function processEmailJob(job: Job) {
         break;
       case 'payment-confirmation':
         await sendOrderConfirmation(job.data as any);
+        logger.info({ orderNumber: (job.data as any)?.orderNumber }, 'Payment confirmation email sent');
         break;
       case 'welcome-email':
         await sendWelcomeEmail(job.data as any);

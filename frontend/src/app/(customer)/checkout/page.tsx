@@ -95,7 +95,7 @@ function PaymentForm({
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, subtotal, loadCart } = useCart();
+  const { items, subtotal, discount, loadCart } = useCart();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentIntent, setPaymentIntent] = useState<{ clientSecret: string; paymentIntentId: string } | null>(null);
@@ -138,7 +138,7 @@ export default function CheckoutPage() {
 
   const shipping = subtotal >= 49900 ? 0 : 4900;
   const tax = subtotal * 0.18;
-  const total = subtotal + tax + shipping;
+  const total = subtotal - (discount || 0) + tax + shipping;
 
   const onSubmit = async (data: z.infer<typeof checkoutSchema>) => {
     setIsProcessing(true);

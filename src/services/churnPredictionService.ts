@@ -1,7 +1,7 @@
 import { LogisticRegression, FeatureScaler } from '../ml/logisticRegression';
 import { findTopK, ScoredItem } from '../dsa/topK';
 import { getPrisma } from '../config/database';
-import { getRedis } from '../config/redis';
+import { getRedis, isRedisAvailable } from '../config/redis';
 import { logger } from '../config/logger';
 
 interface ChurnFeatures {
@@ -31,10 +31,10 @@ export class ChurnPredictionService {
     topAtRisk: ScoredItem<ChurnResult>[];
     modelStats: { accuracy: number; totalUsers: number; atRiskCount: number };
   }> {
-    const redis = getRedis();
     const cacheKey = 'ml:churn:predictions';
 
-    if (!forceRetrain) {
+    if (!forceRetrain && isRedisAvailable()) {
+      const redis = getRedis();
       const cached = await redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
     }
@@ -52,8 +52,22 @@ export class ChurnPredictionService {
       features: ChurnFeatures;
     }> = [];
 
+    const prisma = getPrisma();
+    const now = new Date();
+
+    const featureRows: number[][] = [];
+    const labels: number[] = [];
+    const rawData: Array<{
+      userId: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      features: ChurnFeatures;
+    }> = [];
+
     let cursor: string | undefined;
     let totalProcessed = 0;
+    const MAX_USERS = 5000;
 
     do {
       const batch = await prisma.user.findMany({
@@ -62,12 +76,14 @@ export class ChurnPredictionService {
           deletedAt: null,
           ...(cursor ? { id: { gt: cursor } } : {}),
         },
-        include: {
-          orders: {
-            select: { createdAt: true, grandTotal: true },
-            orderBy: { createdAt: 'desc' },
-            take: 100,
-          },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          lastLoginAt: true,
+          createdAt: true,
+          _count: { select: { orders: true } },
         },
         orderBy: { id: 'asc' },
         take: BATCH_SIZE,
@@ -80,15 +96,12 @@ export class ChurnPredictionService {
           ? Math.floor((now.getTime() - user.lastLoginAt.getTime()) / (1000 * 60 * 60 * 24))
           : 999;
 
-        const orderCount = user.orders.length;
-        const lastOrder = user.orders[0];
-        const daysSinceLastOrder = lastOrder
-          ? Math.floor((now.getTime() - lastOrder.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        const orderCount = user._count.orders;
+        const daysSinceLastOrder = user.lastLoginAt
+          ? Math.floor((now.getTime() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24))
           : 999;
 
-        const avgOrderValue = orderCount > 0
-          ? Math.round(user.orders.reduce((sum, o) => sum + o.grandTotal, 0) / orderCount)
-          : 0;
+        const avgOrderValue = 0;
 
         const features: ChurnFeatures = {
           daysSinceLastLogin: Math.min(daysSinceLastLogin, 365),
@@ -102,7 +115,6 @@ export class ChurnPredictionService {
         featureRows.push([
           features.daysSinceLastLogin,
           features.orderCount,
-          features.daysSinceLastOrder,
           features.avgOrderValue,
         ]);
         labels.push(isChurned ? 1 : 0);
@@ -117,6 +129,11 @@ export class ChurnPredictionService {
 
       totalProcessed += batch.length;
       cursor = batch[batch.length - 1].id;
+
+      if (totalProcessed >= MAX_USERS) {
+        logger.warn({ totalProcessed, MAX_USERS }, 'Churn prediction: hit user limit, sampling');
+        break;
+      }
     } while (true);
 
     if (featureRows.length === 0) {
@@ -165,7 +182,10 @@ export class ChurnPredictionService {
       modelStats: { accuracy, totalUsers: rawData.length, atRiskCount },
     };
 
-    await redis.setex(cacheKey, CHURN_CACHE_TTL, JSON.stringify(result));
+    if (isRedisAvailable()) {
+      const redis = getRedis();
+      await redis.setex(cacheKey, CHURN_CACHE_TTL, JSON.stringify(result));
+    }
     logger.info({ accuracy, totalUsers: totalProcessed, atRiskCount }, 'Churn prediction completed');
 
     return result;

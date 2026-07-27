@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { getRedis, isRedisAvailable } from '../config/redis';
+import { logger } from '../config/logger';
 import { AuthRequest } from '../types';
 
 const DEFAULT_TTL = 60;
@@ -26,10 +27,8 @@ export function cache(ttlSeconds: number = DEFAULT_TTL) {
       }
 
       // Cache stampede protection: acquire a distributed lock
-      // Only one request regenerates the cache; others wait and retry
       const lockAcquired = await redis.set(lockKey, '1', 'PX', STAMPEDE_LOCK_TTL * 1000, 'NX');
       if (!lockAcquired) {
-        // Another request is regenerating the cache. Wait and retry.
         for (let i = 0; i < STAMPEDE_MAX_RETRIES; i++) {
           await new Promise((resolve) => setTimeout(resolve, STAMPEDE_LOCK_RETRY_DELAY));
           const retryCached = await redis.get(key);
@@ -42,13 +41,21 @@ export function cache(ttlSeconds: number = DEFAULT_TTL) {
       }
 
       const originalJson = res.json.bind(res);
+      let responded = false;
+      const releaseLock = () => redis.del(lockKey).catch(() => {});
+      const cleanup = () => { if (!responded) { responded = true; releaseLock(); } };
+      res.on('close', cleanup);
+      res.on('error', cleanup);
       res.json = function (body: unknown) {
-        redis.setex(key, ttlSeconds, JSON.stringify(body)).catch(() => {});
-        redis.del(lockKey).catch(() => {});
+        if (responded) return this;
+        responded = true;
+        redis.setex(key, ttlSeconds, JSON.stringify(body)).catch((err) => logger.warn({ err }, 'Cache set failed'));
+        releaseLock();
         return originalJson(body);
       };
       next();
-    } catch {
+    } catch (err) {
+      logger.warn({ err, url: req.originalUrl }, 'Cache middleware error');
       next();
     }
   };
@@ -57,12 +64,13 @@ export function cache(ttlSeconds: number = DEFAULT_TTL) {
 export async function invalidateCache(pattern: string): Promise<void> {
   if (!isRedisAvailable()) return;
   const redis = getRedis();
-  const scanPattern = `cache:${pattern}`;
+  // Remove leading 'cache:' if already present, or add it
+  const scanPattern = pattern.startsWith('cache:') ? pattern : `cache:${pattern}`;
   let cursor = '0';
 
   try {
     do {
-      const result = await redis.scan(cursor, 'MATCH', scanPattern, 'COUNT', '100');
+      const result = await redis.scan(cursor, 'MATCH', scanPattern, 'COUNT', 100);
       cursor = result[0];
       const keys = result[1];
       if (keys.length > 0) {
@@ -70,8 +78,6 @@ export async function invalidateCache(pattern: string): Promise<void> {
       }
     } while (cursor !== '0');
   } catch (error) {
-    // Log but don't throw — cache invalidation failure should not break the app
-    const { logger } = await import('../config/logger');
     logger.error({ pattern, error }, 'Cache invalidation failed');
   }
 }

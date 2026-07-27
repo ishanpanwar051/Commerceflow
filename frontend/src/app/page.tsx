@@ -151,7 +151,7 @@ export default function HomePage() {
                       </Button>
                     </Link>
                     <Link href="/categories">
-                      <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 text-base px-8">
+                      <Button size="lg" variant="outline" className="bg-transparent border-white/30 text-white hover:bg-white/10 text-base px-8">
                         Browse Categories
                       </Button>
                     </Link>
@@ -214,8 +214,8 @@ export default function HomePage() {
                 <Link key={cat.slug} href={`/categories/${cat.slug}`}>
                   <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }} className="group relative aspect-[4/5] rounded-2xl overflow-hidden">
                     <Image src={cat.image} alt="" fill className="object-cover group-hover:scale-110 transition-transform duration-500" sizes="(max-width: 768px) 50vw, 20vw" />
-                    <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-40 group-hover:opacity-50 transition-opacity`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-t ${cat.color} opacity-40 group-hover:opacity-50 transition-opacity`} />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <span className="absolute bottom-3 left-3 text-white text-sm font-bold">{cat.name}</span>
                   </motion.div>
                 </Link>
@@ -316,3 +316,4 @@ export default function HomePage() {
     </div>
   );
 }
+// AI_TEST_CHANGE_2026_07_25

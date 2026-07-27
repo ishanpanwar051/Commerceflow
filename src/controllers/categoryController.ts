@@ -19,6 +19,17 @@ export class CategoryController {
     } catch (error) { next(error); }
   }
 
+  async getBySlugOrId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const identifier = req.params.idOrSlug as string;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const category = uuidRegex.test(identifier)
+        ? await categoryService.getById(identifier)
+        : await categoryService.getBySlug(identifier);
+      sendSuccess(res, category, 'Category fetched successfully');
+    } catch (error) { next(error); }
+  }
+
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const category = await categoryService.create(req.body);

@@ -13,13 +13,15 @@ export function isRedisAvailable(): boolean {
 
 export function getRedis(): Redis {
   if (!redis) {
-    redis = new Redis({
+    const redisOptions: any = {
       host: config.redis.host,
       port: config.redis.port,
       family: 4,
       maxRetriesPerRequest: null,
-      enableReadyCheck: false,
+      enableReadyCheck: true,
       lazyConnect: true,
+      keepAlive: 10000,
+      connectTimeout: 10000,
       retryStrategy: (times) => {
         if (times > 10) {
           if (!retryLogged) {
@@ -31,7 +33,20 @@ export function getRedis(): Redis {
         const delay = Math.min(Math.round(Math.random() * 200) + (times * 200), 5000);
         return delay;
       },
-    });
+    };
+
+    if (config.redis.tlsEnabled) {
+      redisOptions.tls = {};
+      if (config.redis.tlsCa) redisOptions.tls.ca = config.redis.tlsCa;
+      if (config.redis.tlsCert) redisOptions.tls.cert = config.redis.tlsCert;
+      if (config.redis.tlsKey) redisOptions.tls.key = config.redis.tlsKey;
+    }
+
+    if (config.redis.password) {
+      redisOptions.password = config.redis.password;
+    }
+
+    redis = new Redis(redisOptions);
 
     redis.on('connect', () => {
       redisAvailable = true;
@@ -76,7 +91,8 @@ export async function disconnectRedis(): Promise<void> {
   if (redis) {
     try {
       await redis.quit();
-    } catch {
+    } catch (err) {
+      logger.warn({ err }, 'Error during Redis quit, forcing disconnect');
       redis.disconnect();
     }
     redis = null;

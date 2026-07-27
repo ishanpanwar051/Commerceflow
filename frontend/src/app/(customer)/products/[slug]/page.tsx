@@ -37,6 +37,7 @@ export default function ProductDetailPage() {
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', slug],
     queryFn: () => productService.getProduct(slug),
+    enabled: !!slug,
   });
 
   const { data: reviewsMeta } = useQuery({
@@ -123,7 +124,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  const discountPercent = product.discountPercent || (product.originalPrice ? Math.round((1 - product.basePrice / product.originalPrice) * 100) : 0);
+  const discountPercent = product.discountPercent ?? (product.originalPrice ? Math.round((1 - product.basePrice / product.originalPrice) * 100) : 0);
 
   return (
     <div className="min-h-screen bg-background">

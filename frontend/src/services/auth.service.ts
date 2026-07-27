@@ -63,6 +63,11 @@ export const authService = {
     return data.data!;
   },
 
+  async googleLogin(idToken: string) {
+    const { data } = await apiClient.post<ApiResponse<LoginResponse>>('/auth/google', { idToken });
+    return data.data!;
+  },
+
   async deleteAccount() {
     await apiClient.delete('/users/account');
   },

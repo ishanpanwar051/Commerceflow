@@ -26,9 +26,13 @@ export function errorHandler(
   let code = 'INTERNAL_ERROR';
   let errors: unknown = undefined;
 
+  if (config.isProd && !(err instanceof AppError)) {
+    message = 'Internal server error';
+  }
+
   if (err instanceof AppError) {
     statusCode = err.statusCode;
-    message = err.message;
+    message = config.isProd && err.statusCode === 500 ? 'Internal server error' : err.message;
     code = err.code;
     if (err instanceof ValidationError) {
       errors = err.fields;
@@ -61,7 +65,7 @@ export function errorHandler(
     statusCode = 422;
     message = 'Invalid data provided';
     code = 'VALIDATION_ERROR';
-  } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+  } else if (err instanceof Error && (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError')) {
     statusCode = 401;
     message = 'Invalid or expired token';
     code = 'UNAUTHORIZED';

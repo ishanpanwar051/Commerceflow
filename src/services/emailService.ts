@@ -7,7 +7,7 @@ let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter(): nodemailer.Transporter {
   if (!transporter) {
-    if (config.isProd && config.smtp.user) {
+    if (config.smtp.user && config.smtp.pass) {
       transporter = nodemailer.createTransport({
         host: config.smtp.host,
         port: config.smtp.port,
@@ -15,6 +15,10 @@ function getTransporter(): nodemailer.Transporter {
         auth: { user: config.smtp.user, pass: config.smtp.pass },
       });
     } else {
+      if (config.isProd) {
+        logger.error('SMTP not configured in production — emails will not be sent');
+        throw new Error('SMTP_USER and SMTP_PASS must be set in production');
+      }
       transporter = nodemailer.createTransport({
         host: 'localhost',
         port: 1025,
@@ -25,10 +29,14 @@ function getTransporter(): nodemailer.Transporter {
   return transporter;
 }
 
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 export async function sendOrderConfirmation(data: { email: string; orderNumber: string; total: number; firstName: string }) {
   const subject = `Order #${data.orderNumber} Confirmed`;
   const html = `
-    <h1>Thank you for your order, ${data.firstName}!</h1>
+    <h1>Thank you for your order, ${escapeHtml(data.firstName)}!</h1>
     <p>Order <strong>#${data.orderNumber}</strong> has been confirmed.</p>
     <p>Total: <strong>$${data.total.toFixed(2)}</strong></p>
     <p>We'll notify you when your order ships.</p>
@@ -39,23 +47,23 @@ export async function sendOrderConfirmation(data: { email: string; orderNumber: 
 
 export async function sendWelcomeEmail(data: { email: string; firstName: string }) {
   const subject = 'Welcome to CommerceFlow!';
-  const html = `<h1>Welcome, ${data.firstName}!</h1><p>Your account has been created successfully.</p>`;
+  const html = `<h1>Welcome, ${escapeHtml(data.firstName)}!</h1><p>Your account has been created successfully.</p>`;
   await sendEmail({ to: data.email, subject, html });
   logger.info({ email: data.email }, 'Welcome email sent');
 }
 
 export async function sendPasswordReset(data: { email: string; token: string; firstName: string }) {
-  const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${data.token}`;
+  const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${encodeURIComponent(data.token)}`;
   const subject = 'Reset Your Password';
-  const html = `<h1>Hi ${data.firstName}</h1><p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`;
+  const html = `<h1>Hi ${escapeHtml(data.firstName)}</h1><p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`;
   await sendEmail({ to: data.email, subject, html });
   logger.info({ email: data.email }, 'Password reset email sent');
 }
 
 export async function sendEmailVerification(data: { email: string; token: string; firstName: string }) {
-  const verificationUrl = `${config.frontendUrl}/auth/verify-email?token=${data.token}`;
+  const verificationUrl = `${config.frontendUrl}/auth/verify-email?token=${encodeURIComponent(data.token)}`;
   const subject = 'Verify Your Email';
-  const html = `<h1>Hi ${data.firstName}</h1><p>Please verify your email address by clicking <a href="${verificationUrl}">here</a>.</p>`;
+  const html = `<h1>Hi ${escapeHtml(data.firstName)}</h1><p>Please verify your email address by clicking <a href="${verificationUrl}">here</a>.</p>`;
   await sendEmail({ to: data.email, subject, html });
   logger.info({ email: data.email }, 'Verification email sent');
 }

@@ -41,11 +41,19 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('uncaughtException', (err) => {
   logger.fatal(err, 'Uncaught exception');
-  shutdown('UNCAUGHT_EXCEPTION');
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
 });
 process.on('unhandledRejection', (reason) => {
   logger.fatal({ reason }, 'Unhandled rejection');
-  shutdown('UNHANDLED_REJECTION');
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
 });
 
 start().catch((err) => {

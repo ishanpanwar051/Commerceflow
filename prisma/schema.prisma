@@ -10,7 +10,7 @@ datasource db {
 model User {
   id              String    @id @default(uuid())
   email           String    @unique
-  password        String
+  password        String?
   firstName       String
   lastName        String
   phone           String?
@@ -24,6 +24,8 @@ model User {
   isActive        Boolean   @default(true)
   passwordChangedAt DateTime?
   deletedAt       DateTime?
+  provider        String    @default("local")
+  socialId        String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -36,6 +38,7 @@ model User {
   refreshTokens RefreshToken[]
 
   @@index([role])
+  @@index([deletedAt])
   @@map("users")
 }
 
@@ -162,6 +165,7 @@ model Product {
   @@index([soldCount])
   @@index([trendingScore])
   @@index([isActive, isFeatured, isBestSeller, isNewArrival, isTopRated])
+  @@index([deletedAt])
   @@map("products")
 }
 
@@ -227,6 +231,7 @@ model WishlistItem {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+  @@index([userId, productId])
   @@index([userId])
   @@index([productId])
   @@map("wishlist_items")
@@ -251,6 +256,7 @@ model Coupon {
   orders Order[]
 
   @@index([expiresAt])
+  @@index([code])
   @@map("coupons")
 }
 
@@ -288,6 +294,7 @@ model Order {
   @@index([status])
   @@index([userId, status])
   @@index([createdAt])
+  @@index([deletedAt])
   @@map("orders")
 }
 
@@ -311,9 +318,9 @@ model OrderItem {
 model Payment {
   id                  String        @id @default(uuid())
   orderId             String
-  order               Order         @relation(fields: [orderId], references: [id])
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   userId              String
-  user                User          @relation(fields: [userId], references: [id])
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   stripePaymentId     String        @unique
   stripeIntentId      String?
   clientSecret        String?

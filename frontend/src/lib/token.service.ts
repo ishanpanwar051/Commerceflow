@@ -2,6 +2,7 @@ let accessToken: string | null = null;
 
 const REFRESH_TOKEN_KEY = 'cf_refresh_token';
 
+// TODO: Use cookies (httpOnly) instead of sessionStorage for refresh token to persist across tab closes and avoid XSS exposure
 function getRefreshToken(): string | null {
   try {
     return sessionStorage.getItem(REFRESH_TOKEN_KEY);

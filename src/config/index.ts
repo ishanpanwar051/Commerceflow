@@ -2,27 +2,33 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { z } from 'zod';
 
+// Precedence (highest to lowest): env/<NODE_ENV>.env > root .env > env/.env.local
 const envFile = `.env.${process.env.NODE_ENV || 'development'}`;
 dotenv.config({ path: path.resolve(__dirname, `../../env/${envFile}`) });
 
-dotenv.config({ path: path.resolve(__dirname, '../../env/.env.local'), override: true });
-
-// Also try loading root .env as fallback
+// Root .env should take precedence over .env.local
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+dotenv.config({ path: path.resolve(__dirname, '../../env/.env.local'), override: false });
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'staging', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
-  HOST: z.string().default('localhost'),
+  HOST: z.string().default('0.0.0.0'),
 
   DATABASE_URL: z.string(),
   DATABASE_POOL_URL: z.string().optional(),
 
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().default(6379),
+  REDIS_PASSWORD: z.string().optional(),
+  REDIS_TLS_ENABLED: z.coerce.boolean().default(false),
+  REDIS_TLS_CA: z.string().optional(),
+  REDIS_TLS_CERT: z.string().optional(),
+  REDIS_TLS_KEY: z.string().optional(),
 
-  JWT_ACCESS_SECRET: z.string().min(16),
-  JWT_REFRESH_SECRET: z.string().min(16),
+  JWT_ACCESS_SECRET: z.string().min(32).regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'JWT secret must contain uppercase, lowercase, and number').refine(v => !v.startsWith('change-this-') && v !== 'your-secret-key-min-32-chars-long!!', 'JWT access secret must not be a default/placeholder value'),
+  JWT_REFRESH_SECRET: z.string().min(32).regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'JWT secret must contain uppercase, lowercase, and number').refine(v => !v.startsWith('change-this-') && v !== 'your-secret-key-min-32-chars-long!!', 'JWT refresh secret must not be a default/placeholder value'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
@@ -39,10 +45,12 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default('noreply@commerceflow.dev'),
 
-  FRONTEND_URL: z.string().default('http://localhost:3000'),
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
 
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
+
+  GOOGLE_CLIENT_ID: z.string().optional(),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
@@ -75,7 +83,14 @@ export const config = {
   redis: {
     host: parsed.data.REDIS_HOST,
     port: parsed.data.REDIS_PORT,
-    url: `redis://${parsed.data.REDIS_HOST}:${parsed.data.REDIS_PORT}`,
+    password: parsed.data.REDIS_PASSWORD,
+    tlsEnabled: parsed.data.REDIS_TLS_ENABLED,
+    tlsCa: parsed.data.REDIS_TLS_CA,
+    tlsCert: parsed.data.REDIS_TLS_CERT,
+    tlsKey: parsed.data.REDIS_TLS_KEY,
+    url: parsed.data.REDIS_PASSWORD
+      ? `redis://:${parsed.data.REDIS_PASSWORD}@${parsed.data.REDIS_HOST}:${parsed.data.REDIS_PORT}`
+      : `redis://${parsed.data.REDIS_HOST}:${parsed.data.REDIS_PORT}`,
   },
 
   jwt: {
@@ -109,6 +124,10 @@ export const config = {
   rateLimit: {
     windowMs: parsed.data.RATE_LIMIT_WINDOW_MS,
     max: parsed.data.RATE_LIMIT_MAX,
+  },
+
+  google: {
+    clientId: parsed.data.GOOGLE_CLIENT_ID,
   },
 
   logging: {

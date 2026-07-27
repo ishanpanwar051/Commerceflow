@@ -8,6 +8,7 @@ import { getPrisma } from '../config/database';
 const connection = {
   host: config.redis.host,
   port: config.redis.port,
+  maxRetriesPerRequest: null,
 };
 
 let emailQueue: Queue | null = null;

@@ -18,33 +18,21 @@ export class OrderController {
       });
 
       let paymentIntent = null;
-      let paymentError: string | null = null;
-      try {
-        paymentIntent = await paymentService.createPaymentIntent(order.id, req.user!.userId);
-      } catch (error) {
-        // Payment intent creation failed, but order is created.
-        // Log the failure and include it in response so the frontend can retry.
-        paymentError = error instanceof Error ? error.message : 'Payment processing failed';
-        logger.error(
-          { orderId: order.id, error: paymentError },
-          'Payment intent creation failed after order creation',
-        );
-      }
 
       if (req.idempotencyKey) {
         await markIdempotencyOrder(req.idempotencyKey, order.id);
       }
 
-      const response = { order, paymentIntent, paymentError };
+      const response = { order, paymentIntent };
       if (req.idempotencyKey) {
-        await markIdempotencyComplete(req.idempotencyKey, paymentError ? 201 : 201, {
+        await markIdempotencyComplete(req.idempotencyKey, 201, {
           success: true,
-          message: paymentError ? 'Order created but payment failed' : 'Checkout successful',
+          message: 'Checkout successful',
           data: response,
         });
       }
 
-      sendSuccess(res, response, paymentError ? 'Order created. Payment pending.' : 'Checkout successful', 201);
+      sendSuccess(res, response, 'Checkout successful', 201);
     } catch (error) { next(error); }
   }
 

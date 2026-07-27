@@ -57,6 +57,20 @@ export const fetchProfile = createAsyncThunk(
   }
 );
 
+export const googleLogin = createAsyncThunk(
+  'user/googleLogin',
+  async (idToken: string, { rejectWithValue }) => {
+    try {
+      const result = await authService.googleLogin(idToken);
+      TokenService.setTokens(result.accessToken, result.refreshToken);
+      return result;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message || 'Google sign-in failed');
+    }
+  }
+);
+
 export const logout = createAsyncThunk(
   'user/logout',
   async () => {
@@ -99,6 +113,16 @@ const userSlice = createSlice({
         state.isAuthenticated = true;
       })
       .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(googleLogin.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user as UserState['user'];
+        state.isAuthenticated = true;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })

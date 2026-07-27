@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { fetchProfile } from '@/store/slices/userSlice';
@@ -14,10 +14,15 @@ export function useAuth(requireAuth = false) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
+  const profileAttempted = useRef(false);
 
   useEffect(() => {
-    if (TokenService.hasTokens() && !isAuthenticated && !isLoading) {
-      dispatch(fetchProfile());
+    if (TokenService.hasTokens() && !isAuthenticated && !isLoading && !profileAttempted.current) {
+      profileAttempted.current = true;
+      dispatch(fetchProfile()).catch(() => {
+        // If profile fetch fails, clear tokens to prevent redirect loops
+        TokenService.clear();
+      });
     }
   }, [dispatch, isAuthenticated, isLoading]);
 

@@ -184,7 +184,7 @@ export class ProductService {
       },
     });
 
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
     return product;
   }
 
@@ -244,7 +244,7 @@ export class ProductService {
       return productUpdate;
     });
 
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
     return updated;
   }
 
@@ -252,7 +252,7 @@ export class ProductService {
     const product = await this.productRepo.findById(id);
     if (!product) throw new NotFoundError('Product');
     await this.productRepo.softDelete(id);
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
   }
 
   async addImage(productId: string, url: string, alt?: string, order = 0) {
@@ -278,6 +278,6 @@ export class ProductService {
 
   async deleteImage(imageId: string) {
     await this.productRepo.deleteImage(imageId);
-    await invalidateCache('products:*');
+    await invalidateCache('/api/v1/products*');
   }
 }

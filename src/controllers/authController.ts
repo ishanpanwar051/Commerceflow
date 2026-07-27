@@ -71,4 +71,12 @@ export class AuthController {
       sendSuccess(res, null, 'Verification email sent');
     } catch (error) { next(error); }
   }
+
+  async googleLogin(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { idToken } = req.body;
+      const result = await authService.googleLogin(idToken);
+      sendSuccess(res, result, 'Google login successful');
+    } catch (error) { next(error); }
+  }
 }
