@@ -22,7 +22,7 @@ export function getRedis(): Redis {
       lazyConnect: true,
       keepAlive: 10000,
       connectTimeout: 10000,
-      retryStrategy: (times) => {
+      retryStrategy: (times: number) => {
         if (times > 10) {
           if (!retryLogged) {
             retryLogged = true;

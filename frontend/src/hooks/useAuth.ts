@@ -1,41 +1,44 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { fetchProfile } from '@/store/slices/userSlice';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchProfile, logout } from '@/store/slices/userSlice';
 import { TokenService } from '@/lib/token.service';
 
-const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
-const authRoutes = ['/login', '/register'];
-
-export function useAuth(requireAuth = false) {
+export function useAuth(options: { required?: boolean; redirectTo?: string } = {}) {
+  const { required = false, redirectTo = '/auth/login' } = options;
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const pathname = usePathname();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
-  const profileAttempted = useRef(false);
 
   useEffect(() => {
-    if (TokenService.hasTokens() && !isAuthenticated && !isLoading && !profileAttempted.current) {
-      profileAttempted.current = true;
-      dispatch(fetchProfile()).catch(() => {
-        // If profile fetch fails, clear tokens to prevent redirect loops
-        TokenService.clear();
-      });
+    // If not loading and tokens exist but no user, fetch profile
+    if (!isLoading && !user && TokenService.hasTokens()) {
+      dispatch(fetchProfile());
     }
-  }, [dispatch, isAuthenticated, isLoading]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (requireAuth && !isAuthenticated && !publicRoutes.includes(pathname)) {
-        router.push('/login');
-      }
-      if (isAuthenticated && authRoutes.includes(pathname)) {
-        router.push('/');
-      }
+    // If auth is required and user is not authenticated after loading, redirect
+    if (required && !isLoading && !isAuthenticated && !TokenService.hasTokens()) {
+      router.push(redirectTo);
     }
-  }, [isAuthenticated, isLoading, pathname, requireAuth, router]);
+  }, [dispatch, router, user, isAuthenticated, isLoading, required, redirectTo]);
 
-  return { user, isAuthenticated, isLoading };
+  const handleLogout = async () => {
+    await dispatch(logout());
+    router.push('/auth/login');
+  };
+
+  return {
+    user,
+    isAuthenticated,
+    isLoading,
+    logout: handleLogout,
+  };
+}
+
+export function useRequireAuth() {
+  return useAuth({ required: true });
+}
+
+export function useOptionalAuth() {
+  return useAuth({ required: false });
 }

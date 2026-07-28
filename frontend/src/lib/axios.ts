@@ -5,16 +5,30 @@ import { TokenService } from './token.service';
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 30000, // Increased to 30s for slower connections
+  withCredentials: false, // Set to true if using httpOnly cookies
 });
 
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const authHeader = TokenService.getAuthorizationHeader();
-  if (authHeader) {
-    config.headers.Authorization = authHeader;
+// Request interceptor: Add auth token to all requests
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const authHeader = TokenService.getAuthorizationHeader();
+    if (authHeader) {
+      config.headers.Authorization = authHeader;
+    }
+    
+    // Log request in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+    }
+    
+    return config;
+  },
+  (error) => {
+    console.error('[API Request Error]', error);
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -33,19 +47,48 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
+// Response interceptor: Handle errors and token refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log response in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, response.status);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[API Error]', {
+        url: originalRequest?.url,
+        status: error.response?.status,
+        message: error.message,
+      });
+    }
+
+    // Handle 401 Unauthorized - attempt token refresh
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      // Skip refresh for auth endpoints
+      if (originalRequest.url?.includes('/auth/login') || 
+          originalRequest.url?.includes('/auth/register') ||
+          originalRequest.url?.includes('/auth/refresh')) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
+        // Queue failed requests while refreshing
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return apiClient(originalRequest);
-        });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
@@ -54,30 +97,48 @@ apiClient.interceptors.response.use(
       const refreshToken = TokenService.getRefreshToken();
       if (!refreshToken) {
         TokenService.clear();
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login?expired=true';
+        }
         return Promise.reject(error);
       }
 
       try {
         const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
-        const newToken = data.data.accessToken;
-        TokenService.setAccessToken(newToken);
-        if (data.data.refreshToken) {
-          TokenService.setTokens(newToken, data.data.refreshToken);
-        }
-        processQueue(null, newToken);
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        const newAccessToken = data.data.accessToken;
+        const newRefreshToken = data.data.refreshToken;
+        
+        // Update tokens
+        TokenService.setTokens(newAccessToken, newRefreshToken);
+        
+        // Process queued requests
+        processQueue(null, newAccessToken);
+        
+        // Retry original request
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
         TokenService.clear();
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login?expired=true';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
+    // Handle network errors
+    if (!error.response) {
+      console.error('[Network Error]', error.message);
+      return Promise.reject({
+        message: 'Network error. Please check your internet connection.',
+        originalError: error,
+      });
+    }
+
+    // Handle other errors
     return Promise.reject(error);
   }
 );

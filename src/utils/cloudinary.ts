@@ -1,14 +1,29 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config';
 import { logger } from '../config/logger';
+import { BadRequestError } from './errors';
 
-cloudinary.config({
-  cloud_name: config.cloudinary.cloudName,
-  api_key: config.cloudinary.apiKey,
-  api_secret: config.cloudinary.apiSecret,
-});
+// Only configure if credentials are available
+if (config.cloudinary.cloudName && config.cloudinary.apiKey && config.cloudinary.apiSecret) {
+  cloudinary.config({
+    cloud_name: config.cloudinary.cloudName,
+    api_key: config.cloudinary.apiKey,
+    api_secret: config.cloudinary.apiSecret,
+  });
+  logger.info('Cloudinary configured successfully');
+} else {
+  logger.warn('Cloudinary credentials not configured - image upload features will be disabled');
+}
+
+export function isCloudinaryConfigured(): boolean {
+  return !!(config.cloudinary.cloudName && config.cloudinary.apiKey && config.cloudinary.apiSecret);
+}
 
 export async function uploadToCloudinary(filePath: string, folder: string): Promise<{ secure_url: string; public_id: string }> {
+  if (!isCloudinaryConfigured()) {
+    throw new BadRequestError('Image upload is not configured. Please contact the administrator.');
+  }
+  
   const result = await cloudinary.uploader.upload(filePath, {
     folder,
     resource_type: 'image',
@@ -18,6 +33,11 @@ export async function uploadToCloudinary(filePath: string, folder: string): Prom
 }
 
 export async function deleteFromCloudinary(imageUrl: string): Promise<void> {
+  if (!isCloudinaryConfigured()) {
+    logger.warn('Cloudinary not configured, skipping image deletion');
+    return;
+  }
+  
   const publicId = extractPublicId(imageUrl);
   if (!publicId) return;
   try {

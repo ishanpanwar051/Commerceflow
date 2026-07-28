@@ -8,24 +8,27 @@ export class ProductController {
   async getProducts(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query as Record<string, unknown>;
+      const page = Number(query.page) || 1;
+      const limit = Number(query.limit) || 20;
+      
       const { products, total } = await productService.getProducts({
-        page: (query.page as number) || 1,
-        limit: (query.limit as number) || 20,
+        page,
+        limit,
         sort: query.sort as string,
         order: query.order as 'asc' | 'desc',
         search: query.search as string,
         brand: query.brand as string,
         categoryId: query.categoryId as string,
-        minPrice: query.minPrice as number | undefined,
-        maxPrice: query.maxPrice as number | undefined,
-        minRating: query.minRating as number | undefined,
-        isFeatured: query.isFeatured as boolean | undefined,
-        isBestSeller: query.isBestSeller as boolean | undefined,
-        isNewArrival: query.isNewArrival as boolean | undefined,
-        isTopRated: query.isTopRated as boolean | undefined,
-        freeDelivery: query.freeDelivery as boolean | undefined,
-        cashOnDelivery: query.cashOnDelivery as boolean | undefined,
-        emiAvailable: query.emiAvailable as boolean | undefined,
+        minPrice: query.minPrice ? Number(query.minPrice) : undefined,
+        maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
+        minRating: query.minRating ? Number(query.minRating) : undefined,
+        isFeatured: query.isFeatured === 'true',
+        isBestSeller: query.isBestSeller === 'true',
+        isNewArrival: query.isNewArrival === 'true',
+        isTopRated: query.isTopRated === 'true',
+        freeDelivery: query.freeDelivery === 'true',
+        cashOnDelivery: query.cashOnDelivery === 'true',
+        emiAvailable: query.emiAvailable === 'true',
       });
       sendSuccess(res, products, 'Products fetched successfully', 200, calculatePaginationMeta(total, page, limit));
     } catch (error) { next(error); }

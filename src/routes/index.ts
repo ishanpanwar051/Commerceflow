@@ -59,11 +59,11 @@ adminRouter.get('/dashboard', async (_req: AuthRequest, res: Response, next: Nex
 adminRouter.get('/users', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const prisma = getPrisma();
-    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 10));
+    const page = Math.max(1, parseInt(Array.isArray(req.query.page) ? req.query.page[0] : (req.query.page as string || '1'), 10));
+    const limit = Math.min(100, Math.max(1, parseInt(Array.isArray(req.query.limit) ? req.query.limit[0] : (req.query.limit as string || '10'), 10)));
     const skip = (page - 1) * limit;
     const where: any = { deletedAt: null };
-    const search = req.query.search as string;
+    const search = Array.isArray(req.query.search) ? req.query.search[0] : (req.query.search as string);
     if (search) where.OR = [{ email: { contains: search } }, { firstName: { contains: search } }, { lastName: { contains: search } }];
     const [users, total] = await Promise.all([
       prisma.user.findMany({ where, select: { id: true, email: true, firstName: true, lastName: true, role: true, isActive: true, isEmailVerified: true, createdAt: true }, orderBy: { createdAt: 'desc' }, skip, take: limit }),
@@ -96,8 +96,8 @@ adminRouter.patch('/users/:userId/role', async (req: AuthRequest, res: Response,
 adminRouter.get('/reviews', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const prisma = getPrisma();
-    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 10));
+    const page = Math.max(1, parseInt(Array.isArray(req.query.page) ? req.query.page[0] : (req.query.page as string || '1'), 10));
+    const limit = Math.min(100, Math.max(1, parseInt(Array.isArray(req.query.limit) ? req.query.limit[0] : (req.query.limit as string || '10'), 10)));
     const [reviews, total] = await Promise.all([
       prisma.review.findMany({ where: { deletedAt: null }, include: { user: { select: { id: true, firstName: true, lastName: true, email: true } }, product: { select: { id: true, name: true, slug: true } } }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
       prisma.review.count({ where: { deletedAt: null } }),

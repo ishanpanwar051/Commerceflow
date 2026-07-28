@@ -52,19 +52,6 @@ export class ChurnPredictionService {
       features: ChurnFeatures;
     }> = [];
 
-    const prisma = getPrisma();
-    const now = new Date();
-
-    const featureRows: number[][] = [];
-    const labels: number[] = [];
-    const rawData: Array<{
-      userId: string;
-      email: string;
-      firstName: string;
-      lastName: string;
-      features: ChurnFeatures;
-    }> = [];
-
     let cursor: string | undefined;
     let totalProcessed = 0;
     const MAX_USERS = 5000;
