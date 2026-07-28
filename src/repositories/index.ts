@@ -44,6 +44,24 @@ export class CategoryRepository {
       data: { deletedAt: new Date(), isActive: false },
     });
   }
+
+  async findProducts(where: any, skip: number, take: number, sortBy: string, sortOrder: 'asc' | 'desc') {
+    return this.prisma.product.findMany({
+      where,
+      include: {
+        images: true,
+        category: true,
+        inventory: true,
+      },
+      skip,
+      take,
+      orderBy: { [sortBy]: sortOrder },
+    });
+  }
+
+  async countProducts(where: any) {
+    return this.prisma.product.count({ where });
+  }
 }
 
 export class CartRepository {

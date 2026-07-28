@@ -34,6 +34,22 @@ export class ProductController {
     } catch (error) { next(error); }
   }
 
+  async searchProducts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = req.query.query || req.query.q || req.query.search;
+      const page = Number(req.query.page) || 1;
+      const limit = Number(req.query.limit) || 20;
+
+      const { products, total } = await productService.getProducts({
+        page,
+        limit,
+        search: query as string,
+      });
+
+      sendSuccess(res, products, 'Search results fetched successfully', 200, calculatePaginationMeta(total, page, limit));
+    } catch (error) { next(error); }
+  }
+
   async getProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const product = await productService.getProduct(req.params.idOrSlug as string);

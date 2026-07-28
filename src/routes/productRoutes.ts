@@ -9,6 +9,7 @@ const router = Router();
 const controller = new ProductController();
 
 router.get('/', validate(productQuerySchema, 'query'), cache(30), controller.getProducts.bind(controller));
+router.get('/search', cache(30), controller.searchProducts.bind(controller));
 router.get('/:idOrSlug', cache(30), controller.getProduct.bind(controller));
 
 router.post('/', authenticate, authorize('ADMIN'), validate(createProductSchema), controller.createProduct.bind(controller));

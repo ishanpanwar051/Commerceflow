@@ -50,4 +50,27 @@ export class CategoryController {
       sendSuccess(res, null, 'Category deleted successfully');
     } catch (error) { next(error); }
   }
+
+  async getProducts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice as string) : undefined;
+      const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : undefined;
+      const sortBy = (req.query.sortBy as string) || 'createdAt';
+      const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc';
+
+      const result = await categoryService.getProducts(id, {
+        page,
+        limit,
+        minPrice,
+        maxPrice,
+        sortBy,
+        sortOrder,
+      });
+
+      sendSuccess(res, result.data, 'Products fetched successfully', 200, result.pagination);
+    } catch (error) { next(error); }
+  }
 }

@@ -62,4 +62,46 @@ export class CategoryService {
     await this.repo.softDelete(id);
     await invalidateCache('/api/v1/products*');
   }
+
+  async getProducts(categoryId: string, options: {
+    page: number;
+    limit: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }) {
+    const category = await this.repo.findById(categoryId);
+    if (!category) throw new NotFoundError('Category');
+
+    const { page, limit, minPrice, maxPrice, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      categoryId,
+      isActive: true,
+      isDeleted: false,
+    };
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {};
+      if (minPrice !== undefined) where.price.gte = minPrice;
+      if (maxPrice !== undefined) where.price.lte = maxPrice;
+    }
+
+    const [products, total] = await Promise.all([
+      this.repo.findProducts(where, skip, limit, sortBy, sortOrder),
+      this.repo.countProducts(where),
+    ]);
+
+    return {
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 }

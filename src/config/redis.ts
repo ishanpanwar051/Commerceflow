@@ -74,7 +74,14 @@ export function getRedis(): Redis {
 export async function connectRedis(): Promise<void> {
   try {
     redis = getRedis();
-    await redis.connect();
+    
+    // Try to connect with timeout
+    const connectPromise = redis.connect();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
+    );
+    
+    await Promise.race([connectPromise, timeoutPromise]);
     redisAvailable = true;
     logger.info('Redis connected successfully');
   } catch (err: any) {
