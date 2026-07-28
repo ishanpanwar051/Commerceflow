@@ -1,0 +1,431 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String?
+  firstName       String
+  lastName        String
+  phone           String?
+  avatar          String?
+  isEmailVerified Boolean   @default(false)
+  emailToken      String?
+  resetToken      String?
+  resetTokenExp   DateTime?
+  role            String    @default("CUSTOMER")
+  lastLoginAt     DateTime?
+  isActive        Boolean   @default(true)
+  passwordChangedAt DateTime?
+  deletedAt       DateTime?
+  provider        String    @default("local")
+  socialId        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  addresses   Address[]
+  cart        Cart?
+  wishlist    WishlistItem[]
+  orders      Order[]
+  reviews     Review[]
+  payments    Payment[]
+  refreshTokens RefreshToken[]
+
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Address {
+  id         String  @id @default(uuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String?
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  zipCode    String
+  country    String  @default("US")
+  isDefault  Boolean @default(false)
+  isBilling  Boolean @default(false)
+  isShipping Boolean @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shippingOrders Order[] @relation("ShippingAddress")
+  billingOrders  Order[] @relation("BillingAddress")
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  image       String?
+  isActive    Boolean    @default(true)
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  longDescription String?
+  basePrice       Int
+  originalPrice   Int?
+  discountPercent Float?
+  brand           String?
+  sku             String    @unique
+  barcode         String?
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id])
+  weight          Float?
+  dimensions      String?
+  material        String?
+  warranty        String?
+  countryOfOrigin String?
+  sellerName      String?
+  returnPolicy    String?
+  deliveryEstimate String?
+  gstPercent      Float     @default(0)
+  cashOnDelivery  Boolean   @default(false)
+  emiAvailable    Boolean   @default(false)
+  freeDelivery    Boolean   @default(false)
+  specifications  String?
+  keyFeatures     String?
+  whatsInTheBox   String?
+  tags            String?
+  videoUrl        String?
+  isActive        Boolean   @default(true)
+  isFeatured      Boolean   @default(false)
+  isNewArrival    Boolean   @default(false)
+  isBestSeller    Boolean   @default(false)
+  isTopRated      Boolean   @default(false)
+  soldCount       Int       @default(0)
+  wishlistCount   Int       @default(0)
+  questionsCount  Int       @default(0)
+  trendingScore   Float     @default(0)
+  averageRating   Float     @default(0)
+  reviewCount     Int       @default(0)
+  seoMetaTitle    String?
+  seoDescription  String?
+  seoKeywords     String?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  images     ProductImage[]
+  inventory  Inventory?
+  cartItems  CartItem[]
+  wishlist   WishlistItem[]
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@index([name])
+  @@index([brand])
+  @@index([categoryId])
+  @@index([basePrice])
+  @@index([name, categoryId])
+  @@index([categoryId, basePrice])
+  @@index([soldCount])
+  @@index([trendingScore])
+  @@index([isActive, isFeatured, isBestSeller, isNewArrival, isTopRated])
+  @@index([deletedAt])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model Inventory {
+  id             String   @id @default(uuid())
+  productId      String   @unique
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stock          Int      @default(0)
+  reservedStock  Int      @default(0)
+  lowStockThreshold Int   @default(5)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("inventory")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@map("wishlist_items")
+}
+
+model Coupon {
+  id              String       @id @default(uuid())
+  code            String       @unique
+  description     String?
+  discountType    String
+  discountValue   Int
+  minOrderAmount  Int?
+  maxDiscount     Int?
+  usageLimit      Int?
+  usedCount       Int          @default(0)
+  isActive        Boolean      @default(true)
+  expiresAt       DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  orders Order[]
+
+  @@index([expiresAt])
+  @@index([code])
+  @@map("coupons")
+}
+
+model Order {
+  id              String       @id @default(uuid())
+  orderNumber     String       @unique
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  status          String       @default("PENDING")
+  subtotal        Int
+  taxAmount       Int
+  shippingCharge  Int          @default(0)
+  discountAmount  Int          @default(0)
+  couponId        String?
+  coupon          Coupon?      @relation(fields: [couponId], references: [id])
+  grandTotal      Int
+  shippingAddressId String?
+  shippingAddress Address?     @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddressId  String?
+  billingAddress  Address?     @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  notes           String?
+  paidAt          DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  deletedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  items      OrderItem[]
+  payments   Payment[]
+  idempotency IdempotencyRecord?
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  name       String
+  price      Int
+  quantity   Int
+  total      Int
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Payment {
+  id                  String        @id @default(uuid())
+  orderId             String
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripePaymentId     String        @unique
+  stripeIntentId      String?
+  clientSecret        String?
+  amount              Int
+  currency            String        @default("usd")
+  status              String        @default("PENDING")
+  paymentMethod       String?
+  receiptUrl          String?
+  idempotencyKey      String?
+  failureMessage      String?
+  paidAt              DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([idempotencyKey])
+  @@map("payments")
+}
+
+model Review {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating         Int
+  title          String?
+  comment        String?
+  isVerified     Boolean      @default(false)
+  helpfulCount   Int          @default(0)
+  isActive       Boolean      @default(true)
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  images ReviewImage[]
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([productId, rating])
+  @@index([userId])
+  @@map("reviews")
+}
+
+model ReviewImage {
+  id        String   @id @default(uuid())
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  url       String
+  createdAt DateTime @default(now())
+
+  @@index([reviewId])
+  @@map("review_images")
+}
+
+model IdempotencyRecord {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  response    String?
+  statusCode  Int?
+  method      String?
+  path        String?
+  orderId     String?  @unique
+  order       Order?   @relation(fields: [orderId], references: [id])
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model JobRecord {
+  id          String    @id @default(uuid())
+  jobId       String    @unique
+  name        String
+  status      String    @default("QUEUED")
+  data        String?
+  result      String?
+  error       String?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([name])
+  @@index([status])
+  @@map("job_records")
+}

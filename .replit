@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "python-base-3.13"]
 
 [deployment]
 router = "application"
@@ -18,3 +18,14 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+FRONTEND_URL = "https://replit.dev"
+JWT_ACCESS_EXPIRES_IN = "15m"
+JWT_ACCESS_SECRET = "commerceflow_jwt_access_secret_32chars_key"
+JWT_REFRESH_EXPIRES_IN = "7d"
+JWT_REFRESH_SECRET = "commerceflow_jwt_refresh_secret_32chars_k"
+LOG_LEVEL = "info"
+NODE_ENV = "development"
