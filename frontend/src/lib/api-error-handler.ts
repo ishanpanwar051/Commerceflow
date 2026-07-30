@@ -1,5 +1,9 @@
 import { AxiosError } from 'axios';
-import { toast } from 'sonner';
+
+async function getToast() {
+  const { toast } = await import('sonner');
+  return toast;
+}
 
 interface ApiError {
   message: string;
@@ -7,14 +11,13 @@ interface ApiError {
   statusCode?: number;
 }
 
-export function handleApiError(error: unknown, customMessage?: string): string {
+export async function handleApiError(error: unknown, customMessage?: string): Promise<string> {
+  const toast = await getToast();
   if (error instanceof AxiosError) {
     const apiError = error.response?.data as ApiError | undefined;
     
-    // Get error message
     const message = apiError?.message || error.message || 'An unexpected error occurred';
     
-    // Handle validation errors
     if (apiError?.errors) {
       const validationErrors = Object.entries(apiError.errors)
         .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
@@ -27,7 +30,6 @@ export function handleApiError(error: unknown, customMessage?: string): string {
       return validationErrors;
     }
     
-    // Handle specific status codes
     switch (error.response?.status) {
       case 400:
         toast.error(customMessage || 'Bad Request', { description: message });
@@ -57,31 +59,33 @@ export function handleApiError(error: unknown, customMessage?: string): string {
     return message;
   }
   
-  // Handle network errors
   if (error instanceof Error) {
     const message = error.message || 'An unexpected error occurred';
     toast.error(customMessage || 'Error', { description: message });
     return message;
   }
   
-  // Handle unknown errors
   const fallbackMessage = 'An unexpected error occurred';
   toast.error(customMessage || 'Error', { description: fallbackMessage });
   return fallbackMessage;
 }
 
-export function showSuccessToast(message: string, description?: string) {
+export async function showSuccessToast(message: string, description?: string) {
+  const toast = await getToast();
   toast.success(message, { description });
 }
 
-export function showErrorToast(message: string, description?: string) {
+export async function showErrorToast(message: string, description?: string) {
+  const toast = await getToast();
   toast.error(message, { description });
 }
 
-export function showInfoToast(message: string, description?: string) {
+export async function showInfoToast(message: string, description?: string) {
+  const toast = await getToast();
   toast.info(message, { description });
 }
 
-export function showWarningToast(message: string, description?: string) {
+export async function showWarningToast(message: string, description?: string) {
+  const toast = await getToast();
   toast.warning(message, { description });
 }

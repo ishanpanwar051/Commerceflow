@@ -1,181 +1,220 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../config/logger';
 
-// Input sanitization to prevent XSS
-export function sanitizeInput(req: Request, _res: Response, next: NextFunction) {
-  const sanitize = (obj: any): any => {
-    if (typeof obj === 'string') {
-      // Remove potential XSS patterns
-      return obj
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+\s*=/gi, '');
+// Simple sanitization without ReDoS-vulnerable regex patterns
+function sanitizeValue(value: string): string {
+  let result = value;
+  // Remove <script> tags using simple string operations (no catastrophic backtracking)
+  while (result.includes('<script') || result.includes('<SCRIPT')) {
+    const scriptOpen = result.toLowerCase().indexOf('<script');
+    if (scriptOpen === -1) break;
+    const scriptClose = result.toLowerCase().indexOf('</script>', scriptOpen);
+    if (scriptClose === -1) {
+      result = result.substring(0, scriptOpen);
+    } else {
+      result = result.substring(0, scriptOpen) + result.substring(scriptClose + 9);
     }
-    if (Array.isArray(obj)) {
-      return obj.map(sanitize);
-    }
-    if (obj && typeof obj === 'object') {
-      const sanitized: any = {};
-      for (const key in obj) {
-        sanitized[key] = sanitize(obj[key]);
+  }
+  // Remove javascript: protocol references
+  result = result.replace(/javascript\s*:/gi, '');
+  // Remove event handlers (onclick, onload, etc.) - simple string check without ReDoS
+  const eventHandlerPatterns = ['onclick', 'onload', 'onerror', 'onmouseover', 'onfocus', 'onblur', 'onsubmit', 'onchange', 'onkeydown', 'onkeypress', 'onkeyup', 'ondblclick', 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseout', 'onmouseenter', 'onmouseleave', 'onresize', 'onscroll', 'oninput', 'oninvalid', 'onselect', 'onwheel', 'oncontextmenu', 'onauxclick', 'ongotpointercapture', 'onlostpointercapture', 'onpointerdown', 'onpointermove', 'onpointerup', 'onpointercancel', 'onpointerover', 'onpointerout', 'onpointerenter', 'onpointerleave', 'ontouchcancel', 'ontouchend', 'ontouchmove', 'ontouchstart', 'onanimationend', 'onanimationiteration', 'onanimationstart', 'ontransitionend', 'ontransitionrun', 'ontransitionstart'];
+  for (const handler of eventHandlerPatterns) {
+    while (result.toLowerCase().includes(handler)) {
+      const idx = result.toLowerCase().indexOf(handler);
+      const eqIdx = result.indexOf('=', idx);
+      if (eqIdx === -1) break;
+      // Find the end of the attribute value
+      const afterEq = result[eqIdx + 1];
+      let endIdx;
+      if (afterEq === '"') {
+        endIdx = result.indexOf('"', eqIdx + 2);
+        if (endIdx === -1) endIdx = result.length;
+        else endIdx = endIdx + 1;
+      } else if (afterEq === "'") {
+        endIdx = result.indexOf("'", eqIdx + 2);
+        if (endIdx === -1) endIdx = result.length;
+        else endIdx = endIdx + 1;
+      } else {
+        // Unquoted value - find next space or end
+        endIdx = result.indexOf(' ', eqIdx + 1);
+        if (endIdx === -1) endIdx = result.indexOf('>', eqIdx + 1);
+        if (endIdx === -1) endIdx = result.length;
       }
-      return sanitized;
+      result = result.substring(0, idx) + result.substring(endIdx);
     }
-    return obj;
-  };
-
-  if (req.body) {
-    req.body = sanitize(req.body);
   }
-  if (req.query) {
-    req.query = sanitize(req.query);
-  }
-  if (req.params) {
-    req.params = sanitize(req.params);
-  }
-
-  next();
+  return result;
 }
 
-// Prevent common attack patterns
-export function preventAttacks(req: Request, res: Response, next: NextFunction) {
-  const userAgent = req.get('user-agent') || '';
-  const path = req.path.toLowerCase();
-
-  // Block suspicious user agents
-  const suspiciousAgents = ['sqlmap', 'nikto', 'nmap', 'masscan', 'nessus'];
-  if (suspiciousAgents.some(agent => userAgent.toLowerCase().includes(agent))) {
-    logger.warn({ userAgent, ip: req.ip }, 'Blocked suspicious user agent');
-    return res.status(403).json({ success: false, message: 'Forbidden', code: 'FORBIDDEN' });
+function sanitize(obj: unknown): unknown {
+  if (typeof obj === 'string') {
+    return sanitizeValue(obj);
   }
-
-  // Block common attack paths
-  const attackPaths = [
-    '/admin',
-    '/.env',
-    '/phpmy admin',
-    '/.git',
-    '/wp-admin',
-    '/wp-login',
-    '/.htaccess',
-    '/config',
-  ];
-  
-  if (attackPaths.some(attackPath => path.includes(attackPath))) {
-    logger.warn({ path, ip: req.ip }, 'Blocked attack path attempt');
-    return res.status(404).json({ success: false, message: 'Not found', code: 'NOT_FOUND' });
+  if (Array.isArray(obj)) {
+    return obj.map(sanitize);
   }
-
-  // Block SQL injection patterns in query strings
-  const sqlPatterns = [
-    'union.*select',
-    'drop.*table',
-    'insert.*into',
-    'delete.*from',
-    'update.*set',
-    '--',
-    ';.*drop',
-  ];
-  
-  const queryString = req.url.toLowerCase();
-  if (sqlPatterns.some(pattern => new RegExp(pattern).test(queryString))) {
-    logger.warn({ url: req.url, ip: req.ip }, 'Blocked SQL injection attempt');
-    return res.status(403).json({ success: false, message: 'Forbidden', code: 'FORBIDDEN' });
+  if (obj && typeof obj === 'object') {
+    const sanitized: Record<string, unknown> = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        sanitized[key] = sanitize((obj as Record<string, unknown>)[key]);
+      }
+    }
+    return sanitized;
   }
+  return obj;
+}
 
-  next();
+export function sanitizeInput(req: Request, _res: Response, next: NextFunction): void {
+  try {
+    if (req.body && typeof req.body === 'object') {
+      req.body = sanitize(req.body) as typeof req.body;
+    }
+    // Do NOT reassign req.query or req.params - they are read-only getters in Express
+    next();
+  } catch (error) {
+    logger.error({ error }, 'Sanitize middleware error - allowing request to proceed');
+    next();
+  }
+}
+
+// Block common attack patterns
+const SUSPICIOUS_AGENTS = ['sqlmap', 'nikto', 'nmap', 'masscan', 'nessus'];
+const ATTACK_PATHS = ['/.env', '/phpmyadmin', '/.git', '/wp-admin', '/wp-login', '/.htaccess'];
+const SQL_PATTERNS = [
+  /union\s+.*select/i,
+  /drop\s+.*table/i,
+  /insert\s+.*into/i,
+  /delete\s+.*from/i,
+  /update\s+.*set/i,
+  /;\s*drop/i,
+];
+
+export function preventAttacks(req: Request, res: Response, next: NextFunction): void {
+  try {
+    const userAgent = (req.get('user-agent') || '').toLowerCase();
+
+    // Block suspicious user agents
+    if (SUSPICIOUS_AGENTS.some(agent => userAgent.includes(agent))) {
+      logger.warn({ userAgent: req.get('user-agent'), ip: req.ip }, 'Blocked suspicious user agent');
+      res.status(403).json({ success: false, message: 'Forbidden', code: 'FORBIDDEN' });
+      return;
+    }
+
+    // Block common attack paths
+    const path = req.path.toLowerCase();
+    if (ATTACK_PATHS.some(attackPath => path === attackPath || path.startsWith(attackPath + '/'))) {
+      logger.warn({ path, ip: req.ip }, 'Blocked attack path attempt');
+      res.status(404).json({ success: false, message: 'Not found', code: 'NOT_FOUND' });
+      return;
+    }
+
+    // Block SQL injection patterns in query strings
+    const queryString = req.url.toLowerCase();
+    if (SQL_PATTERNS.some(pattern => pattern.test(queryString))) {
+      logger.warn({ url: req.url, ip: req.ip }, 'Blocked SQL injection attempt');
+      res.status(403).json({ success: false, message: 'Forbidden', code: 'FORBIDDEN' });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    next();
+  }
 }
 
 // Add security headers
-export function securityHeaders(_req: Request, res: Response, next: NextFunction) {
-  // Prevent MIME type sniffing
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  
-  // Enable XSS protection
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  
-  // Prevent clickjacking
-  res.setHeader('X-Frame-Options', 'DENY');
-  
-  // Referrer policy
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // Permissions policy
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-
-  next();
+export function securityHeaders(_req: Request, res: Response, next: NextFunction): void {
+  try {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    next();
+  } catch (error) {
+    next();
+  }
 }
 
 // Request size limits based on content type
-export function validateContentLength(req: Request, res: Response, next: NextFunction) {
-  const contentLength = parseInt(req.get('content-length') || '0', 10);
-  const maxSize = 10 * 1024 * 1024; // 10MB default
-  
-  // Stricter limits for certain endpoints
-  const strictEndpoints = ['/api/v1/auth', '/api/v1/users/profile'];
-  const strictLimit = 100 * 1024; // 100KB
-  
-  if (strictEndpoints.some(endpoint => req.path.startsWith(endpoint))) {
-    if (contentLength > strictLimit) {
-      logger.warn({ contentLength, path: req.path }, 'Request too large for endpoint');
-      return res.status(413).json({ success: false, message: 'Payload too large', code: 'PAYLOAD_TOO_LARGE' });
-    }
-  } else if (contentLength > maxSize) {
-    logger.warn({ contentLength, path: req.path }, 'Request too large');
-    return res.status(413).json({ success: false, message: 'Payload too large', code: 'PAYLOAD_TOO_LARGE' });
-  }
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB default
+const STRICT_MAX_SIZE = 100 * 1024; // 100KB
+const STRICT_ENDPOINTS = ['/api/v1/auth', '/api/v1/users/profile'];
 
-  next();
+export function validateContentLength(req: Request, res: Response, next: NextFunction): void {
+  try {
+    const contentLength = parseInt(req.get('content-length') || '0', 10);
+    if (contentLength === 0) {
+      next();
+      return;
+    }
+
+    const isStrict = STRICT_ENDPOINTS.some(endpoint => req.path.startsWith(endpoint));
+    const maxSize = isStrict ? STRICT_MAX_SIZE : MAX_SIZE;
+
+    if (contentLength > maxSize) {
+      logger.warn({ contentLength, path: req.path, maxSize }, 'Request too large');
+      res.status(413).json({ success: false, message: 'Payload too large', code: 'PAYLOAD_TOO_LARGE' });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    next();
+  }
 }
+
 
 // Monitor for brute force attempts
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const BRUTE_FORCE_WINDOW = 15 * 60 * 1000; // 15 minutes
+const MAX_ATTEMPTS = 5;
+const PROTECTED_PATHS = ['/api/v1/auth/login', '/api/v1/auth/register', '/api/v1/auth/reset-password'];
 
-export function bruteForceProtection(req: Request, res: Response, next: NextFunction) {
-  // Only apply to sensitive endpoints
-  const protectedPaths = ['/api/v1/auth/login', '/api/v1/auth/register', '/api/v1/auth/reset-password'];
-  if (!protectedPaths.includes(req.path)) {
-    return next();
-  }
+export function bruteForceProtection(req: Request, res: Response, next: NextFunction): void {
+  try {
+    if (!PROTECTED_PATHS.includes(req.path)) {
+      next();
+      return;
+    }
 
-  const ip = req.ip || 'unknown';
-  const now = Date.now();
-  const window = 15 * 60 * 1000; // 15 minutes
-  const maxAttempts = 5;
+    const ip = req.ip || 'unknown';
+    const now = Date.now();
 
-  const attempt = loginAttempts.get(ip);
-  
-  if (attempt) {
-    if (now > attempt.resetAt) {
-      // Window expired, reset
-      loginAttempts.set(ip, { count: 1, resetAt: now + window });
-    } else if (attempt.count >= maxAttempts) {
-      // Too many attempts
+    let attempt = loginAttempts.get(ip);
+
+    if (!attempt || now > attempt.resetAt) {
+      loginAttempts.set(ip, { count: 1, resetAt: now + BRUTE_FORCE_WINDOW });
+      next();
+      return;
+    }
+
+    if (attempt.count >= MAX_ATTEMPTS) {
       logger.warn({ ip, path: req.path }, 'Brute force attempt blocked');
-      return res.status(429).json({
+      res.status(429).json({
         success: false,
         message: 'Too many attempts. Please try again later.',
         code: 'TOO_MANY_ATTEMPTS',
       });
-    } else {
-      // Increment counter
-      attempt.count++;
+      return;
     }
-  } else {
-    // First attempt
-    loginAttempts.set(ip, { count: 1, resetAt: now + window });
-  }
 
-  // Clean up old entries periodically
-  if (Math.random() < 0.01) { // 1% chance
-    const keysToDelete: string[] = [];
-    loginAttempts.forEach((value, key) => {
-      if (now > value.resetAt) {
-        keysToDelete.push(key);
-      }
-    });
-    keysToDelete.forEach(key => loginAttempts.delete(key));
+    attempt.count++;
+    next();
+  } catch (error) {
+    next();
   }
-
-  next();
 }
+
+// Periodic cleanup of old entries (runs every 5 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of loginAttempts) {
+    if (now > value.resetAt) {
+      loginAttempts.delete(key);
+    }
+  }
+}, 5 * 60 * 1000).unref();
+

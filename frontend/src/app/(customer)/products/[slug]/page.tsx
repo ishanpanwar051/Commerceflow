@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -14,7 +14,7 @@ import { productService } from '@/services/product.service';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useAppSelector } from '@/store/hooks';
-import { formatPrice, formatDate } from '@/lib/utils';
+import { formatPrice, formatDate, dedupeImages } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function ProductDetailPage() {
@@ -51,6 +51,13 @@ export default function ProductDetailPage() {
     queryFn: () => productService.getProducts({ categoryId: product!.categoryId, limit: 8 }),
     enabled: !!product,
   });
+
+  // Reset gallery selection and quantity whenever the product changes
+  useEffect(() => {
+    setCurrentImage(0);
+    setQuantity(1);
+    setSelectedTab('description');
+  }, [slug]);
 
   const createReviewMutation = useMutation({
     mutationFn: (payload: { rating: number; title?: string; comment?: string }) =>
@@ -95,8 +102,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const images = product.images?.length
-    ? product.images
+  const images = dedupeImages(product.images).length
+    ? dedupeImages(product.images)
     : [{ id: 'fallback', url: '/placeholder.svg', alt: product.name, order: 0 }];
 
   const inStock = product.inventory && (product.inventory.stock - product.inventory.reservedStock) > 0;

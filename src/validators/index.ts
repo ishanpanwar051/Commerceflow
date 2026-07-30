@@ -13,7 +13,7 @@ export const addressSchema = z.object({
   country: z.string().optional().default('US'),
   isDefault: z.boolean().optional().default(false),
   isBilling: z.boolean().optional().default(false),
-  isShipping: z.boolean().optional().default(true),
+  isShipping: z.boolean().optional().default(false),
 });
 
 export const categorySchema = z.object({

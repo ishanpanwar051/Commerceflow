@@ -30,3 +30,17 @@ export function formatDateTime(date: string | Date): string {
 export function getInitials(firstName: string, lastName?: string): string {
   return ((firstName?.[0] || '') + (lastName?.[0] || '')).toUpperCase();
 }
+
+/**
+ * Remove duplicate images (by URL) while preserving order.
+ * Ensures a product gallery never shows the same image twice.
+ */
+export function dedupeImages<T extends { url: string }>(images: T[] | undefined | null): T[] {
+  if (!images || images.length === 0) return [];
+  const seen = new Set<string>();
+  return images.filter((img) => {
+    if (!img?.url || seen.has(img.url)) return false;
+    seen.add(img.url);
+    return true;
+  });
+}

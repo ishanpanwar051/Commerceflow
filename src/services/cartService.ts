@@ -24,10 +24,13 @@ export class CartService {
   }
 
   async addItem(userId: string, productId: string, quantity: number) {
-    // SQLite + Prisma limitation: interactive transactions not well-supported, wrapping for atomicity
     const prisma = getPrisma();
-    await prisma.$transaction(async () => {
-      const product = await this.productRepo.findById(productId);
+    await prisma.$transaction(async (tx) => {
+      // Use Prisma client directly within the transaction for proper atomicity
+      const product = await tx.product.findUnique({
+        where: { id: productId },
+        include: { inventory: true },
+      });
       if (!product) throw new NotFoundError('Product');
       if (!product.isActive || product.deletedAt) throw new BadRequestError('Product is not available');
 
@@ -36,8 +39,19 @@ export class CartService {
         throw new BadRequestError('Insufficient stock');
       }
 
-      const cart = await this.cartRepo.upsert(userId);
-      await this.cartRepo.addItem(cart.id, productId, quantity);
+      // Upsert cart
+      const cart = await tx.cart.upsert({
+        where: { userId },
+        create: { userId },
+        update: {},
+      });
+
+      // Upsert cart item
+      await tx.cartItem.upsert({
+        where: { cartId_productId: { cartId: cart.id, productId } },
+        create: { cartId: cart.id, productId, quantity },
+        update: { quantity: { increment: quantity } },
+      });
     });
 
     return this.getCart(userId);

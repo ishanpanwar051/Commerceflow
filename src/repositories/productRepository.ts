@@ -47,10 +47,11 @@ export class ProductRepository {
     order?: 'asc' | 'desc';
     search?: string;
     brand?: string;
-    categoryId?: string;
+    categoryIds?: string[];
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
+    minDiscount?: number;
     maxRating?: number;
     isFeatured?: boolean;
     isBestSeller?: boolean;
@@ -74,7 +75,7 @@ export class ProductRepository {
         ],
       }),
       ...(params.brand && { brand: { in: params.brand.split(',') } }),
-      ...(params.categoryId && { categoryId: params.categoryId }),
+      ...(params.categoryIds && params.categoryIds.length > 0 && { categoryId: { in: params.categoryIds } }),
       ...(params.minPrice !== undefined && params.maxPrice !== undefined
         ? { basePrice: { gte: params.minPrice, lte: params.maxPrice } }
         : {
@@ -89,6 +90,7 @@ export class ProductRepository {
       ...(params.cashOnDelivery !== undefined && { cashOnDelivery: params.cashOnDelivery }),
       ...(params.emiAvailable !== undefined && { emiAvailable: params.emiAvailable }),
       ...(params.minRating !== undefined && { averageRating: { gte: params.minRating } }),
+      ...(params.minDiscount !== undefined && { discountPercent: { gte: params.minDiscount } }),
     };
 
     const orderBy: Prisma.ProductOrderByWithRelationInput = {};
@@ -127,10 +129,11 @@ export class ProductRepository {
   async count(params: {
     search?: string;
     brand?: string;
-    categoryId?: string;
+    categoryIds?: string[];
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
+    minDiscount?: number;
     isFeatured?: boolean;
     isBestSeller?: boolean;
     isNewArrival?: boolean;
@@ -151,7 +154,7 @@ export class ProductRepository {
         ],
       }),
       ...(params.brand && { brand: { in: params.brand.split(',') } }),
-      ...(params.categoryId && { categoryId: params.categoryId }),
+      ...(params.categoryIds && params.categoryIds.length > 0 && { categoryId: { in: params.categoryIds } }),
       ...(params.minPrice !== undefined && params.maxPrice !== undefined
         ? { basePrice: { gte: params.minPrice, lte: params.maxPrice } }
         : {
@@ -159,6 +162,7 @@ export class ProductRepository {
             ...(params.maxPrice !== undefined && { basePrice: { lte: params.maxPrice } }),
           }),
       ...(params.minRating !== undefined && { averageRating: { gte: params.minRating } }),
+      ...(params.minDiscount !== undefined && { discountPercent: { gte: params.minDiscount } }),
       ...(params.isFeatured !== undefined && { isFeatured: params.isFeatured }),
       ...(params.isBestSeller !== undefined && { isBestSeller: params.isBestSeller }),
       ...(params.isNewArrival !== undefined && { isNewArrival: params.isNewArrival }),

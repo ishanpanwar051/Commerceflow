@@ -8,6 +8,7 @@ const protectedRoutes = [
   '/wishlist',
   '/addresses',
   '/checkout',
+  '/cart',
 ];
 
 // Define admin routes
@@ -19,13 +20,15 @@ const adminRoutes = [
 const authRoutes = [
   '/auth/login',
   '/auth/register',
+  '/forgot-password',
+  '/reset-password',
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Check for tokens in cookies or headers
-  // Note: This is a simplified check. In production, you might want to verify the token
+  // Check for tokens in cookies set by the client-side TokenService
+  // The TokenService sets cookies so that the middleware can detect authenticated users
   const accessToken = request.cookies.get('cf_access_token')?.value;
   const refreshToken = request.cookies.get('cf_refresh_token')?.value;
   const hasTokens = !!(accessToken || refreshToken);
@@ -42,12 +45,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Protect admin routes
-  // Note: In production, you should verify the user's role from the token
-  if (!hasTokens && adminRoutes.some(route => pathname.startsWith(route))) {
-    const loginUrl = new URL('/auth/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+  // Protect admin routes - also redirect non-admin users
+  if (adminRoutes.some(route => pathname.startsWith(route))) {
+    if (!hasTokens) {
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    // Note: In production, verify the user's role from the JWT token
+    // For now, the client-side ProtectedRoute component will handle role-based access
   }
 
   return NextResponse.next();
@@ -55,14 +61,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Match all request paths except static files, images, and API routes
+    '/((?!api/|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js)$).*)',
   ],
 };

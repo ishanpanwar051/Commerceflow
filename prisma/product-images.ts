@@ -150,10 +150,37 @@ export function getProductImages(product: ProductInfo, productIndex: number) {
   
   // Use productIndex to ensure each product gets unique starting images
   const start = (productIndex * 3 + hash(`${product.name}:${product.brand}`)) % images.length;
-
-  return Array.from({ length: 4 }, (_, order) => ({
-    url: imageUrl(images[(start + order) % images.length]),
-    alt: `${product.name} — gallery image ${order + 1}`,
-    order,
-  }));
+  
+  const result: Array<{ url: string; alt: string; order: number }> = [];
+  const usedUrls = new Set<string>();
+  
+  for (let i = 0; i < 4 && result.length < images.length; i++) {
+    const imgUrl = imageUrl(images[(start + i) % images.length]);
+    // Ensure no duplicate images in the gallery
+    if (!usedUrls.has(imgUrl)) {
+      usedUrls.add(imgUrl);
+      result.push({
+        url: imgUrl,
+        alt: `${product.name} — gallery image ${result.length + 1}`,
+        order: result.length,
+      });
+    }
+  }
+  
+  // If we still need more images, continue scanning from the beginning
+  if (result.length < 4) {
+    for (let i = 0; i < images.length && result.length < 4; i++) {
+      const imgUrl = imageUrl(images[i]);
+      if (!usedUrls.has(imgUrl)) {
+        usedUrls.add(imgUrl);
+        result.push({
+          url: imgUrl,
+          alt: `${product.name} — gallery image ${result.length + 1}`,
+          order: result.length,
+        });
+      }
+    }
+  }
+  
+  return result;
 }

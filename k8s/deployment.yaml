@@ -23,7 +23,7 @@ spec:
         - name: api
           image: commerceflow-api:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 4000
           envFrom:
             - secretRef:
                 name: commerceflow-secrets
@@ -37,13 +37,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 3000
+              port: 4000
             initialDelaySeconds: 10
             periodSeconds: 15
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 3000
+              port: 4000
             initialDelaySeconds: 5
             periodSeconds: 10
           lifecycle:
@@ -91,7 +91,7 @@ spec:
     app: commerceflow-api
   ports:
     - port: 80
-      targetPort: 3000
+      targetPort: 4000
   type: ClusterIP
 ---
 apiVersion: autoscaling/v2

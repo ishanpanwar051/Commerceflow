@@ -16,23 +16,22 @@ import router from './routes';
 import healthRoutes from './routes/healthRoutes';
 import { AuthRequest } from './types';
 
-const allowedCorsOrigins = (process.env.CORS_ORIGIN?.split(',') || [config.frontendUrl]).filter(Boolean);
+const allowedCorsOrigins = (process.env.CORS_ORIGIN?.split(',').map(s => s.trim()) || [config.frontendUrl]).filter(Boolean);
 
 const app = express();
 
 app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 
-// Security middleware
+// Security middleware - order matters
 app.use(helmet({
-  contentSecurityPolicy: config.isProd ? undefined : false, // Disable CSP in dev for hot reload
-  crossOriginEmbedderPolicy: false, // Allow embedding resources from CDNs
+  contentSecurityPolicy: config.isProd ? undefined : false,
+  crossOriginEmbedderPolicy: false,
 }));
 app.use(securityHeaders);
 app.use(preventAttacks);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, etc.)
     if (!origin || allowedCorsOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -43,6 +42,8 @@ app.use(cors({
 }));
 
 app.use(compression());
+
+// Body parsing - must come before other middleware that reads body
 app.use(express.json({
   limit: '10mb',
   verify: (req: any, _res, buf) => {
@@ -52,27 +53,27 @@ app.use(express.json({
   },
 }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(sanitizeInput);
 
-// Security and monitoring middleware
+// Request identification and monitoring
 app.use(requestIdMiddleware);
 app.use(metricsMiddleware);
-app.use(sanitizeInput);
 app.use(validateContentLength);
 app.use(bruteForceProtection);
-app.use(timeout(30000));
 
-// Rate limiting
+// Timeout middleware - 30s for dev, 10s for prod
+app.use(timeout(config.isProd ? 10000 : 30000));
+
+// Rate limiting - skip for test environment and health checks
 const apiLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
   message: { success: false, message: 'Too many requests, please try again later', code: 'RATE_LIMIT_EXCEEDED' },
   standardHeaders: true,
   legacyHeaders: false,
-  // Skip rate limiting for health checks
   skip: (req) => req.path.startsWith('/api/v1/health'),
 });
 
-// Apply rate limiting (skip in test environment)
 app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'test' || process.env.VITEST) return next();
   return apiLimiter(req, res, next);

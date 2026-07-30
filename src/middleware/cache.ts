@@ -20,20 +20,28 @@ export function cache(ttlSeconds: number = DEFAULT_TTL) {
     const redis = getRedis();
 
     try {
-      const cached = await redis.get(key);
+      const cached = await redis.get(key).catch(() => null);
       if (cached) {
-        res.json(JSON.parse(cached));
+        try {
+          res.json(JSON.parse(cached));
+        } catch {
+          next();
+        }
         return;
       }
 
       // Cache stampede protection: acquire a distributed lock
-      const lockAcquired = await redis.set(lockKey, '1', 'PX', STAMPEDE_LOCK_TTL * 1000, 'NX');
+      const lockAcquired = await redis.set(lockKey, '1', 'PX', STAMPEDE_LOCK_TTL * 1000, 'NX').catch(() => null);
       if (!lockAcquired) {
         for (let i = 0; i < STAMPEDE_MAX_RETRIES; i++) {
           await new Promise((resolve) => setTimeout(resolve, STAMPEDE_LOCK_RETRY_DELAY));
-          const retryCached = await redis.get(key);
+          const retryCached = await redis.get(key).catch(() => null);
           if (retryCached) {
-            res.json(JSON.parse(retryCached));
+            try {
+              res.json(JSON.parse(retryCached));
+            } catch {
+              next();
+            }
             return;
           }
         }
@@ -42,16 +50,26 @@ export function cache(ttlSeconds: number = DEFAULT_TTL) {
 
       const originalJson = res.json.bind(res);
       let responded = false;
-      const releaseLock = () => redis.del(lockKey).catch(() => {});
-      const cleanup = () => { if (!responded) { responded = true; releaseLock(); } };
+      const cleanup = () => {
+        if (!responded) {
+          responded = true;
+          redis.del(lockKey).catch(() => {});
+        }
+      };
       res.on('close', cleanup);
       res.on('error', cleanup);
       res.json = function (body: unknown) {
         if (responded) return this;
         responded = true;
-        redis.setex(key, ttlSeconds, JSON.stringify(body)).catch((err) => logger.warn({ err }, 'Cache set failed'));
-        releaseLock();
-        return originalJson(body);
+        if (res.headersSent) {
+          logger.warn({ url: req.originalUrl }, 'Cache: headers already sent, skipping');
+          return this;
+        }
+        redis.setex(key, ttlSeconds, JSON.stringify(body)).catch((err: Error) => logger.warn({ err }, 'Cache set failed'));
+        redis.del(lockKey).catch(() => {});
+        res.removeListener('close', cleanup);
+        res.removeListener('error', cleanup);
+        return originalJson.call(this, body);
       };
       next();
     } catch (err) {

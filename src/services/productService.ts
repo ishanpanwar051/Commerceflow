@@ -67,6 +67,7 @@ export class ProductService {
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
+    minDiscount?: number;
     isFeatured?: boolean;
     isBestSeller?: boolean;
     isNewArrival?: boolean;
@@ -85,6 +86,12 @@ export class ProductService {
         }
       : {};
 
+    // Resolve the category and all its descendants once so products in
+    // subcategories are included. Avoids duplicate recursive queries.
+    const categoryIds = params.categoryId
+      ? await this.getAllDescendantCategoryIds(params.categoryId)
+      : undefined;
+
     const [products, total] = await Promise.all([
       this.productRepo.findAll({
         skip,
@@ -93,9 +100,10 @@ export class ProductService {
         order: params.order,
         search: params.search,
         brand: params.brand,
-        categoryId: params.categoryId,
+        categoryIds,
         ...priceFilter,
         minRating: params.minRating,
+        minDiscount: params.minDiscount,
         isFeatured: params.isFeatured,
         isBestSeller: params.isBestSeller,
         isNewArrival: params.isNewArrival,
@@ -108,9 +116,10 @@ export class ProductService {
       this.productRepo.count({
         search: params.search,
         brand: params.brand,
-        categoryId: params.categoryId,
+        categoryIds,
         ...priceFilter,
         minRating: params.minRating,
+        minDiscount: params.minDiscount,
         isFeatured: params.isFeatured,
         isBestSeller: params.isBestSeller,
         isNewArrival: params.isNewArrival,
@@ -131,6 +140,27 @@ export class ProductService {
     });
 
     return { products: productsWithRating, total };
+  }
+
+  /**
+   * Recursively get all child category IDs for a given category ID.
+   * This ensures products from subcategories are also included.
+   */
+  private async getAllDescendantCategoryIds(categoryId: string): Promise<string[]> {
+    const prisma = getPrisma();
+    const ids: string[] = [categoryId];
+    
+    const children = await prisma.category.findMany({
+      where: { parentId: categoryId, deletedAt: null, isActive: true },
+      select: { id: true },
+    });
+    
+    for (const child of children) {
+      const descendantIds = await this.getAllDescendantCategoryIds(child.id);
+      ids.push(...descendantIds);
+    }
+    
+    return ids;
   }
 
   async getProduct(idOrSlug: string) {

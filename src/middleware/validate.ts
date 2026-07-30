@@ -9,7 +9,13 @@ export function validate(schema: ZodSchema, target: ValidationTarget = 'body') {
     if (!result.success) {
       return next(result.error);
     }
-    req[target] = result.data;
+    if (target === 'query') {
+      Object.assign(req.query, result.data);
+    } else if (target === 'params') {
+      Object.assign(req.params, result.data);
+    } else {
+      req.body = result.data;
+    }
     next();
   };
 }

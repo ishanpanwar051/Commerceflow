@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, dedupeImages } from '@/lib/utils';
 import type { Product } from '@/types/api';
 
 interface ProductCardProps {
@@ -20,7 +20,7 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const images = product.images || [];
+  const images = dedupeImages(product.images);
   const mainImage = imgError ? '/placeholder.svg' : (images[0]?.url || '/placeholder.svg');
   const hoverImage = !imgError && images.length > 1 ? images[1]?.url : mainImage;
   const inStock = product.inventory && (product.inventory.stock - product.inventory.reservedStock) > 0;

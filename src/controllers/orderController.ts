@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { OrderService } from '../services/orderService';
-import { PaymentService } from '../services/paymentService';
+import { PaymentService, getStripe } from '../services/paymentService';
 import { AuthRequest } from '../types';
 import { sendSuccess, calculatePaginationMeta } from '../utils/helpers';
 import { markIdempotencyComplete, markIdempotencyOrder } from '../middleware/idempotency';
@@ -18,6 +18,15 @@ export class OrderController {
       });
 
       let paymentIntent = null;
+
+      // Attempt to create a Stripe payment intent if Stripe is configured
+      try {
+        if (getStripe()) {
+          paymentIntent = await paymentService.createPaymentIntent(order.id, req.user!.userId);
+        }
+      } catch (err) {
+        logger.warn({ err, orderId: order.id }, 'Could not create payment intent - payment will be handled separately');
+      }
 
       if (req.idempotencyKey) {
         await markIdempotencyOrder(req.idempotencyKey, order.id);

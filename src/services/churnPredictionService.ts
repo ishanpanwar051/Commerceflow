@@ -78,17 +78,27 @@ export class ChurnPredictionService {
 
       if (batch.length === 0) break;
 
+      const userIds = batch.map(u => u.id);
+      const ordersAgg = await prisma.order.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _max: { createdAt: true },
+        _avg: { grandTotal: true },
+      });
+      const orderMap = new Map(ordersAgg.map(o => [o.userId, { lastOrderDate: o._max.createdAt, avgTotal: o._avg.grandTotal }]));
+
       for (const user of batch) {
         const daysSinceLastLogin = user.lastLoginAt
           ? Math.floor((now.getTime() - user.lastLoginAt.getTime()) / (1000 * 60 * 60 * 24))
           : 999;
 
         const orderCount = user._count.orders;
-        const daysSinceLastOrder = user.lastLoginAt
-          ? Math.floor((now.getTime() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        const userOrder = orderMap.get(user.id);
+        const daysSinceLastOrder = userOrder?.lastOrderDate
+          ? Math.floor((now.getTime() - userOrder.lastOrderDate.getTime()) / (1000 * 60 * 60 * 24))
           : 999;
 
-        const avgOrderValue = 0;
+        const avgOrderValue = userOrder?.avgTotal ? Math.round(userOrder.avgTotal / 100) : 0;
 
         const features: ChurnFeatures = {
           daysSinceLastLogin: Math.min(daysSinceLastLogin, 365),

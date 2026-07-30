@@ -36,6 +36,7 @@ export const productQuerySchema = z.object({
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
   minRating: z.coerce.number().min(1).max(5).optional(),
+  minDiscount: z.coerce.number().min(0).max(100).optional(),
   isFeatured: z.coerce.boolean().optional(),
   isBestSeller: z.coerce.boolean().optional(),
   isNewArrival: z.coerce.boolean().optional(),

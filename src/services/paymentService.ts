@@ -8,9 +8,9 @@ import { addJob } from '../workers/queue';
 const WEBHOOK_EVENT_TTL = 24 * 60 * 60 * 1000;
 
 let stripeInstance: Stripe | null = null;
-function getStripe(): Stripe | null {
+export function getStripe(): Stripe | null {
   if (!stripeInstance && config.stripe.secretKey) {
-    stripeInstance = new Stripe(config.stripe.secretKey, { apiVersion: '2025-02-24.acacia' });
+    stripeInstance = new Stripe(config.stripe.secretKey, { apiVersion: '2024-12-18.acacia' });
   }
   return stripeInstance;
 }

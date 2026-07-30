@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { getProductImages } from './product-images';
+import { getCategoryImage, getSubcategoryImage } from './category-images';
 
 const prisma = new PrismaClient();
 
@@ -293,7 +294,12 @@ async function main() {
     const created = await prisma.category.upsert({
       where: { slug: cat.slug },
       update: {},
-      create: { name: cat.name, slug: cat.slug, description: cat.description },
+      create: { 
+        name: cat.name, 
+        slug: cat.slug, 
+        description: cat.description,
+        image: getCategoryImage(cat.slug),
+      },
     });
     categoryMap.set(cat.slug, created.id);
 
@@ -302,11 +308,23 @@ async function main() {
       const existing = await prisma.category.findUnique({ where: { slug: subSlug } });
       if (!existing) {
         const subCat = await prisma.category.create({
-          data: { name: sub, slug: subSlug, description: `${sub} products`, parentId: created.id },
+          data: { 
+            name: sub, 
+            slug: subSlug, 
+            description: `${sub} products`, 
+            parentId: created.id,
+            image: getSubcategoryImage(cat.slug, subSlug),
+          },
         });
         subcategoryMap.set(subSlug, subCat.id);
       } else {
-        await prisma.category.update({ where: { id: existing.id }, data: { parentId: created.id } });
+        await prisma.category.update({ 
+          where: { id: existing.id }, 
+          data: { 
+            parentId: created.id,
+            image: getSubcategoryImage(cat.slug, subSlug),
+          } 
+        });
         subcategoryMap.set(subSlug, existing.id);
       }
     }
