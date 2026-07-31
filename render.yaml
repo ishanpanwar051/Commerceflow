@@ -1,0 +1,68 @@
+# Render blueprint for CommerceFlow (pnpm workspace monorepo)
+# Created to deploy: PostgreSQL DB + Express API (backend/) + Vite/React frontend (frontend/)
+#
+# How to use:
+#   1. Push this file to GitHub
+#   2. Go to https://render.com -> New -> Blueprint
+#   3. Select the CommerceFlow repository
+#   4. Render creates the database and both services automatically
+#   5. After first deploy, set the remaining env vars (Stripe, Cloudinary, SMTP, Google OAuth)
+#      in the "Environment" tab of the backend service, then Deploy again.
+
+databases:
+  - name: commerceflow-db
+    plan: free
+    databaseName: commerceflow
+    user: commerceflow
+
+services:
+  # ============================================
+  # BACKEND: Express + TypeScript + Prisma API
+  # ============================================
+  - type: web
+    name: commerceflow-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    # Install from the monorepo root, then build the api-server package + its workspace deps
+    buildCommand: pnpm --dir .. install --frozen-lockfile && pnpm --dir .. --filter @workspace/api-server... --if-present run build
+    startCommand: node --enable-source-maps ./dist/index.mjs
+    # Generate the Prisma client and create the database schema before the server starts
+    preDeployCommand: pnpm --dir .. --filter @workspace/api-server exec prisma generate && pnpm --dir .. --filter @workspace/api-server exec prisma db push
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: commerceflow-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: commerceflow-frontend
+          property: url
+
+  # ============================================
+  # FRONTEND: Vite / React static site
+  # ============================================
+  - type: web
+    name: commerceflow-frontend
+    runtime: static
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: pnpm --dir .. install --frozen-lockfile && pnpm --dir .. --filter @workspace/commerce-flow... --if-present run build
+    staticPublishPath: ./dist/public
+    envVars:
+      # Build-time variable. If the backend URL differs, update this in the dashboard.
+      - key: VITE_API_URL
+        sync: false
+        value: https://commerceflow-api.onrender.com/api/v1
