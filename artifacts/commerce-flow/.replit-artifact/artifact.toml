@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "CommerceFlow"
+version = "1.0.0"
+id = "artifacts/commerce-flow"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19115
+
+[services.development]
+run = "pnpm --filter @workspace/commerce-flow run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/commerce-flow", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/commerce-flow/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19115"
+BASE_PATH = "/"

@@ -1,0 +1,71 @@
+modules = ["nodejs-20", "web", "postgresql-16"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/api-server: API Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/commerce-flow: web"
+
+[[workflows.workflow]]
+name = "artifacts/api-server: API Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=8080 pnpm --filter @workspace/api-server run dev"
+waitForPort = 8080
+
+[[workflows.workflow]]
+name = "artifacts/commerce-flow: web"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=19115 BASE_PATH=/ pnpm --filter @workspace/commerce-flow run dev"
+waitForPort = 19115
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+FRONTEND_URL = "https://replit.dev"
+JWT_ACCESS_EXPIRES_IN = "15m"
+JWT_ACCESS_SECRET = "commerceflow_jwt_access_secret_32chars_key"
+JWT_REFRESH_EXPIRES_IN = "7d"
+JWT_REFRESH_SECRET = "commerceflow_jwt_refresh_secret_32chars_k"
+LOG_LEVEL = "info"
+NODE_ENV = "development"
+
+[nix]
+channel = "stable-25_05"
