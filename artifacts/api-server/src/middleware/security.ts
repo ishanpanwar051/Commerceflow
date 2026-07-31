@@ -27,8 +27,10 @@ export function sanitizeInput(req: Request, _res: Response, next: NextFunction) 
   if (req.body) {
     req.body = sanitize(req.body);
   }
+  // Express 5 made req.query a read-only getter — use defineProperty to override
   if (req.query) {
-    req.query = sanitize(req.query);
+    const sanitized = sanitize(req.query);
+    Object.defineProperty(req, 'query', { get: () => sanitized, configurable: true });
   }
   if (req.params) {
     req.params = sanitize(req.params);
@@ -49,16 +51,14 @@ export function preventAttacks(req: Request, res: Response, next: NextFunction) 
     return res.status(403).json({ success: false, message: 'Forbidden', code: 'FORBIDDEN' });
   }
 
-  // Block common attack paths
+  // Block common attack paths (not /admin — that's a legitimate app route)
   const attackPaths = [
-    '/admin',
     '/.env',
     '/phpmy admin',
     '/.git',
     '/wp-admin',
     '/wp-login',
     '/.htaccess',
-    '/config',
   ];
   
   if (attackPaths.some(attackPath => path.includes(attackPath))) {

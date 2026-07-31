@@ -1,4 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+// Use createRequire for ESM/CJS interop — @prisma/client is CJS and
+// cannot be named-imported in ESM compiled output
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
+const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
+type PrismaClient = InstanceType<typeof PrismaClient>;
+
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { logger } from './logger';

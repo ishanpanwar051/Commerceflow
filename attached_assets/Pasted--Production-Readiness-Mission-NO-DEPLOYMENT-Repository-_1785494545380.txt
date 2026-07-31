@@ -1,0 +1,257 @@
+# Production Readiness Mission (NO DEPLOYMENT)
+
+Repository:
+https://github.com/ishanpanwar051/Commerceflow.git
+
+You are a Senior Full Stack Engineer, Software Architect, QA Engineer, Performance Engineer, Security Engineer, and Code Reviewer.
+
+## Mission
+
+Your only objective is to make this repository completely production-ready.
+
+**DO NOT deploy the project anywhere.**
+**DO NOT create cloud resources.**
+**DO NOT publish anything.**
+**DO NOT push to production.**
+
+Only modify the codebase so it is production-ready and every feature works correctly.
+
+---
+
+# Step 1 — Understand the Entire Project
+
+Read and understand the entire repository.
+
+Analyze:
+
+* Folder structure
+* Frontend
+* Backend
+* API architecture
+* Prisma
+* PostgreSQL
+* Redis
+* Docker
+* Environment variables
+* Authentication
+* Authorization
+* Image handling
+* File uploads
+* Payment integration
+* Location services
+* Search
+* State management
+* Database schema
+* Middleware
+* Background jobs
+* Build configuration
+
+Generate a complete understanding before making any code changes.
+
+---
+
+# Step 2 — Find Every Broken Feature
+
+Inspect every page, route, API, and component.
+
+Find and document:
+
+* Broken buttons
+* Broken navigation
+* Missing functionality
+* Broken forms
+* Images not loading
+* Broken authentication
+* Authorization issues
+* API failures
+* Validation problems
+* State management bugs
+* Search issues
+* Cart issues
+* Checkout issues
+* Restaurant creation issues
+* Seller dashboard issues
+* User dashboard issues
+* Delivery dashboard issues
+* Admin panel issues
+* Database issues
+* Redis issues
+* Prisma issues
+* Docker configuration problems
+* Broken imports
+* Missing files
+* Incorrect API endpoints
+* Runtime crashes
+* Build errors
+* Console errors
+* Memory leaks
+* Infinite rendering
+* Duplicate code
+* Dead code
+* Incorrect error handling
+
+---
+
+# Step 3 — Verify Every User Flow
+
+Test every feature from start to finish.
+
+Verify:
+
+* User Registration
+* Login
+* Logout
+* Google Login
+* Forgot Password
+* Reset Password
+* User Profile
+* Restaurant Creation
+* Restaurant Editing
+* Food CRUD
+* Categories
+* Search
+* Filters
+* Cart
+* Wishlist
+* Checkout
+* Orders
+* Order Tracking
+* Reviews
+* Ratings
+* Coupons
+* Notifications
+* Address Management
+* Image Upload
+* Image Display
+* Seller Dashboard
+* Delivery Dashboard
+* Admin Dashboard
+* Responsive Design
+* API Responses
+* Database Operations
+* Redis Operations
+* Prisma Queries
+
+Every workflow must function correctly from beginning to end.
+
+---
+
+# Step 4 — Fix Everything
+
+Whenever a bug is found:
+
+* Identify the root cause.
+* Implement a proper production-grade fix.
+* Do not apply temporary workarounds.
+* Refactor where necessary.
+* Preserve existing functionality.
+* Improve maintainability and code quality.
+
+---
+
+# Step 5 — Improve Code Quality
+
+Improve:
+
+* Folder organization
+* Component structure
+* API architecture
+* Reusability
+* Error handling
+* Validation
+* Loading states
+* Empty states
+* Logging
+* Performance
+* Accessibility
+* Maintainability
+
+---
+
+# Step 6 — Security Review
+
+Audit and fix:
+
+* Authentication
+* Authorization
+* JWT handling
+* Cookie security
+* CORS
+* Input validation
+* SQL injection risks
+* XSS risks
+* CSRF risks
+* Environment variable handling
+* Password hashing
+* File upload validation
+* API security
+
+Never expose secrets.
+
+---
+
+# Step 7 — Performance Optimization
+
+Optimize:
+
+* React rendering
+* API calls
+* Database queries
+* Prisma performance
+* Redis usage
+* Image loading
+* Lazy loading
+* Pagination
+* Memoization
+* Bundle size
+* Code splitting
+* Duplicate requests
+
+---
+
+# Step 8 — Production Readiness
+
+Ensure:
+
+* No build errors
+* No runtime errors
+* No broken imports
+* No console errors
+* No failing APIs
+* No broken images
+* No broken routes
+* No missing pages
+* No infinite loops
+* No TypeScript errors
+* No ESLint errors
+* No security vulnerabilities
+* Clean production-ready code
+
+---
+
+# Final Report
+
+Provide:
+
+1. Every bug discovered.
+2. Root cause of each bug.
+3. Files modified.
+4. Exact fixes applied.
+5. Remaining issues (if any).
+6. Security review summary.
+7. Performance review summary.
+8. Production readiness score (0–100).
+9. Recommended future improvements.
+
+---
+
+# Strict Rules
+
+* Do NOT deploy.
+* Do NOT create cloud resources.
+* Do NOT modify production credentials.
+* Do NOT skip testing.
+* Do NOT stop after the first error.
+* Continue until all possible issues are fixed.
+* Treat this as production software intended for real users.
+* Ensure every visible feature and backend functionality works correctly before finishing.

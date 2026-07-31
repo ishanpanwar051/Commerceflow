@@ -1,0 +1,512 @@
+# CommerceFlow – Complete End-to-End Production Readiness Mission (NO DEPLOYMENT)
+
+Repository:
+https://github.com/ishanpanwar051/Commerceflow.git
+
+You are an elite Senior Software Engineer, Staff Full Stack Engineer, Software Architect, QA Engineer, DevOps Engineer (local only), Security Engineer, Performance Engineer, UI/UX Engineer, and Code Reviewer.
+
+## YOUR ONLY GOAL
+
+Transform this project into a **100% fully functional end-to-end application**.
+
+When you finish, every page, every button, every API, every image, every dashboard, every workflow, every database operation, and every feature must work correctly.
+
+The project should feel like a real production application with no broken functionality.
+
+---
+
+# IMPORTANT
+
+## DO NOT DEPLOY ANYWHERE
+
+Do NOT deploy.
+
+Do NOT use Render.
+
+Do NOT use Railway.
+
+Do NOT use Vercel.
+
+Do NOT use Netlify.
+
+Do NOT use Koyeb.
+
+Do NOT use Docker Cloud.
+
+Do NOT create cloud resources.
+
+Do NOT publish anything.
+
+Do NOT ask to deploy.
+
+Do NOT prepare deployment.
+
+Focus only on making the local project completely functional.
+
+---
+
+# PHASE 1 — Understand Everything
+
+Read the ENTIRE repository before making changes.
+
+Understand:
+
+* Complete architecture
+* Frontend
+* Backend
+* API layer
+* Database schema
+* Prisma
+* PostgreSQL
+* Redis
+* Docker configuration
+* Authentication
+* Authorization
+* State management
+* Routing
+* Middleware
+* Services
+* Controllers
+* Components
+* Utilities
+* Environment variables
+* Third-party integrations
+
+Build a complete dependency map before editing anything.
+
+---
+
+# PHASE 2 — Find Every Bug
+
+Inspect every single file.
+
+Find every issue including:
+
+Broken pages
+
+Broken routes
+
+Broken navigation
+
+Broken buttons
+
+Broken forms
+
+Broken links
+
+Missing functionality
+
+404 pages
+
+500 errors
+
+Console errors
+
+Network errors
+
+Runtime crashes
+
+Build failures
+
+Infinite rendering
+
+Memory leaks
+
+Duplicate logic
+
+Dead code
+
+Unused components
+
+Missing imports
+
+Incorrect imports
+
+Incorrect API calls
+
+Incorrect validation
+
+Broken authentication
+
+Broken authorization
+
+Database bugs
+
+Redis bugs
+
+Prisma bugs
+
+Search bugs
+
+Filtering bugs
+
+Pagination bugs
+
+Restaurant bugs
+
+Seller bugs
+
+Delivery bugs
+
+Admin bugs
+
+Profile bugs
+
+Cart bugs
+
+Checkout bugs
+
+Order bugs
+
+Review bugs
+
+Rating bugs
+
+Wishlist bugs
+
+Favorites bugs
+
+Image upload bugs
+
+Image display bugs
+
+File upload bugs
+
+Notification bugs
+
+Location bugs
+
+Map bugs
+
+Everything.
+
+Nothing should be ignored.
+
+---
+
+# PHASE 3 — Verify Every User Flow
+
+Test the application like a real user.
+
+Verify complete end-to-end workflows:
+
+User Registration
+
+Email Login
+
+Google Login
+
+Logout
+
+Forgot Password
+
+Reset Password
+
+Profile Update
+
+Address Management
+
+Restaurant Creation
+
+Restaurant Editing
+
+Restaurant Deletion
+
+Food CRUD
+
+Category CRUD
+
+Restaurant Search
+
+Food Search
+
+Filters
+
+Sorting
+
+Cart
+
+Wishlist
+
+Checkout
+
+Payment integration
+
+Order Placement
+
+Order History
+
+Order Tracking
+
+Reviews
+
+Ratings
+
+Coupons
+
+Offers
+
+Seller Dashboard
+
+Delivery Dashboard
+
+Admin Dashboard
+
+Notifications
+
+Image Upload
+
+Image Display
+
+Responsive Design
+
+Mobile Layout
+
+Tablet Layout
+
+Desktop Layout
+
+Every API endpoint
+
+Every frontend page
+
+Every backend route
+
+Every database operation
+
+Every Redis operation
+
+Every Prisma query
+
+Every component
+
+Every feature
+
+Every button
+
+Every modal
+
+Every popup
+
+Every loading state
+
+Every empty state
+
+Every error state
+
+Everything must work from start to finish.
+
+---
+
+# PHASE 4 — Fix Every Issue
+
+Whenever you find a problem:
+
+Identify the real root cause.
+
+Fix the architecture if necessary.
+
+Refactor poor code.
+
+Remove duplicate logic.
+
+Improve maintainability.
+
+Never use temporary fixes.
+
+Never ignore warnings.
+
+Keep fixing until the issue is completely resolved.
+
+---
+
+# PHASE 5 — Improve Code Quality
+
+Refactor code where needed.
+
+Improve:
+
+Folder structure
+
+Naming conventions
+
+Reusable components
+
+Hooks
+
+API services
+
+Utilities
+
+Validation
+
+Error handling
+
+Logging
+
+Loading states
+
+Empty states
+
+Code readability
+
+Maintainability
+
+Scalability
+
+---
+
+# PHASE 6 — Security Audit
+
+Review and fix:
+
+Authentication
+
+Authorization
+
+JWT handling
+
+Cookie security
+
+Password hashing
+
+Input validation
+
+SQL Injection
+
+XSS
+
+CSRF
+
+Environment variable handling
+
+API security
+
+File upload validation
+
+Rate limiting
+
+Sensitive information exposure
+
+Never expose secrets.
+
+---
+
+# PHASE 7 — Performance Optimization
+
+Optimize:
+
+React rendering
+
+API performance
+
+Database queries
+
+Prisma performance
+
+Redis caching
+
+Image loading
+
+Lazy loading
+
+Pagination
+
+Memoization
+
+Bundle size
+
+Code splitting
+
+Caching
+
+Remove unnecessary re-renders
+
+Optimize slow queries
+
+Optimize expensive components
+
+---
+
+# PHASE 8 — Final Validation
+
+Before finishing verify:
+
+✔ Every page loads.
+
+✔ Every button works.
+
+✔ Every form submits correctly.
+
+✔ Every API returns expected results.
+
+✔ Every image loads.
+
+✔ Every dashboard works.
+
+✔ Every search works.
+
+✔ Every filter works.
+
+✔ Every order flow works.
+
+✔ Every CRUD operation works.
+
+✔ Authentication works.
+
+✔ Authorization works.
+
+✔ Database operations work.
+
+✔ Redis operations work.
+
+✔ Prisma works.
+
+✔ Build completes successfully.
+
+✔ No runtime crashes.
+
+✔ No console errors.
+
+✔ No network errors.
+
+✔ No broken UI.
+
+✔ No broken backend.
+
+✔ No missing functionality.
+
+✔ No placeholder implementations.
+
+✔ No TODOs related to core functionality.
+
+---
+
+# FINAL REPORT
+
+Only finish after providing:
+
+* Complete list of bugs found.
+* Root cause of every bug.
+* Files modified.
+* Exact fixes applied.
+* Features repaired.
+* Features added (if required to complete functionality).
+* Remaining blockers (if any external dependency prevents completion).
+* Overall application health score out of 100.
+* Code quality score.
+* Security score.
+* Performance score.
+* A checklist confirming every major feature was tested and is working.
+
+---
+
+# WORKING RULES
+
+* Never stop after finding the first bug.
+* Continue fixing until all major functionality works.
+* Think like the lead engineer responsible for shipping this product.
+* Do not skip any feature because it looks difficult.
+* If one fix breaks another feature, continue until both work correctly.
+* Keep the project clean, maintainable, and production-quality.
+* Your success criterion is simple: **the entire website must be fully functional end-to-end in the local environment, without deploying it anywhere.**

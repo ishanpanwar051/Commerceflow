@@ -9,7 +9,13 @@ export function validate(schema: ZodSchema, target: ValidationTarget = 'body') {
     if (!result.success) {
       return next(result.error);
     }
-    req[target] = result.data;
+    // Express 5 made req.query a read-only getter — use defineProperty to override it
+    if (target === 'query') {
+      const data = result.data;
+      Object.defineProperty(req, 'query', { get: () => data, configurable: true });
+    } else {
+      req[target] = result.data;
+    }
     next();
   };
 }
