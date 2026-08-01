@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useAppDispatch } from '@/store/hooks';
 import { googleLogin } from '@/store/slices/userSlice';
@@ -23,7 +23,13 @@ export function GoogleSignInButton({ mode = 'login' }: { mode?: 'login' | 'regis
         return;
       }
       const result = await signInWithPopup(auth, googleProvider);
-      const idToken = await result.user.getIdToken();
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const idToken = credential?.idToken;
+      if (!idToken) {
+        toast.error('Google sign-in failed. Please try again.');
+        setLoading(false);
+        return;
+      }
       const payload = await dispatch(googleLogin(idToken)).unwrap();
       if (payload) {
         toast.success(mode === 'login' ? 'Login successful!' : 'Account created!');
