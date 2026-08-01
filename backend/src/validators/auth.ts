@@ -10,6 +10,7 @@ export const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
   phone: z.string().optional(),
+  role: z.enum(['CUSTOMER', 'SELLER', 'DELIVERY_BOY']).optional().default('CUSTOMER'),
 });
 
 export const loginSchema = z.object({

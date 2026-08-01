@@ -22,6 +22,7 @@ export class ProductController {
         minPrice: query.minPrice ? Number(query.minPrice) : undefined,
         maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
         minRating: query.minRating ? Number(query.minRating) : undefined,
+        minDiscount: query.minDiscount ? Number(query.minDiscount) : undefined,
         isFeatured: query.isFeatured === undefined ? undefined : query.isFeatured === 'true',
         isBestSeller: query.isBestSeller === undefined ? undefined : query.isBestSeller === 'true',
         isNewArrival: query.isNewArrival === undefined ? undefined : query.isNewArrival === 'true',

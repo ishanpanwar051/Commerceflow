@@ -51,8 +51,11 @@ export const fetchProfile = createAsyncThunk(
     try {
       return await authService.getProfile();
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      return rejectWithValue(err.response?.data?.message || 'Failed to fetch profile');
+      const err = error as { response?: { data?: { message?: string }; status?: number } };
+      return rejectWithValue({
+        message: err.response?.data?.message || 'Failed to fetch profile',
+        status: err.response?.status,
+      });
     }
   }
 );
@@ -132,10 +135,14 @@ const userSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
       })
-      .addCase(fetchProfile.rejected, (state) => {
+      .addCase(fetchProfile.rejected, (state, action) => {
         state.isLoading = false;
-        state.user = null;
-        state.isAuthenticated = false;
+        const payload = action.payload as { message?: string; status?: number } | undefined;
+        if (payload?.status === 401) {
+          state.user = null;
+          state.isAuthenticated = false;
+        }
+        state.error = payload?.message || null;
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;

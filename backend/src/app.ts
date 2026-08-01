@@ -9,10 +9,16 @@ import { logger } from "./lib/logger";
 import router from "./routes/index";
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalLimiter } from './middleware/rateLimiter';
+import { requestIdMiddleware } from './middleware/requestId';
+import { securityHeaders } from './middleware/security';
 
 const app = express();
 
 app.set("trust proxy", ["loopback", "linklocal", "uniquelocal"]);
+
+app.use(requestIdMiddleware);
+
+app.use(securityHeaders);
 
 app.use(
   helmet({

@@ -17,6 +17,11 @@ export const orderService = {
     return data.data!;
   },
 
+  async trackOrder(orderNumber: string) {
+    const { data } = await apiClient.get<ApiResponse<Order>>(`/orders/track/${encodeURIComponent(orderNumber)}`);
+    return data.data!;
+  },
+
   async cancelOrder(id: string, reason?: string) {
     const { data } = await apiClient.post<ApiResponse<Order>>(`/orders/${id}/cancel`, { reason });
     return data.data!;
@@ -26,6 +31,11 @@ export const orderService = {
   async getAllOrders(page = 1, limit = 10, status?: string) {
     const { data } = await apiClient.get<ApiResponse<Order[]>>('/orders/admin/all', { params: { page, limit, status } });
     return { orders: data.data!, meta: data.meta as PaginationMeta };
+  },
+
+  async getOrderAdmin(id: string) {
+    const { data } = await apiClient.get<ApiResponse<Order>>(`/orders/admin/${id}`);
+    return data.data!;
   },
 
   async updateOrderStatus(id: string, status: string) {

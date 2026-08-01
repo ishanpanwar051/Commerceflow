@@ -60,6 +60,7 @@ function CategoriesContent() {
                       src={category.image}
                       alt={`${category.name} collection`}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }}
                     />
                   </div>
                 )}

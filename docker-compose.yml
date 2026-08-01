@@ -1,0 +1,133 @@
+name: commerceflow
+
+# ============================================================================
+# CommerceFlow — development stack
+#   docker compose up -d --build
+#
+# Provides PostgreSQL + Redis with healthchecks, the API server (with
+# migrations + optional seed on first boot) and the SPA served by nginx.
+# Defaults are safe for local development; override via a root .env file.
+# ============================================================================
+
+networks:
+  commerceflow:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-commerceflow}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-commerceflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - commerceflow
+
+  redis:
+    image: redis:7-alpine
+    command: ["sh", "-c", "if [ -n \"$$REDIS_PASSWORD\" ]; then exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\"; else exec redis-server --appendonly yes; fi"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$$REDIS_PASSWORD\" ]; then redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG; else redis-cli ping | grep -q PONG; fi"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - commerceflow
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-runtime
+    environment: &backend_env
+      NODE_ENV: production
+      HOST: "0.0.0.0"
+      PORT: "4000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-commerceflow}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-commerceflow_dev_access_secret_key_2026_atleast_32}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-commerceflow_dev_refresh_secret_key_2026_atleast_32}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@commerceflow.dev}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      SEED_DB: ${SEED_DB:-true}
+    volumes:
+      - uploads_data:/app/runtime/uploads
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    stop_grace_period: 30s
+    init: true
+    networks:
+      - commerceflow
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-runtime
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:8080"
+    restart: unless-stopped
+    stop_grace_period: 15s
+    networks:
+      - commerceflow
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:

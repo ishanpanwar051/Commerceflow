@@ -161,7 +161,7 @@ export function welcomeEmailTemplate(data: { firstName: string }): string {
 }
 
 export function passwordResetTemplate(data: { firstName: string; token: string }): string {
-  const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${encodeURIComponent(data.token)}`;
+  const resetUrl = `${config.frontendUrl}/reset-password?token=${encodeURIComponent(data.token)}`;
   
   return `
     <h1>Password Reset Request</h1>
@@ -183,7 +183,7 @@ export function passwordResetTemplate(data: { firstName: string; token: string }
 }
 
 export function emailVerificationTemplate(data: { firstName: string; token: string }): string {
-  const verificationUrl = `${config.frontendUrl}/auth/verify-email?token=${encodeURIComponent(data.token)}`;
+  const verificationUrl = `${config.frontendUrl}/verify-email?token=${encodeURIComponent(data.token)}`;
   
   return `
     <h1>Verify Your Email Address</h1>

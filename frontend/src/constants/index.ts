@@ -1,5 +1,10 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
+// ─── Pagination ───────────────────────────────────────────────────────────────
+export const ITEMS_PER_PAGE = 20;
+export const REVIEWS_PER_PAGE = 10;
+
+// ─── Order Status ─────────────────────────────────────────────────────────────
 export const ORDER_STATUS_MAP: Record<string, string> = {
   PENDING: 'Pending',
   CONFIRMED: 'Confirmed',
@@ -40,4 +45,47 @@ export const SORT_OPTIONS = [
   { value: 'name-desc', label: 'Name: Z to A' },
 ];
 
-export const ITEMS_PER_PAGE = 20;
+// ─── Order Status Labels (aliases) ────────────────────────────────────────────
+export const ORDER_STATUS_LABELS = ORDER_STATUS_MAP;
+
+// ─── Roles ────────────────────────────────────────────────────────────────────
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Admin',
+  CUSTOMER: 'Customer',
+  SELLER: 'Seller',
+  DELIVERY_BOY: 'Delivery Boy',
+};
+
+// ─── File Upload ──────────────────────────────────────────────────────────────
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+
+// ─── Sort ─────────────────────────────────────────────────────────────────────
+// Maps frontend sort option values to backend-compatible sort fields + order.
+export function resolveSort(sort?: string): { sort?: string; order?: 'asc' | 'desc' } {
+  switch (sort) {
+    case 'price-asc':
+      return { sort: 'basePrice', order: 'asc' };
+    case 'price-desc':
+      return { sort: 'basePrice', order: 'desc' };
+    case 'name-asc':
+      return { sort: 'name', order: 'asc' };
+    case 'name-desc':
+      return { sort: 'name', order: 'desc' };
+    case 'rating':
+      return { sort: 'rating', order: 'desc' };
+    case 'popularity':
+      return { sort: 'popularity', order: 'desc' };
+    case 'trending':
+      return { sort: 'trending', order: 'desc' };
+    case 'discount':
+      return { sort: 'discountPercent', order: 'desc' };
+    case 'newest':
+    default:
+      return { sort: 'createdAt', order: 'desc' };
+  }
+}
+
+// ─── Date ─────────────────────────────────────────────────────────────────────
+export const DATE_FORMAT = 'PPP' as const;
+export const DATETIME_FORMAT = 'PPp' as const;

@@ -12,7 +12,7 @@ import { productService } from '@/services/product.service';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useAppSelector } from '@/store/hooks';
-import { SORT_OPTIONS, ITEMS_PER_PAGE } from '@/constants';
+import { SORT_OPTIONS, ITEMS_PER_PAGE, resolveSort } from '@/constants';
 import { toast } from 'sonner';
 import type { Category } from '@/types/api';
 
@@ -72,13 +72,13 @@ function ProductsContent() {
     queryFn: () => productService.getProducts({
       page, limit: ITEMS_PER_PAGE,
       search: search || undefined,
-      sort: sort === 'newest' ? 'createdAt' : sort === 'price-asc' ? 'basePrice' : sort === 'price-desc' ? 'basePrice' : sort === 'name-asc' ? 'name' : sort === 'name-desc' ? 'name' : sort === 'rating' ? 'averageRating' : sort === 'popularity' ? 'soldCount' : sort === 'discount' ? 'discountPercent' : sort === 'trending' ? 'trendingScore' : undefined,
-      order: sort === 'price-desc' || sort === 'name-desc' || sort === 'rating' || sort === 'popularity' || sort === 'discount' || sort === 'trending' ? 'desc' : 'asc',
+      ...resolveSort(sort),
       brand: brand || undefined,
       categoryId: categoryId || undefined,
-      minPrice: minPrice ? Number(minPrice) * 100 : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) * 100 : undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
       minRating: minRating ? Number(minRating) : undefined,
+      minDiscount: minDiscount ? Number(minDiscount) : undefined,
       isFeatured,
       isBestSeller,
       isNewArrival,
@@ -214,6 +214,7 @@ function ProductsContent() {
                 {categoryId && <FilterPill label={categories?.find(c => c.id === categoryId)?.name || 'Category'} onRemove={() => updateFilter('categoryId', '')} />}
                 {(minPrice || maxPrice) && <FilterPill label={`₹${minPrice || '0'} - ₹${maxPrice || '∞'}`} onRemove={() => { updateFilter('minPrice', ''); updateFilter('maxPrice', ''); }} />}
                 {minRating && <FilterPill label={`${minRating}★ & above`} onRemove={() => updateFilter('minRating', '')} />}
+                {minDiscount && <FilterPill label={`${minDiscount}%+ off`} onRemove={() => updateFilter('minDiscount', '')} />}
                 {isFeatured && <FilterPill label="Featured" onRemove={() => updateFilter('isFeatured', '')} />}
                 {isBestSeller && <FilterPill label="Best Seller" onRemove={() => updateFilter('isBestSeller', '')} />}
                 {isNewArrival && <FilterPill label="New Arrival" onRemove={() => updateFilter('isNewArrival', '')} />}

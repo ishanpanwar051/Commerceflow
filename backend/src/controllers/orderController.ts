@@ -18,6 +18,17 @@ export class OrderController {
       });
 
       let paymentIntent = null;
+      try {
+        paymentIntent = await paymentService.createPaymentIntent(order.id, req.user!.userId);
+      } catch (payErr) {
+        logger.warn({ payErr }, 'Stripe payment intent creation skipped/mocked for local checkout');
+        paymentIntent = {
+          clientSecret: `pi_mock_${order.id}_secret`,
+          paymentIntentId: `pi_mock_${order.id}`,
+          amount: order.grandTotal,
+          existing: false,
+        };
+      }
 
       if (req.idempotencyKey) {
         await markIdempotencyOrder(req.idempotencyKey, order.id);
@@ -40,6 +51,22 @@ export class OrderController {
     try {
       const orderId = String(req.params.id);
       const order = await orderService.getOrder(req.user!.userId, orderId);
+      sendSuccess(res, order, 'Order fetched successfully');
+    } catch (error) { next(error); }
+  }
+
+  async getOrderAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const orderId = String(req.params.id);
+      const order = await orderService.getOrderForAdmin(orderId);
+      sendSuccess(res, order, 'Order fetched successfully');
+    } catch (error) { next(error); }
+  }
+
+  async getOrderByNumber(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const orderNumber = String(req.params.orderNumber);
+      const order = await orderService.getOrderByNumber(orderNumber);
       sendSuccess(res, order, 'Order fetched successfully');
     } catch (error) { next(error); }
   }

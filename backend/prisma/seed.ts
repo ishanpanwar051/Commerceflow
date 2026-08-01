@@ -1,9 +1,22 @@
-import { PrismaClient } from '@prisma/client';
+import { createRequire } from 'module';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { getProductImages } from './product-images';
 
-const prisma = new PrismaClient();
+const _require = createRequire(import.meta.url);
+const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error('DATABASE_URL environment variable is required to run the seed');
+  process.exit(1);
+}
+const seedPool = new Pool({ connectionString: databaseUrl });
+const seedAdapter = new PrismaPg(seedPool);
+
+const prisma = new PrismaClient({ adapter: seedAdapter } as any);
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
@@ -491,5 +504,13 @@ async function main() {
 }
 
 main()
-  .then(async () => { await prisma.$disconnect(); })
-  .catch(async (e) => { console.error(e); await prisma.$disconnect(); process.exit(1); });
+  .then(async () => {
+    await prisma.$disconnect();
+    await seedPool.end();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect().catch(() => {});
+    await seedPool.end().catch(() => {});
+    process.exit(1);
+  });

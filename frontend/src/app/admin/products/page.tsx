@@ -80,7 +80,7 @@ export default function AdminProductsPage() {
     reset({
       name: product.name,
       description: product.description || '',
-      basePrice: product.basePrice,
+      basePrice: product.basePrice / 100,
       sku: product.sku,
       barcode: product.barcode || '',
       categoryId: product.categoryId,
@@ -253,7 +253,7 @@ export default function AdminProductsPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-md bg-muted overflow-hidden shrink-0 relative">
-                          <img src={product.images?.[0]?.url || '/placeholder.svg'} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          <img src={product.images?.[0]?.url || '/placeholder.svg'} alt="" className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                         </div>
                         <span className="font-medium text-sm truncate max-w-[200px]">{product.name}</span>
                       </div>

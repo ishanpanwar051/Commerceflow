@@ -1,20 +1,29 @@
 /**
- * Next.js navigation compatibility shim for wouter.
+ * wouter navigation compatibility shim.
  * Import these hooks instead of 'next/navigation'.
  */
-import { useLocation, useRoute, useParams as useWouterParams, useSearchParams as useWouterSearchParams } from 'wouter';
-import { useCallback } from 'react';
+import { useLocation, useParams as useWouterParams, useSearchParams as useWouterSearchParams } from 'wouter';
+import { useCallback, useMemo } from 'react';
 
 export function useRouter() {
   const [, navigate] = useLocation();
-  return {
-    push: (href: string) => navigate(href),
-    replace: (href: string) => navigate(href, { replace: true }),
-    back: () => window.history.back(),
-    forward: () => window.history.forward(),
-    prefetch: () => {},
-    refresh: () => {},
-  };
+
+  const push = useCallback((href: string) => navigate(href), [navigate]);
+  const replace = useCallback((href: string) => navigate(href, { replace: true }), [navigate]);
+  const back = useCallback(() => window.history.back(), []);
+  const forward = useCallback(() => window.history.forward(), []);
+
+  return useMemo(
+    () => ({
+      push,
+      replace,
+      back,
+      forward,
+      prefetch: () => {},
+      refresh: () => {},
+    }),
+    [push, replace, back, forward]
+  );
 }
 
 export function usePathname() {

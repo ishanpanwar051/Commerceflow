@@ -13,7 +13,7 @@ import { productService } from '@/services/product.service';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useAppSelector } from '@/store/hooks';
-import { SORT_OPTIONS, RATING_OPTIONS, ITEMS_PER_PAGE } from '@/constants';
+import { SORT_OPTIONS, RATING_OPTIONS, ITEMS_PER_PAGE, resolveSort } from '@/constants';
 import { toast } from 'sonner';
 
 function CategoryDetailContent() {
@@ -38,12 +38,14 @@ function CategoryDetailContent() {
 
   const category = allCategories?.find((c) => c.slug === slug);
 
+  const { sort: resolvedSort, order: resolvedOrder } = resolveSort(sort);
+
   const { data, isLoading } = useQuery({
     queryKey: ['products', { categoryId: category?.id, page, search, sort, minRating }],
     queryFn: () => productService.getProducts({
       page, limit: ITEMS_PER_PAGE, search: search || undefined,
-      sort: sort === 'newest' ? 'createdAt' : sort === 'price-asc' ? 'basePrice' : sort === 'price-desc' ? 'basePrice' : sort === 'name-asc' ? 'name' : sort === 'name-desc' ? 'name' : sort === 'rating' ? 'averageRating' : undefined,
-      order: sort === 'price-desc' || sort === 'name-desc' || sort === 'rating' ? 'desc' : 'asc',
+      sort: resolvedSort,
+      order: resolvedOrder,
       categoryId: category?.id,
       minRating: minRating ? Number(minRating) : undefined,
     }),

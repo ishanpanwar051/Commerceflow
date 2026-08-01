@@ -98,8 +98,10 @@ export default function ProductDetailPage() {
     ? product.images
     : [{ id: 'fallback', url: '/placeholder.svg', alt: product.name, order: 0 }];
 
-  const inStock = product.inventory && (product.inventory.stock - product.inventory.reservedStock) > 0;
-  const availableStock = product.inventory ? product.inventory.stock - product.inventory.reservedStock : 0;
+  const availableStock = product.inventory
+    ? (product.inventory.stock ?? 0) - (product.inventory.reservedStock ?? 0)
+    : undefined;
+  const inStock = availableStock === undefined ? true : availableStock > 0;
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) { toast.error('Please login to add items to cart'); return; }
@@ -160,6 +162,7 @@ export default function ProductDetailPage() {
             >
               <img
                 src={images[currentImage]?.url}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }}
                 alt={images[currentImage]?.alt || product.name}
                 className={`absolute inset-0 w-full h-full object-cover transition-transform duration-200 ${showZoom ? 'scale-150' : ''}`}
                 style={showZoom ? { transformOrigin: `${mousePos.x}% ${mousePos.y}%` } : undefined}
@@ -203,7 +206,7 @@ export default function ProductDetailPage() {
                       i === currentImage ? 'border-primary' : 'border-border hover:border-muted-foreground/30'
                     }`}
                   >
-                    <img src={img.url} alt={img.alt || ''} className="object-cover absolute inset-0 w-full h-full object-cover" />
+                    <img src={img.url} alt={img.alt || ''} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                   </button>
                 ))}
               </div>
@@ -288,7 +291,7 @@ export default function ProductDetailPage() {
                   <span className="font-medium">In Stock</span>
                   {product.inventory && (
                     <span className="text-muted-foreground">
-                      ({product.inventory.stock - product.inventory.reservedStock} available)
+                      ({availableStock} available)
                     </span>
                   )}
                 </div>
@@ -337,7 +340,7 @@ export default function ProductDetailPage() {
                   </button>
                   <span className="px-5 py-2.5 font-medium text-sm min-w-[3rem] text-center">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(availableStock ?? 99, quantity + 1))}
                     className="p-2.5 hover:bg-accent transition-colors rounded-r-lg"
                   >
                     <Plus className="h-4 w-4" />

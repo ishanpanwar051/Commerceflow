@@ -61,7 +61,7 @@ export default function WishlistPage() {
             >
               <Link href={`/products/${item.product.slug}`}>
                 <div className="relative aspect-square bg-muted">
-                  <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} className="object-cover absolute inset-0 w-full h-full object-cover" />
+                  <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                 </div>
               </Link>
               <div className="p-4">

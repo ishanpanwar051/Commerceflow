@@ -22,8 +22,12 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
   const images = product.images || [];
   const mainImage = imgError ? '/placeholder.svg' : (images[0]?.url || '/placeholder.svg');
   const hoverImage = !imgError && images.length > 1 ? images[1]?.url : mainImage;
-  const inStock = product.inventory && (product.inventory.stock - product.inventory.reservedStock) > 0;
-  const lowStock = product.inventory && (product.inventory.stock - product.inventory.reservedStock) <= product.inventory.lowStockThreshold;
+  const availableStock = product.inventory
+    ? (product.inventory.stock ?? 0) - (product.inventory.reservedStock ?? 0)
+    : undefined;
+  const inStock = availableStock === undefined ? true : availableStock > 0;
+  const lowStock = availableStock !== undefined && availableStock > 0
+    && availableStock <= (product.inventory?.lowStockThreshold ?? 5);
 
   return (
     <div
@@ -47,13 +51,13 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
           )}
 
           {product.discountPercent && product.discountPercent > 0 && (
-            <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600 text-white border-0">
+            <Badge className={`absolute left-2 bg-red-500 hover:bg-red-600 text-white border-0 ${product.isBestSeller ? 'top-9' : 'top-2'}`}>
               -{product.discountPercent}%
             </Badge>
           )}
 
           {product.isBestSeller && (
-            <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white border-0 text-[10px]">
+            <Badge className="absolute top-2 left-2 bg-amber-500 hover:bg-amber-600 text-white border-0 text-[10px]">
               Best Seller
             </Badge>
           )}
@@ -61,7 +65,7 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
           {lowStock && inStock && (
             <div className="absolute bottom-2 left-2 right-2">
               <div className="bg-background/90 backdrop-blur-sm rounded-md px-2 py-1 text-[10px] font-medium text-destructive text-center">
-                Only {product.inventory!.stock - product.inventory!.reservedStock} left in stock
+                Only {availableStock} left in stock
               </div>
             </div>
           )}
@@ -91,11 +95,17 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-0.5">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs font-semibold">{product.averageRating?.toFixed(1)}</span>
+              {product.averageRating ? (
+                <span className="text-xs font-semibold">{product.averageRating.toFixed(1)}</span>
+              ) : (
+                <span className="text-xs text-muted-foreground">New</span>
+              )}
             </div>
-            <span className="text-[11px] text-muted-foreground">
-              ({product.reviewCount?.toLocaleString()})
-            </span>
+            {product.reviewCount ? (
+              <span className="text-[11px] text-muted-foreground">
+                ({product.reviewCount.toLocaleString()})
+              </span>
+            ) : null}
             {product.soldCount && product.soldCount > 0 && (
               <span className="text-[11px] text-muted-foreground">
                 | {product.soldCount?.toLocaleString()} sold

@@ -18,9 +18,12 @@ export default function AuthProvider({ children }: AuthProviderProps) {
         try {
           await dispatch(fetchProfile()).unwrap();
         } catch (error) {
-          // If profile fetch fails, tokens are invalid
+          // Only clear the session on authentication errors (401).
+          // Transient failures (network / 5xx) must not log the user out.
           console.error('Failed to fetch profile on init:', error);
-          TokenService.clear();
+          if ((error as { status?: number })?.status === 401) {
+            TokenService.clear();
+          }
         }
       }
     };

@@ -30,7 +30,7 @@ export class InventoryRepository {
     const rows: LockedInventoryRow[] = [];
     for (const pid of sortedIds) {
       const rowsRaw = await tx.$queryRawUnsafe<LockedInventoryRow[]>(
-        'SELECT id, productId, stock, reservedStock, lowStockThreshold FROM inventory WHERE productId = $1 LIMIT 1',
+        'SELECT id, "productId", stock, "reservedStock", "lowStockThreshold" FROM inventory WHERE "productId" = $1 LIMIT 1',
         pid,
       );
       if (rowsRaw.length === 0) throw new BadRequestError(`Inventory not found for product ${pid}`);
@@ -77,7 +77,7 @@ export class InventoryRepository {
     quantity: number,
   ): Promise<boolean> {
     const result = await tx.$executeRawUnsafe(
-      `UPDATE inventory SET stock = stock - $1, reservedStock = reservedStock + $2 WHERE productId = $3 AND stock - reservedStock >= $4`,
+      `UPDATE inventory SET stock = stock - $1, "reservedStock" = "reservedStock" + $2 WHERE "productId" = $3 AND stock - "reservedStock" >= $4`,
       quantity,
       quantity,
       productId,

@@ -1,0 +1,55 @@
+# Dependencies and build output
+**/node_modules
+**/dist
+**/.turbo
+**/.cache
+**/tsconfig.tsbuildinfo
+**/*.map
+
+# Environment and secrets (never baked into images)
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Git / CI / deployment manifests
+.git
+.gitignore
+.github
+Dockerfile
+.dockerignore
+docker-compose*.yml
+render.yaml
+replit.md
+ARCHITECTURE_AUDIT.md
+*.ps1
+*.bat
+**/*.bak
+**/*.bak.*
+
+# Editor / OS cruft
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# Logs, runtime uploads, and temporary data
+**/logs
+**/uploads
+*.log
+**/*.sqlite
+**/sqlite
+
+# Outside-workspace checkouts (not part of CommerceFlow)
+distributed-rate-limiter
+url-shortener
+forge-ai
+food dilver
+
+# Host-only artifacts / secrets
+*.pem
+*.key

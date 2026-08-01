@@ -1,6 +1,6 @@
 
 import { useParams, useRouter } from '@/lib/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 // next/image removed;
 
 import { ArrowLeft, Package } from 'lucide-react';
@@ -18,6 +18,7 @@ import { useState } from 'react';
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth(true);
   const [cancelling, setCancelling] = useState(false);
   const id = params.id as string;
@@ -34,7 +35,8 @@ export default function OrderDetailPage() {
     try {
       await orderService.cancelOrder(id);
       toast.success('Order cancelled');
-      router.refresh();
+      await queryClient.invalidateQueries({ queryKey: ['order', id] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
     } catch { toast.error('Failed to cancel order'); }
     finally { setCancelling(false); }
   };
@@ -93,7 +95,7 @@ export default function OrderDetailPage() {
               {order.items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted shrink-0">
-                    <img src={item.product?.images?.[0]?.url || '/placeholder.svg'} alt={item.name} className="object-cover absolute inset-0 w-full h-full object-cover" />
+                    <img src={item.product?.images?.[0]?.url || '/placeholder.svg'} alt={item.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>

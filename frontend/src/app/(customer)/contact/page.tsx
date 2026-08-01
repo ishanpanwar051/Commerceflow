@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '@/constants';
 
 const contactInfo = [
   { icon: Mail, label: 'Email Us', value: 'support@commerceflow.com', href: 'mailto:support@commerceflow.com' },
@@ -24,7 +25,7 @@ export default function ContactPage() {
     if (!form.name || !form.email || !form.message) { toast.error('Please fill in all required fields'); return; }
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/v1/contact', {
+      const res = await fetch(`${API_BASE_URL}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

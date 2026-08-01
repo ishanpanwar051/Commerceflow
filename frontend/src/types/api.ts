@@ -117,7 +117,7 @@ export interface Product {
   questionsCount?: number;
   trendingScore?: number;
   images: ProductImage[];
-  inventory: Inventory;
+  inventory?: Inventory;
   averageRating: number;
   reviewCount: number;
   createdAt: string;

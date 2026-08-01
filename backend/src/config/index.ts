@@ -20,8 +20,8 @@ const envSchema = z.object({
   REDIS_TLS_CERT: z.string().optional(),
   REDIS_TLS_KEY: z.string().optional(),
 
-  JWT_ACCESS_SECRET: z.string().min(32).optional().default('AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPp1'),
-  JWT_REFRESH_SECRET: z.string().min(32).optional().default('ZzYyXxWwVvUuTtSsRrQqPpOoNnMmLlKk2'),
+  JWT_ACCESS_SECRET: z.string().min(32).optional(),
+  JWT_REFRESH_SECRET: z.string().min(32).optional(),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
@@ -60,6 +60,17 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+const fallbackAccess = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPp1';
+const fallbackRefresh = 'ZzYyXxWwVvUuTtSsRrQqPpOoNnMmLlKk2';
+
+if (parsed.data.NODE_ENV === 'production' && (!parsed.data.JWT_ACCESS_SECRET || !parsed.data.JWT_REFRESH_SECRET)) {
+  console.error(JSON.stringify({
+    level: 'fatal',
+    msg: 'JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are required in production (insecure fallbacks refused)',
+  }));
+  process.exit(1);
+}
+
 export const config = {
   env: parsed.data.NODE_ENV,
   port: parsed.data.PORT,
@@ -87,8 +98,8 @@ export const config = {
   },
 
   jwt: {
-    accessSecret: parsed.data.JWT_ACCESS_SECRET,
-    refreshSecret: parsed.data.JWT_REFRESH_SECRET,
+    accessSecret: parsed.data.JWT_ACCESS_SECRET || fallbackAccess,
+    refreshSecret: parsed.data.JWT_REFRESH_SECRET || fallbackRefresh,
     accessExpiresIn: parsed.data.JWT_ACCESS_EXPIRES_IN,
     refreshExpiresIn: parsed.data.JWT_REFRESH_EXPIRES_IN,
   },

@@ -112,7 +112,7 @@ export default function CartPage() {
               >
                 <Link href={`/products/${item.product.slug}`} className="shrink-0">
                   <div className="relative h-24 w-24 rounded-md overflow-hidden bg-muted">
-                    <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} className="object-cover absolute inset-0 w-full h-full object-cover" />
+                    <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                   </div>
                 </Link>
                 <div className="flex-1 min-w-0">

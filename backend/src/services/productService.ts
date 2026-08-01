@@ -67,6 +67,7 @@ export class ProductService {
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
+    minDiscount?: number;
     isFeatured?: boolean;
     isBestSeller?: boolean;
     isNewArrival?: boolean;
@@ -96,6 +97,7 @@ export class ProductService {
         categoryId: params.categoryId,
         ...priceFilter,
         minRating: params.minRating,
+        minDiscount: params.minDiscount,
         isFeatured: params.isFeatured,
         isBestSeller: params.isBestSeller,
         isNewArrival: params.isNewArrival,
@@ -111,7 +113,7 @@ export class ProductService {
         categoryId: params.categoryId,
         ...priceFilter,
         minRating: params.minRating,
-        isFeatured: params.isFeatured,
+        minDiscount: params.minDiscount,
         isBestSeller: params.isBestSeller,
         isNewArrival: params.isNewArrival,
         isTopRated: params.isTopRated,

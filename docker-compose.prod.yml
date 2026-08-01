@@ -1,0 +1,41 @@
+name: commerceflow-prod
+
+# ============================================================================
+# CommerceFlow — production overlay
+#
+#   docker compose --env-file .env.production \
+#     -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Hardens the base stack for production:
+#   * refuses to start without real JWT secrets (no insecure fallbacks)
+#   * restarts always, seeding disabled by default (SEED_DB=true only on an
+#     empty database). Publish the frontend on :80 by setting FRONTEND_PORT=80
+#     in .env.production.
+#   * backend no longer exposes a host port (frontend nginx proxies /api).
+# ============================================================================
+
+services:
+  backend:
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required in production (use a random string of at least 32 chars)}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required in production (use a random string of at least 32 chars)}
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL is required in production (public origin, e.g. https://shop.example.com)}
+      SEED_DB: ${SEED_DB:-false}
+    ports: !reset []
+    restart: always
+
+  frontend:
+    restart: always
+
+  postgres:
+    restart: always
+
+  redis:
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:

@@ -12,6 +12,7 @@ interface ProductQueryParams {
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
+  minDiscount?: number;
   isFeatured?: boolean;
   isBestSeller?: boolean;
   isNewArrival?: boolean;

@@ -17,7 +17,7 @@ export default function ProtectedRoute({
   requireAuth = true,
   requireRole,
   fallback = <LoadingSpinner />,
-  redirectTo = '/auth/login',
+  redirectTo = '/login',
 }: ProtectedRouteProps) {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);

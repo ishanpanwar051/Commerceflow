@@ -26,7 +26,7 @@ export class AuthService {
     this.userRepo = new UserRepository();
   }
 
-  async register(data: { email: string; password: string; firstName: string; lastName: string; phone?: string }) {
+  async register(data: { email: string; password: string; firstName: string; lastName: string; phone?: string; role?: string }) {
     const existing = await this.userRepo.findByEmail(data.email.toLowerCase());
     if (existing) {
       throw new ConflictError('Email already registered');
@@ -36,12 +36,16 @@ export class AuthService {
     const rawEmailToken = crypto.randomBytes(32).toString('hex');
     const hashedEmailToken = this.hashToken(rawEmailToken);
 
+    const validRoles = ['CUSTOMER', 'SELLER', 'DELIVERY_BOY'];
+    const userRole = data.role && validRoles.includes(data.role) ? data.role : 'CUSTOMER';
+
     const user = await this.userRepo.create({
       email: data.email.toLowerCase(),
       password: hashedPassword,
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
+      role: userRole,
       emailToken: hashedEmailToken,
     });
 

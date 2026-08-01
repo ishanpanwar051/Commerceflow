@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from '@/lib/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchProfile, logout } from '@/store/slices/userSlice';
@@ -10,18 +10,24 @@ export function useAuth(options: boolean | { required?: boolean; redirectTo?: st
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
+  const attemptedRef = useRef(false);
 
   useEffect(() => {
-    // If not loading and tokens exist but no user, fetch profile
-    if (!isLoading && !user && TokenService.hasTokens()) {
-      dispatch(fetchProfile());
+    // If not loading and tokens exist but no user, fetch profile (once per session restore)
+    if (!isLoading && !user && !attemptedRef.current && TokenService.hasTokens()) {
+      attemptedRef.current = true;
+      dispatch(fetchProfile()).finally(() => {
+        attemptedRef.current = false;
+      });
     }
+  }, [dispatch, isLoading, user]);
 
+  useEffect(() => {
     // If auth is required and user is not authenticated after loading, redirect
     if (required && !isLoading && !isAuthenticated && !TokenService.hasTokens()) {
       router.push(redirectTo);
     }
-  }, [dispatch, router, user, isAuthenticated, isLoading, required, redirectTo]);
+  }, [router, isAuthenticated, isLoading, required, redirectTo]);
 
   const handleLogout = async () => {
     await dispatch(logout());

@@ -252,9 +252,15 @@ export class OrderService {
     return order;
   }
 
+  async getOrderForAdmin(orderId: string) {
+    const order = await this.orderRepo.findById(orderId);
+    if (!order || order.deletedAt) throw new NotFoundError('Order');
+    return order;
+  }
+
   async getOrderByNumber(orderNumber: string) {
     const order = await this.orderRepo.findByOrderNumber(orderNumber);
-    if (!order) throw new NotFoundError('Order');
+    if (!order || order.deletedAt) throw new NotFoundError('Order');
     return order;
   }
 

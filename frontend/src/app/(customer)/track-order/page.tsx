@@ -8,21 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { orderService } from '@/services/order.service';
 
-const mockSteps = [
-  { icon: PackageCheck, label: 'Order Placed', status: 'completed' },
-  { icon: Package, label: 'Packed', status: 'completed' },
-  { icon: Truck, label: 'Shipped', status: 'in-progress' },
-  { icon: MapPin, label: 'Out for Delivery', status: 'pending' },
-  { icon: Check, label: 'Delivered', status: 'pending' },
-];
-
 export default function TrackOrderPage() {
   const [orderId, setOrderId] = useState('');
   const [searched, setSearched] = useState(false);
 
-  const { data: order, isLoading, error } = useQuery({
-    queryKey: ['order', orderId],
-    queryFn: () => orderService.getOrder(orderId),
+  const { data: order, isLoading } = useQuery({
+    queryKey: ['track-order', orderId],
+    queryFn: () => orderService.trackOrder(orderId),
     enabled: !!orderId && searched,
     retry: false,
   });
@@ -33,26 +25,14 @@ export default function TrackOrderPage() {
     setSearched(true);
   };
 
-  const getOrderStatusProgress = (status: string): string => {
-    const statusMap: Record<string, string> = {
-      PENDING: 'order-placed',
-      CONFIRMED: 'order-placed',
-      PROCESSING: 'packed',
-      SHIPPED: 'shipped',
-      DELIVERED: 'delivered',
-      CANCELLED: 'cancelled',
-    };
-    return statusMap[status] || 'pending';
-  };
-
   const trackingSteps = order ? [
     { icon: PackageCheck, label: 'Order Placed', status: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'completed' : 'pending' },
     { icon: Package, label: 'Packed', status: ['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
     { icon: Truck, label: 'Shipped', status: ['SHIPPED', 'DELIVERED'].includes(order.status) ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
     { icon: MapPin, label: 'Out for Delivery', status: order.status === 'DELIVERED' ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
     { icon: Check, label: 'Delivered', status: order.status === 'DELIVERED' ? 'completed' : order.status === 'CANCELLED' ? 'cancelled' : 'pending' },
-  ] : mockSteps;
-  const isDemo = !order && !isLoading && searched && !error;
+  ] : [];
+  const notFound = searched && !isLoading && !order;
 
   return (
     <div className="container py-8 max-w-3xl">
@@ -62,10 +42,10 @@ export default function TrackOrderPage() {
         <p className="text-muted-foreground">Enter your order number to track the delivery status</p>
       </motion.div>
 
-      {isDemo && (
-        <div className="mb-6 p-3 rounded-lg border border-blue-200 bg-blue-50 flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-blue-500 shrink-0" />
-          <p className="text-sm text-blue-700">Showing demo tracking data. Connect to a real backend for live order tracking.</p>
+      {notFound && (
+        <div className="mb-6 p-3 rounded-lg border border-red-200 bg-red-50 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+          <p className="text-sm text-red-700">No order found with number "{orderId}". Please check the order number and try again.</p>
         </div>
       )}
 
@@ -87,26 +67,16 @@ export default function TrackOrderPage() {
         </div>
       )}
 
-      {error && searched && !isLoading && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="border rounded-xl p-6 bg-muted/30">
-          <div className="text-center py-8">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-semibold text-lg mb-1">Order Not Found</h3>
-            <p className="text-sm text-muted-foreground">Could not find order <strong>{orderId}</strong>. Please check the order number and try again.</p>
-          </div>
-        </motion.div>
-      )}
-
-      {!isLoading && !error && searched && (
+      {!isLoading && searched && order && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           <div className="border rounded-xl p-6 bg-muted/30">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-sm text-muted-foreground">Order Number</p>
-                <p className="font-semibold text-lg">{order?.orderNumber || orderId || 'ORD-2024-001'}</p>
+                <p className="font-semibold text-lg">{order.orderNumber}</p>
               </div>
-              <Badge variant={order?.status === 'DELIVERED' ? 'success' : order?.status === 'CANCELLED' ? 'destructive' : 'default'} className="border-0 px-4 py-1.5">
-                {order?.status ? order.status.replace(/_/g, ' ') : 'In Transit'}
+              <Badge variant={order.status === 'DELIVERED' ? 'success' : order.status === 'CANCELLED' ? 'destructive' : 'default'} className="border-0 px-4 py-1.5">
+                {order.status.replace(/_/g, ' ')}
               </Badge>
             </div>
 
@@ -146,15 +116,15 @@ export default function TrackOrderPage() {
               <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
                 <Truck className="h-4 w-4 text-primary" /> Delivery Partner
               </h3>
-              <p className="text-sm text-muted-foreground">{order?.deliveryPartner || 'Express Logistics'}</p>
-              {order?.trackingId && <p className="text-xs text-muted-foreground">Tracking ID: {order.trackingId}</p>}
+              <p className="text-sm text-muted-foreground">{order.deliveryPartner || 'Express Logistics'}</p>
+              {order.trackingId && <p className="text-xs text-muted-foreground">Tracking ID: {order.trackingId}</p>}
             </div>
             <div className="border rounded-xl p-4">
               <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" /> Estimated Delivery
               </h3>
               <p className="text-sm text-muted-foreground">Within 3-5 business days</p>
-              <p className="text-xs text-muted-foreground">{order?.estimatedDelivery ? `Expected by ${new Date(order.estimatedDelivery).toLocaleDateString('en-IN')}` : 'Expected by Jul 18, 2026'}</p>
+              <p className="text-xs text-muted-foreground">{order.estimatedDelivery ? `Expected by ${new Date(order.estimatedDelivery).toLocaleDateString('en-IN')}` : 'Delivery window calculated after dispatch'}</p>
             </div>
           </div>
 
@@ -166,7 +136,7 @@ export default function TrackOrderPage() {
               {order.items?.map((item: any) => (
                 <div key={item.id} className="flex items-center gap-3 py-2 border-b last:border-0">
                   {item.product?.images?.[0]?.url && (
-                    <img src={item.product.images[0].url} alt={item.product.name} className="h-10 w-10 rounded object-cover" />
+                    <img src={item.product.images[0].url} alt={item.product.name} className="h-10 w-10 rounded object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{item.product?.name || 'Product'}</p>

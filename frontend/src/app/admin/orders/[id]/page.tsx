@@ -24,7 +24,7 @@ export default function AdminOrderDetailPage() {
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['admin', 'order', id],
-    queryFn: () => orderService.getOrder(id),
+    queryFn: () => orderService.getOrderAdmin(id),
   });
 
   const updateStatusMutation = useMutation({
@@ -100,7 +100,7 @@ export default function AdminOrderDetailPage() {
               {order.items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted shrink-0">
-                    <img src={item.product?.images?.[0]?.url || '/placeholder.svg'} alt={item.name} className="object-cover absolute inset-0 w-full h-full object-cover" />
+                    <img src={item.product?.images?.[0]?.url || '/placeholder.svg'} alt={item.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
