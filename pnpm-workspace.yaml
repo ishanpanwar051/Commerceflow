@@ -29,18 +29,15 @@ catalog:
   wouter: ^3.3.5
   zod: 3.25.76
 
-onlyBuiltDependencies:
-  - '@firebase/util'
-  - '@prisma/engines'
-  - '@scarf/scarf'
-  - '@swc/core'
-  - esbuild
-  - msgpackr-extract
-  - msw
-  - prisma
-  - protobufjs
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  '@firebase/util': true
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  esbuild: true
+  msgpackr-extract: true
+  prisma: true
+  protobufjs: true
+  sharp: true
 
 overrides:
   '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
