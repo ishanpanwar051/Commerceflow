@@ -78,8 +78,23 @@ export class CategoryService {
     const { page, limit, minPrice, maxPrice, sortBy = 'createdAt', sortOrder = 'desc' } = options;
     const skip = (page - 1) * limit;
 
+    // Include products from all descendant subcategories when browsing a
+    // parent category (e.g. "Electronics" shows Phones, Laptops, ...).
+    const allCategories = await this.repo.findAll();
+    const categoryIds = new Set<string>([categoryId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const c of allCategories) {
+        if (c.parentId && categoryIds.has(c.parentId) && !categoryIds.has(c.id)) {
+          categoryIds.add(c.id);
+          changed = true;
+        }
+      }
+    }
+
     const where: Prisma.ProductWhereInput = {
-      categoryId,
+      categoryId: { in: [...categoryIds] },
       isActive: true,
       deletedAt: null,
     };

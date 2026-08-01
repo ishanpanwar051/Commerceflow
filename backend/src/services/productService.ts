@@ -86,6 +86,12 @@ export class ProductService {
         }
       : {};
 
+    // Browsing a parent category should also show products from its
+    // descendant subcategories (e.g. "Electronics" includes Phones, Laptops...).
+    const categoryIds = params.categoryId
+      ? await this.getCategoryWithDescendants(params.categoryId)
+      : undefined;
+
     const [products, total] = await Promise.all([
       this.productRepo.findAll({
         skip,
@@ -95,6 +101,7 @@ export class ProductService {
         search: params.search,
         brand: params.brand,
         categoryId: params.categoryId,
+        categoryIds,
         ...priceFilter,
         minRating: params.minRating,
         minDiscount: params.minDiscount,
@@ -111,6 +118,7 @@ export class ProductService {
         search: params.search,
         brand: params.brand,
         categoryId: params.categoryId,
+        categoryIds,
         ...priceFilter,
         minRating: params.minRating,
         minDiscount: params.minDiscount,
@@ -148,6 +156,22 @@ export class ProductService {
       averageRating: rest.averageRating || 0,
       reviewCount: ((count as { reviews?: number })?.reviews || 0),
     };
+  }
+
+  private async getCategoryWithDescendants(categoryId: string): Promise<string[]> {
+    const all = await this.categoryRepo.findAll();
+    const ids = new Set<string>([categoryId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const c of all) {
+        if (c.parentId && ids.has(c.parentId) && !ids.has(c.id)) {
+          ids.add(c.id);
+          changed = true;
+        }
+      }
+    }
+    return [...ids];
   }
 
   async createProduct(data: {

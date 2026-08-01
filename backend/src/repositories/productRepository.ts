@@ -48,6 +48,7 @@ export class ProductRepository {
     search?: string;
     brand?: string;
     categoryId?: string;
+    categoryIds?: string[];
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
@@ -75,6 +76,7 @@ export class ProductRepository {
         ],
       }),
       ...(params.brand && { brand: { in: params.brand.split(',') } }),
+      ...(params.categoryIds?.length && { categoryId: { in: params.categoryIds } }),
       ...(params.categoryId && { categoryId: params.categoryId }),
       ...(params.minPrice !== undefined && params.maxPrice !== undefined
         ? { basePrice: { gte: params.minPrice, lte: params.maxPrice } }
@@ -130,6 +132,7 @@ export class ProductRepository {
     search?: string;
     brand?: string;
     categoryId?: string;
+    categoryIds?: string[];
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
@@ -154,6 +157,7 @@ export class ProductRepository {
         ],
       }),
       ...(params.brand && { brand: { in: params.brand.split(',') } }),
+      ...(params.categoryIds?.length && { categoryId: { in: params.categoryIds } }),
       ...(params.categoryId && { categoryId: params.categoryId }),
       ...(params.minPrice !== undefined && params.maxPrice !== undefined
         ? { basePrice: { gte: params.minPrice, lte: params.maxPrice } }

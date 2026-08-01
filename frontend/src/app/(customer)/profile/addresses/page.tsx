@@ -4,13 +4,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MapPin, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, MapPin, Pencil, Trash2, Loader2, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { addressService } from '@/services/address.service';
+import { getCurrentLocationAddress } from '@/lib/location';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -32,6 +33,20 @@ export default function AddressesPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  const handleUseCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const address = await getCurrentLocationAddress();
+      form.reset(address);
+      toast.success('Location filled. Review and save.');
+    } catch (error: unknown) {
+      toast.error((error as Error).message || 'Could not get your location');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const { data: addresses, isLoading } = useQuery({
     queryKey: ['addresses'],
@@ -89,6 +104,10 @@ export default function AddressesPage() {
             <Card>
               <CardContent className="pt-6">
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <Button type="button" variant="outline" className="w-full gap-2" onClick={handleUseCurrentLocation} disabled={locating}>
+                    {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+                    {locating ? 'Getting your location...' : 'Use Current Location'}
+                  </Button>
                   <div className="space-y-2">
                     <Label htmlFor="label">Label (optional)</Label>
                     <Input id="label" placeholder="Home, Work, etc." {...form.register('label')} />

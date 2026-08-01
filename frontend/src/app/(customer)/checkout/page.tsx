@@ -4,7 +4,7 @@ import { useRouter } from '@/lib/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, ArrowLeft, CreditCard } from 'lucide-react';
+import { Loader2, ArrowLeft, CreditCard, MapPin } from 'lucide-react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { addressService } from '@/services/address.service';
 import { orderService } from '@/services/order.service';
 import { paymentService } from '@/services/payment.service';
+import { getCurrentLocationAddress } from '@/lib/location';
 import { formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
@@ -99,6 +100,8 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentIntent, setPaymentIntent] = useState<{ clientSecret: string; paymentIntentId: string } | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: addresses, isLoading: addressesLoading, isError: addressesError } = useQuery({
     queryKey: ['addresses'],
@@ -165,6 +168,20 @@ export default function CheckoutPage() {
     } finally { setIsProcessing(false); }
   };
 
+  const handleAddCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const address = await getCurrentLocationAddress();
+      await addressService.createAddress(address);
+      await queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      toast.success('Current location added as shipping address');
+    } catch (error: unknown) {
+      toast.error((error as Error).message || 'Could not get your location');
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const options: StripeElementsOptions | undefined = paymentIntent
     ? { clientSecret: paymentIntent.clientSecret, appearance: { theme: 'stripe' } }
     : undefined;
@@ -200,7 +217,16 @@ export default function CheckoutPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No addresses found. Please add one in your profile.</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">No addresses found. Add your current location below or add one in your profile.</p>
+                  <Button type="button" variant="outline" className="w-full gap-2" onClick={handleAddCurrentLocation} disabled={locating}>
+                    {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                    {locating ? 'Getting your location...' : 'Use Current Location'}
+                  </Button>
+                  <Button type="button" variant="link" className="w-full text-sm" onClick={() => router.push('/profile/addresses')}>
+                    Add address in profile
+                  </Button>
+                </div>
               )}
               {errors.shippingAddressId && <p className="text-sm text-destructive mt-1">{errors.shippingAddressId.message}</p>}
             </CardContent>
@@ -269,7 +295,7 @@ export default function CheckoutPage() {
                     Place Order
                   </Button>
                   {!addressesLoading && !addresses?.length && (
-                    <p className="text-xs text-destructive text-center mt-2">Please add a shipping address in your profile.</p>
+                    <p className="text-xs text-destructive text-center mt-2">Please add a shipping address using "Use Current Location" above.</p>
                   )}
                 </form>
               )}
