@@ -61,7 +61,7 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://commerceflow-frontend.onrender.com
+        value: https://commerceflow-frontend-5c7v.onrender.com
 
   # ============================================
   # FRONTEND: Vite / React static site
@@ -74,7 +74,12 @@ services:
     # Plain filter (no `...`) matches the proven Dockerfile frontend build.
     buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/commerce-flow run build
     staticPublishPath: ./frontend/dist/public
+    # SPA fallback: serve index.html for all client-side routes (e.g. /login).
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       # Build-time variable. If the backend URL differs, update this in the dashboard.
       - key: VITE_API_URL
-        value: https://commerceflow-api.onrender.com/api/v1
+        value: https://commerceflow-api-1s7i.onrender.com/api/v1

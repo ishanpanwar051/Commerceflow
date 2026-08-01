@@ -3,6 +3,7 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { Providers } from '@/providers/Providers';
 
 // ─── Auth pages ───────────────────────────────────────────────────────────────
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 const LoginPage = lazy(() => import('@/app/(auth)/login/page'));
 const RegisterPage = lazy(() => import('@/app/(auth)/register/page'));
 const ForgotPasswordPage = lazy(() => import('@/app/(auth)/forgot-password/page'));
@@ -95,7 +96,11 @@ function AppRouter() {
   return (
     <Switch>
       {/* Home */}
-      <Route path="/" component={() => <CustomerRoute component={HomePage} />} />
+      <Route path="/">
+        <ProtectedRoute redirectTo="/login">
+          <CustomerRoute component={HomePage} />
+        </ProtectedRoute>
+      </Route>
 
       {/* Auth */}
       <Route path="/login" component={() => <AuthRoute component={LoginPage} />} />
