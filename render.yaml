@@ -1,6 +1,10 @@
 # Render blueprint for CommerceFlow (pnpm workspace monorepo)
 # Deploy: PostgreSQL DB + Express API (backend/) + Vite/React frontend (frontend/)
 #
+# IMPORTANT: rootDir is the repo root (.) for BOTH services so that Render
+# detects pnpm-lock.yaml and uses pnpm. npm cannot resolve the pnpm `catalog:`
+# protocol used across this workspace and fails with EUNSUPPORTEDPROTOCOL.
+#
 # How to use:
 #   1. Push this file to GitHub
 #   2. Go to https://render.com -> New -> Blueprint
@@ -23,11 +27,14 @@ services:
     runtime: node
     plan: free
     region: oregon
-    rootDir: backend
+    # Repo root (not backend/) so Render sees pnpm-lock.yaml and uses pnpm.
+    rootDir: .
     # Install + build from the monorepo root, then generate Prisma client and push schema.
     # NOTE: preDeployCommand is not available on the free tier, so DB setup runs in buildCommand.
-    buildCommand: pnpm --dir .. install --frozen-lockfile && pnpm --dir .. --filter @workspace/api-server... --if-present run build && pnpm --dir .. --filter @workspace/api-server exec prisma generate && pnpm --dir .. --filter @workspace/api-server exec prisma db push
-    startCommand: node --enable-source-maps ./dist/index.mjs
+    # Plain filter (no `...`) matches the proven Dockerfile build: the lib packages are
+    # bundled from source by esbuild/Vite, so they don't need their own build step.
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push
+    startCommand: node --enable-source-maps ./backend/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION
@@ -42,6 +49,8 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        value: https://commerceflow-frontend.onrender.com
 
   # ============================================
   # FRONTEND: Vite / React static site
@@ -49,9 +58,11 @@ services:
   - type: web
     name: commerceflow-frontend
     runtime: static
-    rootDir: frontend
-    buildCommand: pnpm --dir .. install --frozen-lockfile && pnpm --dir .. --filter @workspace/commerce-flow... --if-present run build
-    staticPublishPath: ./dist/public
+    # Repo root (not frontend/) so Render sees pnpm-lock.yaml and uses pnpm.
+    rootDir: .
+    # Plain filter (no `...`) matches the proven Dockerfile frontend build.
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @workspace/commerce-flow run build
+    staticPublishPath: ./frontend/dist/public
     envVars:
       # Build-time variable. If the backend URL differs, update this in the dashboard.
       - key: VITE_API_URL
