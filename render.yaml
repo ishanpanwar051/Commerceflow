@@ -62,6 +62,8 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: https://commerceflow-frontend-5c7v.onrender.com
+      - key: GOOGLE_CLIENT_ID
+        value: 786242663262-d1rglhgp18410e0e0k8h5p6q3b9h8g2u.apps.googleusercontent.com
 
   # ============================================
   # FRONTEND: Vite / React static site
@@ -72,14 +74,26 @@ services:
     # Repo root (not frontend/) so Render sees pnpm-lock.yaml and uses pnpm.
     rootDir: .
     # Plain filter (no `...`) matches the proven Dockerfile frontend build.
-    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/commerce-flow run build
-    staticPublishPath: ./frontend/dist/public
-    # SPA fallback: serve index.html for all client-side routes (e.g. /login).
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      # Build-time variable. If the backend URL differs, update this in the dashboard.
-      - key: VITE_API_URL
-        value: https://commerceflow-api-1s7i.onrender.com/api/v1
+buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/commerce-flow run build
+  staticPublishPath: ./frontend/dist/public
+  # SPA fallback: serve index.html for all client-side routes (e.g. /login).
+  routes:
+    - type: rewrite
+      source: /*
+      destination: /index.html
+  envVars:
+    # Build-time variable. If the backend URL differs, update this in the dashboard.
+    - key: VITE_API_URL
+      value: https://commerceflow-api-1s7i.onrender.com/api/v1
+    - key: VITE_FIREBASE_API_KEY
+      value: AIzaSyBzySXDWLn1yfF1ONz0I4PtWJE_dF6Aki4
+    - key: VITE_FIREBASE_AUTH_DOMAIN
+      value: commerceflow-7cfd1.firebaseapp.com
+    - key: VITE_FIREBASE_PROJECT_ID
+      value: commerceflow-7cfd1
+    - key: VITE_FIREBASE_STORAGE_BUCKET
+      value: commerceflow-7cfd1.firebasestorage.app
+    - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+      value: 786242663262
+    - key: VITE_FIREBASE_APP_ID
+      value: 1:786242663262:web:f4e8e3c2a6d66829f955cf
