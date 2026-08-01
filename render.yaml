@@ -45,7 +45,7 @@ services:
     # NOTE: preDeployCommand is not available on the free tier, so DB setup runs in buildCommand.
     # Plain filter (no `...`) matches the proven Dockerfile build: the lib packages are
     # bundled from source by esbuild/Vite, so they don't need their own build step.
-    buildCommand: pnpm install --frozen-lockfile && pnpm approve-builds && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push
+    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push
     startCommand: node --enable-source-maps ./backend/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
@@ -72,7 +72,7 @@ services:
     # Repo root (not frontend/) so Render sees pnpm-lock.yaml and uses pnpm.
     rootDir: .
     # Plain filter (no `...`) matches the proven Dockerfile frontend build.
-    buildCommand: pnpm install --frozen-lockfile && pnpm approve-builds && pnpm --filter @workspace/commerce-flow run build
+    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/commerce-flow run build
     staticPublishPath: ./frontend/dist/public
     envVars:
       # Build-time variable. If the backend URL differs, update this in the dashboard.
