@@ -66,6 +66,12 @@ services:
         # TODO: replace with the REAL "Web client ID" from Firebase console ->
         # Authentication -> Sign-in method -> Google (project commerceflow-7cfd1).
         sync: false
+      - key: STRIPE_SECRET_KEY
+        # Set manually in the dashboard (Render -> commerceflow-api-1s7i ->
+        # Environment) so it is never committed to the repository.
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
 
   # ============================================
   # FRONTEND: Vite / React static site
@@ -87,6 +93,8 @@ services:
       # Build-time variable. If the backend URL differs, update this in the dashboard.
       - key: VITE_API_URL
         value: https://commerceflow-api-1s7i.onrender.com/api/v1
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        value: pk_test_51TxmtXDYRQrOBbz8GwtTBuQ87jxLS64rIfzlhWpE4rPNo2C8J2GZAVY7MeFoHABVknT3T6oYH1MvMqK6XDasVYO800eWEY0r3M
       - key: VITE_FIREBASE_API_KEY
         value: AIzaSyBzySXDWLn1yfF1ONz0I4PtWJE_dF6Aki4
       - key: VITE_FIREBASE_AUTH_DOMAIN
