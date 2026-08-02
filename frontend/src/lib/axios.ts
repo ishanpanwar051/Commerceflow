@@ -5,7 +5,7 @@ import { TokenService } from './token.service';
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 30000, // Increased to 30s for slower connections
+  timeout: 90000, // 90s: Render free tier cold-starts in 30-60s, so keep generous
   withCredentials: false, // Set to true if using httpOnly cookies
 });
 

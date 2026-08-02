@@ -1,0 +1,23 @@
+name: Keep Render Backend Warm
+
+on:
+  schedule:
+    # Every 5 minutes — Render free tier spins down after ~15 min idle,
+    # so a ping every 5 min keeps the API warm for the live demo.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping health endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health check
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            --max-time 60 \
+            https://commerceflow-api-1s7i.onrender.com/api/healthz)
+          echo "Backend healthz status: $code"
+          if [ "$code" != "200" ]; then
+            echo "Backend did not return 200 (status: $code)"
+          fi
