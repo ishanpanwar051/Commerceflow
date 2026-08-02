@@ -10,7 +10,7 @@ export class CategoryRepository {
 
   async findAll(includeProducts = false) {
     return this.prisma.category.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, isActive: true },
       include: { children: true, ...(includeProducts && { products: { where: { deletedAt: null, isActive: true } } }) },
       orderBy: { name: 'asc' },
     });

@@ -49,7 +49,14 @@ function pickFirst(...values: Array<string | undefined>): string {
   return values.find((v) => v && v.trim()) || '';
 }
 
-export async function getCurrentLocationAddress(): Promise<CurrentLocationAddress> {
+interface IpGeoData {
+  city?: string;
+  region?: string;
+  postal?: string;
+  country_code?: string;
+}
+
+async function getGeolocationAddress(): Promise<CurrentLocationAddress> {
   const position = await getCurrentPosition();
   const { latitude, longitude } = position.coords;
 
@@ -88,4 +95,44 @@ export async function getCurrentLocationAddress(): Promise<CurrentLocationAddres
     isBilling: true,
     isShipping: true,
   };
+}
+
+async function getIpLocationAddress(): Promise<CurrentLocationAddress> {
+  const res = await fetch('https://ipapi.co/json/');
+  if (!res.ok) {
+    throw new Error('Could not determine your location from your IP');
+  }
+  const data = (await res.json()) as IpGeoData;
+  const city = data.city;
+  if (!city) {
+    throw new Error('Could not determine your city from your IP');
+  }
+  const state = data.region || city;
+  const zipCode = data.postal || '';
+  const country = (data.country_code || 'IN').toUpperCase();
+
+  return {
+    label: 'Current Location',
+    line1: city,
+    line2: state || undefined,
+    city,
+    state,
+    zipCode,
+    country,
+    isDefault: true,
+    isBilling: true,
+    isShipping: true,
+  };
+}
+
+export async function getCurrentLocationAddress(): Promise<CurrentLocationAddress> {
+  try {
+    return await getGeolocationAddress();
+  } catch (geolocationError) {
+    try {
+      return await getIpLocationAddress();
+    } catch {
+      throw new Error('Could not find your current location. Please add your address manually.');
+    }
+  }
 }

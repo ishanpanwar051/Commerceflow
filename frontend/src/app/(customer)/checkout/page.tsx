@@ -153,7 +153,8 @@ export default function CheckoutPage() {
 
       setOrderId(result.order.id);
 
-      if (result.paymentIntent?.clientSecret) {
+      const isMockIntent = (result.paymentIntent?.clientSecret ?? '').startsWith('pi_mock_');
+      if (result.paymentIntent?.clientSecret && !isMockIntent && stripePromise) {
         setPaymentIntent({
           clientSecret: result.paymentIntent.clientSecret,
           paymentIntentId: result.paymentIntent.paymentIntentId,
