@@ -18,12 +18,10 @@ interface ProductCardProps {
 
 function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWishlist }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const images = product.images || [];
   const mainImage = imgError ? '/placeholder.svg' : (images[0]?.url || '/placeholder.svg');
-  const hoverImage = !imgError && images.length > 1 ? images[1]?.url : mainImage;
   const availableStock = product.inventory
     ? (product.inventory.stock ?? 0) - (product.inventory.reservedStock ?? 0)
     : undefined;
@@ -32,19 +30,15 @@ function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWish
     && availableStock <= (product.inventory?.lowStockThreshold ?? 5);
 
   return (
-    <div
-      className="group relative rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-300"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="group relative rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-lg transition-all duration-300">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-t-xl bg-muted">
           {!imageLoaded && <Skeleton className="absolute inset-0 w-full h-full" />}
           <img
-            src={isHovered && hoverImage !== mainImage ? hoverImage : mainImage}
+            src={mainImage}
             alt={product.name}
             loading="lazy"
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setImgError(true)}
             onLoad={() => setImageLoaded(true)}
           />
