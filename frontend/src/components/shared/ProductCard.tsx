@@ -1,7 +1,7 @@
 
 // next/image removed;
 import { Link } from 'wouter';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ interface ProductCardProps {
   isInWishlist?: boolean;
 }
 
-export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishlist }: ProductCardProps) {
+function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWishlist }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -39,9 +39,10 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
         <div className="relative aspect-square overflow-hidden rounded-t-xl bg-muted">
           <img
             src={isHovered && hoverImage !== mainImage ? hoverImage : mainImage}
-            alt={product.name}
+            alt={`${product.name}${product.brand ? ` - ${product.brand}` : ''}`}
             className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
             onError={() => setImgError(true)}
+            loading="lazy"
           />
 
           {!inStock && (
@@ -156,3 +157,5 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
     </div>
   );
 }
+
+export const ProductCard = memo(ProductCardComponent);

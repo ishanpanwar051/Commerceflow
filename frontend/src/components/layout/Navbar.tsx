@@ -149,16 +149,16 @@ export function Navbar() {
 
           {isAuthenticated ? (
             <div className="relative" ref={dropdownRef}>
-              <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1 rounded-md hover:bg-muted transition-colors">
+              <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1 rounded-md hover:bg-muted transition-colors" aria-label="User profile" aria-haspopup="menu" aria-expanded={profileOpen}>
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar} />
+                  <AvatarImage src={user?.avatar} alt={`${user?.firstName || 'User'} avatar`} />
                   <AvatarFallback className="text-xs">{getInitials(user?.firstName || '', user?.lastName || '')}</AvatarFallback>
                 </Avatar>
                 <ChevronDown className="hidden lg:block h-3 w-3 text-muted-foreground" />
               </button>
               <AnimatePresence>
                 {profileOpen && (
-                  <motion.div initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={{ duration: 0.15 }} className="absolute right-0 mt-2 w-56 rounded-xl border bg-popover p-1 shadow-xl">
+                  <motion.div initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={{ duration: 0.15 }} className="absolute right-0 mt-2 w-56 rounded-xl border bg-popover p-1 shadow-xl z-40" role="menu">
                     <div className="px-3 py-2 border-b mb-1">
                       <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
                       <p className="text-xs text-muted-foreground">{user?.email}</p>

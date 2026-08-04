@@ -52,16 +52,16 @@ const features = [
 ];
 
 const categories = [
-  { name: 'Electronics', slug: 'electronics', image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=400&h=400&fit=crop', color: 'from-blue-500 to-blue-700' },
-  { name: 'Fashion Men', slug: 'fashion-men', image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&h=400&fit=crop', color: 'from-pink-500 to-rose-600' },
-  { name: 'Fashion Women', slug: 'fashion-women', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=400&fit=crop', color: 'from-violet-500 to-purple-600' },
-  { name: 'Home Decor', slug: 'home-decor', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400&h=400&fit=crop', color: 'from-amber-500 to-orange-600' },
-  { name: 'Beauty', slug: 'beauty', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=400&fit=crop', color: 'from-fuchsia-500 to-pink-600' },
-  { name: 'Sports', slug: 'sports', image: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=400&h=400&fit=crop', color: 'from-green-500 to-emerald-600' },
-  { name: 'Books', slug: 'books', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=400&fit=crop', color: 'from-yellow-600 to-amber-700' },
-  { name: 'Kids', slug: 'kids', image: 'https://images.unsplash.com/photo-1472162072942-cd5147eb3902?w=400&h=400&fit=crop', color: 'from-sky-500 to-cyan-600' },
-  { name: 'Furniture', slug: 'furniture', image: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=400&h=400&fit=crop', color: 'from-stone-500 to-stone-700' },
-  { name: 'Automotive', slug: 'automotive', image: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=400&h=400&fit=crop', color: 'from-slate-600 to-gray-800' },
+  { name: 'Electronics', slug: 'electronics', image: '/images/category-electronics.png', color: 'from-blue-500 to-blue-700' },
+  { name: 'Fashion Men', slug: 'fashion-men', image: '/images/category-fashion-men.png', color: 'from-pink-500 to-rose-600' },
+  { name: 'Fashion Women', slug: 'fashion-women', image: '/images/category-fashion-women.png', color: 'from-violet-500 to-purple-600' },
+  { name: 'Home Decor', slug: 'home-decor', image: '/images/category-home-decor.png', color: 'from-amber-500 to-orange-600' },
+  { name: 'Beauty', slug: 'beauty', image: '/images/category-beauty.png', color: 'from-fuchsia-500 to-pink-600' },
+  { name: 'Sports', slug: 'sports', image: '/images/category-sports.png', color: 'from-green-500 to-emerald-600' },
+  { name: 'Books', slug: 'books', image: '/images/category-books.png', color: 'from-yellow-600 to-amber-700' },
+  { name: 'Kids', slug: 'kids', image: '/images/category-kids.png', color: 'from-sky-500 to-cyan-600' },
+  { name: 'Furniture', slug: 'furniture', image: '/images/category-furniture.png', color: 'from-stone-500 to-stone-700' },
+  { name: 'Automotive', slug: 'automotive', image: '/images/category-automotive.png', color: 'from-slate-600 to-gray-800' },
 ];
 
 export default function HomePage() {

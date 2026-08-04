@@ -1,6 +1,7 @@
 
 import { Link } from 'wouter';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import { memo } from 'react';
 
 const shopLinks = [
   { href: '/products', label: 'All Products' },
@@ -29,7 +30,7 @@ const policyLinks = [
   { href: '/terms', label: 'Terms of Service' },
 ];
 
-export function Footer() {
+function FooterComponent() {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-12">
@@ -116,3 +117,5 @@ export function Footer() {
     </footer>
   );
 }
+
+export const Footer = memo(FooterComponent);

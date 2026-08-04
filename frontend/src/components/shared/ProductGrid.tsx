@@ -1,6 +1,7 @@
 
 import { ProductCard } from './ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { memo } from 'react';
 import type { Product } from '@/types/api';
 
 interface ProductGridProps {
@@ -11,7 +12,7 @@ interface ProductGridProps {
   isInWishlist?: (productId: string) => boolean;
 }
 
-export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist, isInWishlist }: ProductGridProps) {
+function ProductGridComponent({ products, isLoading, onAddToCart, onToggleWishlist, isInWishlist }: ProductGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
@@ -51,3 +52,5 @@ export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist
     </div>
   );
 }
+
+export const ProductGrid = memo(ProductGridComponent);
