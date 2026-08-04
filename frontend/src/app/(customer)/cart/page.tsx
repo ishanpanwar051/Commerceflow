@@ -95,10 +95,10 @@ export default function CartPage() {
   const total = subtotal - (discount || 0) + tax + shipping;
 
   return (
-    <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-8">Shopping Cart ({itemCount} items)</h1>
+    <div className="container px-3 sm:px-4 py-6 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Shopping Cart ({itemCount} items)</h1>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-4">
           <AnimatePresence>
             {items.map((item) => (
@@ -111,8 +111,8 @@ export default function CartPage() {
                 className="flex gap-4 p-4 border rounded-lg"
               >
                 <Link href={`/products/${item.product.slug}`} className="shrink-0">
-                  <div className="relative h-24 w-24 rounded-md overflow-hidden bg-muted">
-                    <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                  <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-md overflow-hidden bg-muted">
+                    <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} loading="lazy" className="object-cover absolute inset-0 w-full h-full" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
                   </div>
                 </Link>
                 <div className="flex-1 min-w-0">

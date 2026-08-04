@@ -14,7 +14,7 @@ interface ProductGridProps {
 export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist, isInWishlist }: ProductGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="rounded-xl border p-3 space-y-3">
             <Skeleton className="aspect-square w-full rounded-lg" />
@@ -38,7 +38,7 @@ export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
       {products.map((product) => (
         <ProductCard
           key={product.id}

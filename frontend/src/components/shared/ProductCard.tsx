@@ -1,10 +1,11 @@
 
 // next/image removed;
 import { Link } from 'wouter';
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types/api';
 
@@ -15,9 +16,10 @@ interface ProductCardProps {
   isInWishlist?: boolean;
 }
 
-export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishlist }: ProductCardProps) {
+function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWishlist }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const images = product.images || [];
   const mainImage = imgError ? '/placeholder.svg' : (images[0]?.url || '/placeholder.svg');
@@ -37,11 +39,14 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
     >
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-t-xl bg-muted">
+          {!imageLoaded && <Skeleton className="absolute inset-0 w-full h-full" />}
           <img
             src={isHovered && hoverImage !== mainImage ? hoverImage : mainImage}
             alt={product.name}
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+            loading="lazy"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setImgError(true)}
+            onLoad={() => setImageLoaded(true)}
           />
 
           {!inStock && (
@@ -156,3 +161,5 @@ export function ProductCard({ product, onAddToCart, onToggleWishlist, isInWishli
     </div>
   );
 }
+
+export const ProductCard = memo(ProductCardComponent);

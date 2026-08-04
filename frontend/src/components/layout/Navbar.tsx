@@ -124,24 +124,24 @@ export function Navbar() {
             <Search className="h-5 w-5" />
           </button>
 
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="relative p-2 rounded-md hover:bg-muted transition-colors" aria-label="Toggle theme">
+          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="relative p-2 rounded-md hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Toggle theme">
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </button>
 
-          <Link href="/wishlist" className="relative p-2 rounded-md hover:bg-muted transition-colors" aria-label="Wishlist">
+          <Link href="/wishlist" className="relative p-2 rounded-md hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={`Wishlist${wishlist.length > 0 ? ` (${wishlist.length} items)` : ''}`}>
             <Heart className="h-5 w-5" />
             {wishlist.length > 0 && (
-              <Badge variant="destructive" className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px]">
+              <Badge variant="destructive" className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px]" aria-hidden="true">
                 {wishlist.length}
               </Badge>
             )}
           </Link>
 
-          <Link href="/cart" className="relative p-2 rounded-md hover:bg-muted transition-colors" aria-label="Cart">
+          <Link href="/cart" className="relative p-2 rounded-md hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={`Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}>
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
-              <Badge variant="destructive" className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px]">
+              <Badge variant="destructive" className="absolute -top-0.5 -right-0.5 h-4 w-4 flex items-center justify-center p-0 text-[10px]" aria-hidden="true">
                 {itemCount}
               </Badge>
             )}
