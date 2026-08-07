@@ -183,6 +183,14 @@ export function Navbar() {
                         </Link>
                       </>
                     )}
+                    {user?.role === 'DELIVERY_BOY' && (
+                      <>
+                        <div className="border-t my-1" />
+                        <Link href="/delivery/dashboard" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-accent transition-colors" onClick={() => setProfileOpen(false)}>
+                          <Truck className="h-4 w-4" /> Delivery Dashboard
+                        </Link>
+                      </>
+                    )}
                     <div className="border-t my-1" />
                     <button onClick={handleLogout} className="flex items-center gap-2.5 w-full px-3 py-2 text-sm rounded-lg hover:bg-accent text-destructive transition-colors">
                       <LogOut className="h-4 w-4" /> Logout

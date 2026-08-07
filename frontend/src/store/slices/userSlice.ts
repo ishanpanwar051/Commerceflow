@@ -19,10 +19,10 @@ const initialState: UserState = {
 
 export const login = createAsyncThunk(
   'user/login',
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async ({ identifier, password, remember }: { identifier: string; password: string; remember: boolean }, { rejectWithValue }) => {
     try {
-      const result = await authService.login(email, password);
-      TokenService.setTokens(result.accessToken, result.refreshToken);
+      const result = await authService.login(identifier, password);
+      TokenService.setTokens(result.accessToken, result.refreshToken, remember);
       return result;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

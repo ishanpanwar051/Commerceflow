@@ -10,11 +10,10 @@ export const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
   phone: z.string().optional(),
-  role: z.enum(['CUSTOMER', 'SELLER', 'DELIVERY_BOY']).optional().default('CUSTOMER'),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  identifier: z.string().min(3, 'Email or mobile number is required').max(120),
   password: z.string().min(1, 'Password is required'),
 });
 

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { productService } from '@/services/product.service';
 import { formatPrice } from '@/lib/utils';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { toast } from 'sonner';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -253,7 +254,7 @@ export default function AdminProductsPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-md bg-muted overflow-hidden shrink-0 relative">
-                          <img src={product.images?.[0]?.url || '/placeholder.svg'} alt="" className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                          <ProductImage src={product.images?.[0]?.url} alt={product.name} className="absolute inset-0 w-full h-full" />
                         </div>
                         <span className="font-medium text-sm truncate max-w-[200px]">{product.name}</span>
                       </div>

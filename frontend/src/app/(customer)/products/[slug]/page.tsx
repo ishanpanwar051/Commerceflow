@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 // next/image removed;
 import { Link } from 'wouter';
 import { useParams } from '@/lib/navigation';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductGrid } from '@/components/shared/ProductGrid';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { productService } from '@/services/product.service';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
@@ -25,9 +26,6 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedTab, setSelectedTab] = useState<'description' | 'specs' | 'reviews'>('description');
-  const [showZoom, setShowZoom] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-  const imageRef = useRef<HTMLDivElement>(null);
 
   const queryClient = useQueryClient();
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
@@ -148,24 +146,11 @@ export default function ProductDetailPage() {
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12">
           {/* Image Gallery */}
           <div className="space-y-3">
-            <div
-              ref={imageRef}
-              className="relative aspect-square rounded-xl overflow-hidden bg-muted group cursor-crosshair"
-              onMouseEnter={() => setShowZoom(true)}
-              onMouseLeave={() => setShowZoom(false)}
-              onMouseMove={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                setMousePos({ x, y });
-              }}
-            >
-              <img
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-muted group">
+              <ProductImage
                 src={images[currentImage]?.url}
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }}
                 alt={images[currentImage]?.alt || product.name}
-                className={`absolute inset-0 w-full h-full object-cover transition-transform duration-200 ${showZoom ? 'scale-150' : ''}`}
-                style={showZoom ? { transformOrigin: `${mousePos.x}% ${mousePos.y}%` } : undefined}
+                className="absolute inset-0 w-full h-full"
               />
               {images.length > 1 && (
                 <>
@@ -206,7 +191,7 @@ export default function ProductDetailPage() {
                       i === currentImage ? 'border-primary' : 'border-border hover:border-muted-foreground/30'
                     }`}
                   >
-                    <img src={img.url} alt={img.alt || ''} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                    <ProductImage src={img.url} alt={img.alt || ''} className="absolute inset-0 w-full h-full" />
                   </button>
                 ))}
               </div>

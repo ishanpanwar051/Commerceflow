@@ -26,7 +26,7 @@ export class AuthService {
     this.userRepo = new UserRepository();
   }
 
-  async register(data: { email: string; password: string; firstName: string; lastName: string; phone?: string; role?: string }) {
+  async register(data: { email: string; password: string; firstName: string; lastName: string; phone?: string }) {
     const existing = await this.userRepo.findByEmail(data.email.toLowerCase());
     if (existing) {
       throw new ConflictError('Email already registered');
@@ -36,16 +36,16 @@ export class AuthService {
     const rawEmailToken = crypto.randomBytes(32).toString('hex');
     const hashedEmailToken = this.hashToken(rawEmailToken);
 
-    const validRoles = ['CUSTOMER', 'SELLER', 'DELIVERY_BOY'];
-    const userRole = data.role && validRoles.includes(data.role) ? data.role : 'CUSTOMER';
-
+    // Public registration always creates a CUSTOMER account. Staff roles
+    // (ADMIN/SELLER/DELIVERY_BOY) are never accepted from this endpoint to
+    // prevent privilege escalation via the public API.
     const user = await this.userRepo.create({
       email: data.email.toLowerCase(),
       password: hashedPassword,
       firstName: data.firstName,
       lastName: data.lastName,
       phone: data.phone,
-      role: userRole,
+      role: 'CUSTOMER',
       emailToken: hashedEmailToken,
     });
 
@@ -74,25 +74,28 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string) {
-    const normalizedEmail = email.toLowerCase();
+  async login(identifier: string, password: string) {
+    // Support signing in with either an email address or a mobile number.
+    const normalizedIdentifier = identifier.includes('@')
+      ? identifier.toLowerCase()
+      : identifier.replace(/[\s-]/g, '');
 
-    await this.checkLockout(normalizedEmail);
+    await this.checkLockout(normalizedIdentifier);
 
-    const user = await this.userRepo.findByEmail(normalizedEmail);
+    const user = await this.userRepo.findByIdentifier(normalizedIdentifier);
     if (!user || !user.isActive || user.deletedAt) {
-      await this.recordFailedAttempt(normalizedEmail);
-      throw new UnauthorizedError('Invalid email or password');
+      await this.recordFailedAttempt(normalizedIdentifier);
+      throw new UnauthorizedError('Invalid email/mobile or password');
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password!);
     if (!isValidPassword) {
-      await this.recordFailedAttempt(normalizedEmail);
-      logger.warn({ email: normalizedEmail }, 'Failed login attempt: invalid password');
-      throw new UnauthorizedError('Invalid email or password');
+      await this.recordFailedAttempt(normalizedIdentifier);
+      logger.warn({ identifier: '[REDACTED]' }, 'Failed login attempt: invalid password');
+      throw new UnauthorizedError('Invalid email/mobile or password');
     }
 
-    await this.invalidateLockout(normalizedEmail);
+    await this.invalidateLockout(normalizedIdentifier);
 
     const tokens = this.generateTokens({
       userId: user.id,

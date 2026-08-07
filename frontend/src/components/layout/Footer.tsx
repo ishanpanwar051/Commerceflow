@@ -112,6 +112,15 @@ export function Footer() {
             <Link href="/faq" className="hover:text-foreground transition-colors">FAQ</Link>
           </div>
         </div>
+
+        <div className="border-t mt-6 pt-4 flex items-center gap-3 text-xs text-muted-foreground">
+          <span>Staff:</span>
+          <Link href="/admin/login" className="hover:text-foreground transition-colors">Admin</Link>
+          <span className="inline-block h-1 w-px bg-border" />
+          <Link href="/seller/login" className="hover:text-foreground transition-colors">Seller</Link>
+          <span className="inline-block h-1 w-px bg-border" />
+          <Link href="/delivery/login" className="hover:text-foreground transition-colors">Delivery</Link>
+        </div>
       </div>
     </footer>
   );

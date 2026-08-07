@@ -51,6 +51,18 @@ const AdminSettingsPage = lazy(() => import('@/app/admin/settings/page'));
 const AdminUsersPage = lazy(() => import('@/app/admin/users/page'));
 const AdminChurnPage = lazy(() => import('@/app/admin/analytics/churn/page'));
 
+// ─── Delivery pages ───────────────────────────────────────────────────────────
+const DeliveryLayout = lazy(() => import('@/app/(delivery)/layout'));
+const DeliveryDashboardPage = lazy(() => import('@/app/(delivery)/dashboard/page'));
+const DeliveryDeliveriesPage = lazy(() => import('@/app/(delivery)/deliveries/page'));
+
+// ─── Staff auth pages ─────────────────────────────────────────────────────────
+const AdminLoginPage = lazy(() => import('@/app/(staff)/admin/login/page'));
+const SellerLoginPage = lazy(() => import('@/app/(staff)/seller/login/page'));
+const DeliveryLoginPage = lazy(() => import('@/app/(staff)/delivery/login/page'));
+const SellerDashboardPage = lazy(() => import('@/app/(staff)/seller/dashboard/page'));
+import StaffAuthLayout from '@/app/(staff)/layout';
+
 // ─── Not found ────────────────────────────────────────────────────────────────
 import NotFound from '@/app/not-found';
 
@@ -89,6 +101,36 @@ function AuthRoute({ component: Component }: { component: React.ComponentType })
         <Component />
       </Suspense>
     </AuthLayout>
+  );
+}
+
+function DeliveryRoute({ component: Component }: { component: React.ComponentType }) {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <DeliveryLayout>
+        <Component />
+      </DeliveryLayout>
+    </Suspense>
+  );
+}
+
+function StaffAuthRoute({ component: Component }: { component: React.ComponentType }) {
+  return (
+    <StaffAuthLayout>
+      <Suspense fallback={<PageLoader />}>
+        <Component />
+      </Suspense>
+    </StaffAuthLayout>
+  );
+}
+
+function SellerRoute({ component: Component }: { component: React.ComponentType }) {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <StaffAuthLayout>
+        <Component />
+      </StaffAuthLayout>
+    </Suspense>
   );
 }
 
@@ -146,6 +188,23 @@ function AppRouter() {
       <Route path="/admin/settings" component={() => <AdminRoute component={AdminSettingsPage} />} />
       <Route path="/admin/users" component={() => <AdminRoute component={AdminUsersPage} />} />
       <Route path="/admin/analytics/churn" component={() => <AdminRoute component={AdminChurnPage} />} />
+
+      {/* Delivery */}
+      <Route path="/delivery" component={() => <DeliveryRoute component={DeliveryDashboardPage} />} />
+      <Route path="/delivery/dashboard" component={() => <DeliveryRoute component={DeliveryDashboardPage} />} />
+      <Route path="/delivery/deliveries" component={() => <DeliveryRoute component={DeliveryDeliveriesPage} />} />
+
+      {/* Staff auth */}
+      <Route path="/admin/login" component={() => <StaffAuthRoute component={AdminLoginPage} />} />
+      <Route path="/seller/login" component={() => <StaffAuthRoute component={SellerLoginPage} />} />
+      <Route path="/delivery/login" component={() => <StaffAuthRoute component={DeliveryLoginPage} />} />
+
+      {/* Seller dashboard */}
+      <Route path="/seller/dashboard">
+        <ProtectedRoute requireRole="SELLER" redirectTo="/seller/login">
+          <SellerRoute component={SellerDashboardPage} />
+        </ProtectedRoute>
+      </Route>
 
       {/* Fallback */}
       <Route component={NotFound} />

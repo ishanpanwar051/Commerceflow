@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/store/hooks';
 import { setCart } from '@/store/slices/cartSlice';
 import { formatPrice } from '@/lib/utils';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { cartService } from '@/services/cart.service';
 import type { Coupon } from '@/types/api';
 import { toast } from 'sonner';
@@ -112,7 +113,7 @@ export default function CartPage() {
               >
                 <Link href={`/products/${item.product.slug}`} className="shrink-0">
                   <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-md overflow-hidden bg-muted">
-                    <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} loading="lazy" className="object-cover absolute inset-0 w-full h-full" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                    <ProductImage src={item.product.images?.[0]?.url} alt={item.product.name} className="absolute inset-0 w-full h-full" />
                   </div>
                 </Link>
                 <div className="flex-1 min-w-0">

@@ -8,6 +8,7 @@ import { ProductGrid } from '@/components/shared/ProductGrid';
 import { useAppDispatch } from '@/store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { productService } from '@/services/product.service';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { fetchCart } from '@/store/slices/cartSlice';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
@@ -207,7 +208,7 @@ export default function HomePage() {
               {categories.map((cat, i) => (
                 <Link key={cat.slug} href={`/categories/${cat.slug}`}>
                   <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }} className="group relative aspect-[4/5] rounded-2xl overflow-hidden">
-                    <img src={cat.image} alt={cat.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                    <ProductImage src={cat.image} alt={cat.name} className="absolute inset-0 w-full h-full group-hover:scale-110 transition-transform duration-500" />
                     <div className={`pointer-events-none absolute inset-0 bg-gradient-to-t ${cat.color} opacity-40 group-hover:opacity-50 transition-opacity`} />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <span className="absolute bottom-3 left-3 text-white text-sm font-bold">{cat.name}</span>

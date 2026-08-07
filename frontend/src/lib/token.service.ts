@@ -71,9 +71,22 @@ export const TokenService = {
     return getRefreshToken();
   },
 
-  setTokens(access: string, refresh: string): void {
+  setTokens(access: string, refresh: string, remember = true): void {
     accessToken = access;
-    setRefreshToken(refresh);
+    try {
+      if (isBrowser) {
+        // "Remember me" = persist refresh token across browser sessions.
+        // Otherwise keep it in sessionStorage only (cleared on tab close).
+        if (remember) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+        } else {
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+        }
+        sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+      }
+    } catch (error) {
+      console.error('Failed to store refresh token:', error);
+    }
     persistAccessToken(access);
   },
 

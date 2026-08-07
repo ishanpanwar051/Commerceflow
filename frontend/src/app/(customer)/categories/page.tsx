@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { productService } from '@/services/product.service';
 import { Button } from '@/components/ui/button';
+import { ProductImage } from '@/components/shared/ProductImage';
 
 function CategoriesContent() {
   const router = useRouter();
@@ -56,11 +57,10 @@ function CategoriesContent() {
               >
                 {category.image && (
                   <div className="relative aspect-[16/7] overflow-hidden rounded-t-xl bg-muted">
-                    <img
+                    <ProductImage
                       src={category.image}
                       alt={`${category.name} collection`}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }}
+                      className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
                 )}

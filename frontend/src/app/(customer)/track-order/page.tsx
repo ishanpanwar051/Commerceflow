@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { orderService } from '@/services/order.service';
+import { ProductImage } from '@/components/shared/ProductImage';
 
 export default function TrackOrderPage() {
   const [orderId, setOrderId] = useState('');
@@ -136,7 +137,7 @@ export default function TrackOrderPage() {
               {order.items?.map((item: any) => (
                 <div key={item.id} className="flex items-center gap-3 py-2 border-b last:border-0">
                   {item.product?.images?.[0]?.url && (
-                    <img src={item.product.images[0].url} alt={item.product.name} className="h-10 w-10 rounded object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                    <ProductImage src={item.product.images[0].url} alt={item.product.name} className="h-10 w-10 rounded" />
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium">{item.product?.name || 'Product'}</p>

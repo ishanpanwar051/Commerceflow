@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { orderService } from '@/services/order.service';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice, formatDateTime } from '@/lib/utils';
 import { ORDER_STATUS_MAP, ORDER_STATUS_COLORS } from '@/constants';
@@ -95,7 +96,7 @@ export default function OrderDetailPage() {
               {order.items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted shrink-0">
-                    <img src={item.product?.images?.[0]?.url || '/placeholder.svg'} alt={item.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                    <ProductImage src={item.product?.images?.[0]?.url} alt={item.name} className="absolute inset-0 w-full h-full" />
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>

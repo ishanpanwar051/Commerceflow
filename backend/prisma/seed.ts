@@ -3,7 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { getProductImages } from './product-images';
+import { getProductImages, getCategoryImage } from './product-images';
 
 const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
@@ -305,8 +305,8 @@ async function main() {
   for (const cat of CATEGORIES) {
     const created = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: {},
-      create: { name: cat.name, slug: cat.slug, description: cat.description },
+      update: { image: getCategoryImage(cat.slug) },
+      create: { name: cat.name, slug: cat.slug, description: cat.description, image: getCategoryImage(cat.slug) },
     });
     categoryMap.set(cat.slug, created.id);
 

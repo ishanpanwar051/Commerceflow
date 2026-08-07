@@ -3,9 +3,9 @@ import { handleApiError } from '@/lib/api-error-handler';
 import type { ApiResponse, LoginResponse, RegisterResponse, User } from '@/types/api';
 
 export const authService = {
-  async login(email: string, password: string) {
+  async login(identifier: string, password: string) {
     try {
-      const { data } = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', { email, password });
+      const { data } = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', { identifier, password });
       return data.data!;
     } catch (error) {
       handleApiError(error, 'Login failed');

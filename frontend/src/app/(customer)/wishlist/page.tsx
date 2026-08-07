@@ -10,6 +10,7 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/utils';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { toast } from 'sonner';
 
 export default function WishlistPage() {
@@ -61,7 +62,7 @@ export default function WishlistPage() {
             >
               <Link href={`/products/${item.product.slug}`}>
                 <div className="relative aspect-square bg-muted">
-                  <img src={item.product.images?.[0]?.url || '/placeholder.svg'} alt={item.product.name} className="object-cover absolute inset-0 w-full h-full object-cover" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/placeholder.svg'; }} />
+                  <ProductImage src={item.product.images?.[0]?.url} alt={item.product.name} className="absolute inset-0 w-full h-full" />
                 </div>
               </Link>
               <div className="p-4">

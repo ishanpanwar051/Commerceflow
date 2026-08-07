@@ -231,6 +231,10 @@ async function main() {
 
   let totalCreated = 0;
   let totalSkipped = 0;
+  // Single monotonic counter shared by both new and existing products so every
+  // product is assigned a globally-unique image index (no two products ever get
+  // the same image set / primary image).
+  let globalIndex = 0;
 
   for (const [catSlug, products] of Object.entries(productData)) {
     const categoryId = categoryMap[catSlug];
@@ -249,7 +253,7 @@ async function main() {
             categorySlug: catSlug,
             subcategory: getSubcategoryForProduct(catSlug, existing.name),
           },
-          totalSkipped,
+          globalIndex++,
         );
         await prisma.productImage.deleteMany({ where: { productId: existing.id } });
         await prisma.productImage.createMany({
@@ -277,7 +281,7 @@ async function main() {
           categorySlug: catSlug,
           subcategory: getSubcategoryForProduct(catSlug, product.name),
         },
-        totalCreated
+        globalIndex++
       );
 
       const discountPercent = product.featured ? randomInt(10, 30) : randomInt(0, 20);

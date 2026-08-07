@@ -1,30 +1,23 @@
 
 import { useRouter } from '@/lib/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { AdminSidebar } from '@/components/layout/AdminSidebar';
+import { DeliverySidebar } from '@/components/layout/DeliverySidebar';
 import { useAppSelector } from '@/store/hooks';
 import { TokenService } from '@/lib/token.service';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function DeliveryLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('adminSidebarCollapsed');
-      return saved === 'true';
-    }
-    return false;
-  });
 
   const restoringSession = !isAuthenticated && TokenService.hasTokens();
 
   useEffect(() => {
     if (isLoading || restoringSession) return;
-    if (!isAuthenticated) { router.push('/admin/login'); }
-    else if (user?.role !== 'ADMIN') { router.push('/'); }
+    if (!isAuthenticated) { router.push('/delivery/login'); }
+    else if (user?.role !== 'DELIVERY_BOY') { router.push('/'); }
   }, [isAuthenticated, user, isLoading, restoringSession, router]);
 
   if (isLoading || restoringSession) {
@@ -35,7 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
+  if (!isAuthenticated || user?.role !== 'DELIVERY_BOY') {
     return null;
   }
 
@@ -43,14 +36,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex flex-1">
-        <AdminSidebar collapsed={sidebarCollapsed} onToggle={() => {
-          const next = !sidebarCollapsed;
-          setSidebarCollapsed(next);
-          localStorage.setItem('adminSidebarCollapsed', String(next));
-        }} />
-        <main className={cn('flex-1 p-8 transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
-          {children}
-        </main>
+        <DeliverySidebar />
+        <main className={cn('flex-1 p-8 ml-64')}>{children}</main>
       </div>
     </div>
   );

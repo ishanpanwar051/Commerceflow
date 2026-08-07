@@ -1,12 +1,14 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
-import { JwtPayload, AuthRequest } from '../types';
+import { JwtPayload, AuthRequest, Role } from '../types';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
 import { logger } from '../config/logger';
-type Role = 'ADMIN' | 'CUSTOMER' | 'SELLER' | 'DELIVERY_BOY';
+import { UserRepository } from '../repositories';
 
-export function authenticate(req: AuthRequest, _res: Response, next: NextFunction): void {
+const userRepo = new UserRepository();
+
+export async function authenticate(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,7 +17,22 @@ export function authenticate(req: AuthRequest, _res: Response, next: NextFunctio
 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
-    req.user = decoded;
+
+    // Session versioning: reject tokens issued before the user's last
+    // password change or before the account was disabled/deleted.
+    const user = await userRepo.findById(decoded.userId);
+    if (!user || !user.isActive || user.deletedAt) {
+      throw new UnauthorizedError('User not found or deactivated');
+    }
+
+    if (user.passwordChangedAt) {
+      const issuedAt = typeof decoded.iat === 'number' ? decoded.iat * 1000 : 0;
+      if (issuedAt && user.passwordChangedAt.getTime() > issuedAt) {
+        throw new UnauthorizedError('Session expired. Please sign in again.');
+      }
+    }
+
+    req.user = { userId: user.id, email: user.email, role: user.role as Role };
     next();
   } catch (error) {
     next(error);

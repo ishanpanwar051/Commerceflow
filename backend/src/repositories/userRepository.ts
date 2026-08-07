@@ -25,6 +25,15 @@ export class UserRepository {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
+  async findByIdentifier(identifier: string) {
+    const isEmail = identifier.includes('@');
+    return this.prisma.user.findFirst({
+      where: isEmail
+        ? { email: identifier.toLowerCase() }
+        : { phone: identifier },
+    });
+  }
+
   async create(data: Prisma.UserCreateInput) {
     return this.prisma.user.create({ data });
   }
