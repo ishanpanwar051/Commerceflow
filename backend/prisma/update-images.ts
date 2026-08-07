@@ -24,6 +24,9 @@ const prisma = new PrismaClient({ adapter: syncAdapter } as any);
  *  - every product has exactly 4 images with a UNIQUE primary image
  *    (primaries are derived from the product's stable position in the catalog,
  *    so re-runs produce identical results and never shuffle existing data).
+ *
+ * Batched (not per-row awaits) so it completes well within Render's startup
+ * grace period even with a large catalog.
  */
 async function main() {
   // 1. Category images
@@ -44,36 +47,72 @@ async function main() {
   //    (order 0) is unique and gallery images are evenly distributed.
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
-    include: { category: true },
+    include: {
+      category: { select: { id: true, slug: true, parentId: true } },
+    },
     orderBy: { createdAt: 'asc' },
   });
 
-  let updated = 0;
-  for (const p of products) {
-    const parentCategory = p.category.parentId
-      ? await prisma.category.findUnique({ where: { id: p.category.parentId } })
-      : null;
-    const categorySlug = parentCategory?.slug || p.category.slug;
+  const catById = new Map(categories.map((c) => [c.id, c]));
 
-    const newImages = getProductImages(
-      { name: p.name, brand: p.brand || 'CommerceFlow', categorySlug },
-      updated
-    );
+  const imageRows: {
+    productId: string;
+    url: string;
+    alt: string;
+    order: number;
+  }[] = [];
 
-    await prisma.productImage.deleteMany({ where: { productId: p.id } });
-    await prisma.productImage.createMany({
-      data: newImages.map((img) => ({
+  let skipped = 0;
+  for (let i = 0; i < products.length; i += 1) {
+    const p = products[i];
+    const category = p.category;
+    const parent = category?.parentId ? catById.get(category.parentId) : undefined;
+    const categorySlug = parent?.slug || category?.slug || 'general';
+
+    let newImages;
+    try {
+      newImages = getProductImages(
+        { name: p.name, brand: p.brand || 'CommerceFlow', categorySlug },
+        i
+      );
+    } catch (err) {
+      console.warn(`  ! skipping ${p.id} (${p.name}): ${(err as Error).message}`);
+      skipped += 1;
+      continue;
+    }
+
+    for (const img of newImages) {
+      imageRows.push({
         productId: p.id,
         url: img.url,
         alt: img.alt,
         order: img.order,
-      })),
-    });
-    updated++;
-    if (updated % 100 === 0) console.log(`  ...${updated} products`);
+      });
+    }
   }
 
-  console.log(`✓ Synced images for ${updated} products (4 each, unique primaries).`);
+  const totalProducts = products.length;
+  const totalRows = imageRows.length;
+
+  if (totalRows === 0) {
+    console.log('  ! no product image rows to write');
+    await prisma.$disconnect();
+    return;
+  }
+
+  await prisma.productImage.deleteMany({
+    where: { productId: { in: products.map((p) => p.id) } },
+  });
+
+  const BATCH = 500;
+  for (let i = 0; i < imageRows.length; i += BATCH) {
+    await prisma.productImage.createMany({
+      data: imageRows.slice(i, i + BATCH),
+    });
+    console.log(`  ...${Math.min(i + BATCH, imageRows.length)}/${totalRows} image rows`);
+  }
+
+  console.log(`✓ Synced images for ${totalProducts} products (4 each, unique primaries).`);
   await prisma.$disconnect();
 }
 
