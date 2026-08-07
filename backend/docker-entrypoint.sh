@@ -17,5 +17,10 @@ if [ "${SEED_DB:-true}" = "true" ]; then
   node ./scripts/maybe-seed.mjs
 fi
 
+# Idempotent image sync: guarantees category images + exactly 4 images per
+# product with unique primaries, even on databases seeded before the fix.
+echo "[entrypoint] Syncing product & category images..."
+node ./dist/update-images.mjs
+
 echo "[entrypoint] Starting CommerceFlow API..."
 exec node --enable-source-maps ./dist/index.mjs

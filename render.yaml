@@ -46,7 +46,7 @@ services:
     # Plain filter (no `...`) matches the proven Dockerfile build: the lib packages are
     # bundled from source by esbuild/Vite, so they don't need their own build step.
     buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push
-    startCommand: node --enable-source-maps ./backend/dist/index.mjs
+    startCommand: node ./backend/dist/update-images.mjs && node --enable-source-maps ./backend/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION
