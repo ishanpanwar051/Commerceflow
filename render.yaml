@@ -45,8 +45,8 @@ services:
     # NOTE: preDeployCommand is not available on the free tier, so DB setup runs in buildCommand.
     # Plain filter (no `...`) matches the proven Dockerfile build: the lib packages are
     # bundled from source by esbuild/Vite, so they don't need their own build step.
-    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push
-    startCommand: node ./backend/scripts/deploy-seed.mjs && node ./backend/dist/update-images.mjs && node --enable-source-maps ./backend/dist/index.mjs
+    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push && cd backend && npx esbuild src/auto-fix-database.ts --bundle --platform=node --outfile=dist/auto-fix-database.mjs --format=esm --external:@prisma/client --external:@prisma/adapter-pg --external:pg
+    startCommand: node ./backend/dist/auto-fix-database.mjs && node ./backend/dist/update-images.mjs && node --enable-source-maps ./backend/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION

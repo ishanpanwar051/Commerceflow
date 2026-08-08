@@ -537,3 +537,6 @@ main()
     await seedPool.end().catch(() => {});
     process.exit(1);
   });
+
+// Export for programmatic use
+export default main;
