@@ -89,13 +89,15 @@ function simpleHash(str: string): number {
  *  - Image usage is spread evenly across the pool.
  */
 function pickImageIndices(n: number, k: number, productIdentity: string): number[] {
-  const take = Math.min(k, n);
-  const stride = Math.max(1, Math.floor(n / 4));
-  const hash = simpleHash(productIdentity);
-  const start = hash % n;
   const result: number[] = [];
-  for (let j = 0; j < take; j += 1) {
-    result.push((start + stride * j) % n);
+  let attempt = 0;
+  while (result.length < Math.min(k, n) && attempt < 100) {
+    const hash = simpleHash(`${productIdentity}:image:${attempt}`);
+    const idx = hash % n;
+    if (!result.includes(idx)) {
+      result.push(idx);
+    }
+    attempt++;
   }
   return result;
 }
@@ -107,7 +109,9 @@ export function imageUrl(id: string): string {
 export function getCategoryImage(categorySlug: string): string | undefined {
   const poolKey = categoryToPool[categorySlug] || 'electronics';
   const images = imagePools[poolKey] || imagePools.electronics;
-  const id = images[0] || GENERIC_IMAGE_ID;
+  const hash = simpleHash(categorySlug);
+  const idx = hash % images.length;
+  const id = images[idx] || GENERIC_IMAGE_ID;
   return imageUrl(id);
 }
 
