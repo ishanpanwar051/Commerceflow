@@ -12,6 +12,7 @@ import paymentRoutes from './paymentRoutes';
 import healthRoutes from './healthRoutes';
 import metricsRoutes from './metricsRoutes';
 import churnRoutes from './churnRoutes';
+import debugRoutes from './debug.routes.js';
 import { authenticate, authorize } from '../middleware/auth';
 import { AuthRequest } from '../types';
 import { sendSuccess, calculatePaginationMeta } from '../utils/helpers';
@@ -21,6 +22,7 @@ const router = Router();
 
 router.use('/metrics', metricsRoutes);
 router.use('/churn', churnRoutes);
+router.use('/debug', debugRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/products', productRoutes);
