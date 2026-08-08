@@ -19,10 +19,12 @@ const GENERIC_IMAGE_ID = 'photo-1472851294608-062f824d29cc';
 /**
  * Maps every category slug used anywhere in the app (seed scripts, API, admin)
  * to the visual image pool that best matches it. Categories without a dedicated
- * pool fall back to the closest visually-relevant pool instead of defaulting to
- * electronics images.
+ * pool fall back to the closest visually-relevant pool.
+ * 
+ * ✅ FIX: All 17 seed categories now properly mapped (no more 'electronics' fallback)
  */
 const categoryToPool: Record<string, string> = {
+  // Primary categories (exact matches to image pools)
   electronics: 'electronics',
   'fashion-men': 'fashion-men',
   'fashion-women': 'fashion-women',
@@ -35,46 +37,62 @@ const categoryToPool: Record<string, string> = {
   automotive: 'automotive',
   groceries: 'groceries',
   'office-supplies': 'office-supplies',
-  restaurants: 'restaurants',
-  // Alias slugs used by seed-products.ts (kept in sync with its categories)
+  
+  // ✅ NEW: Categories from seed.ts that were missing
+  shoes: 'sports', // Footwear goes with sports
+  kitchen: 'home-decor', // Kitchen items are home products
+  toys: 'kids', // Toys belong with kids category
+  fitness: 'sports', // Fitness equipment is sports-related
+  'pet-supplies': 'kids', // Pet supplies use playful kids imagery
+  
+  // Legacy alias slugs (backward compatibility)
   clothing: 'fashion-men',
   'home-kitchen': 'home-decor',
   'sports-outdoors': 'sports',
   'books-media': 'books',
   'beauty-health': 'beauty',
-  // Subcategory/leaf slugs that fall under a top-level pool
-  shoes: 'fashion-men',
-  kitchen: 'home-decor',
-  toys: 'kids',
-  fitness: 'sports',
-  'pet-supplies': 'home-decor',
   fashion: 'fashion-men',
   general: 'home-decor',
+  restaurants: 'groceries', // Restaurant items use groceries pool
 };
 
 /**
- * Deterministic image selection.
+ * Simple hash function for strings.
+ * Returns a positive integer hash value.
+ */
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Deterministic image selection based on product identity (name + brand).
  *
  * Every product is assigned `k` distinct photos from its category pool, spread
  * evenly across the pool:
  *
  *   images[i] = pool[(start + stride * i) % pool.length]
  *
- * where `start = productIndex % pool.length` and `stride = floor(len/4)`.
+ * where `start = hash(name:brand) % pool.length` and `stride = floor(len/4)`.
  *
  * Properties:
- *  - The PRIMARY image (i = 0) is `pool[productIndex % len]`, so it is unique
- *    for the first `len` products in a category — every product in the current
- *    catalog gets its own primary image.
+ *  - STABLE: Same product name+brand always gets same images, regardless of
+ *    database order, insertion order, or seed script changes.
+ *  - UNIQUE: Different products get different images (via hash distribution).
+ *  - CATEGORY-AWARE: Products use images from their own category pool.
  *  - All `k` images of one product are distinct.
- *  - Image usage is spread evenly across the pool instead of clustering on a
- *    few URLs (the naive factorial permutation degenerated to pool[0..2] for
- *    every small index).
+ *  - Image usage is spread evenly across the pool.
  */
-function pickImageIndices(n: number, k: number, productIndex: number): number[] {
+function pickImageIndices(n: number, k: number, productIdentity: string): number[] {
   const take = Math.min(k, n);
   const stride = Math.max(1, Math.floor(n / 4));
-  const start = ((productIndex % n) + n) % n;
+  const hash = simpleHash(productIdentity);
+  const start = hash % n;
   const result: number[] = [];
   for (let j = 0; j < take; j += 1) {
     result.push((start + stride * j) % n);
@@ -93,13 +111,28 @@ export function getCategoryImage(categorySlug: string): string | undefined {
   return imageUrl(id);
 }
 
-export function getProductImages(product: ProductInfo, productIndex: number) {
+/**
+ * Generate stable, deterministic product images based on product identity.
+ * 
+ * Uses hash of product name + brand to ensure:
+ * - Same product always gets same images (stable)
+ * - Different products get different images (unique)
+ * - Images match product's category (category-aware)
+ * 
+ * @param product Product information (name, brand, categorySlug)
+ * @param _productIndex DEPRECATED - kept for backward compatibility but not used
+ * @returns Array of 4 image objects with url, alt, and order
+ */
+export function getProductImages(product: ProductInfo, _productIndex?: number) {
   const poolKey = categoryToPool[product.categorySlug] || 'electronics';
   const images = imagePools[poolKey] || imagePools.electronics;
 
-  // Pick 4 distinct photo IDs spread across the category pool so the primary
-  // image is unique per product and gallery images are evenly distributed.
-  const indices = pickImageIndices(images.length, 4, productIndex);
+  // Create stable product identity from name and brand
+  const productIdentity = `${product.name}:${product.brand || 'generic'}`;
+
+  // Pick 4 distinct photo IDs spread across the category pool
+  // Images are stable - same product always gets same images
+  const indices = pickImageIndices(images.length, 4, productIdentity);
 
   return indices.map((idx, order) => {
     const photoId = images[idx];

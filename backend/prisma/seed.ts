@@ -13,9 +13,10 @@ if (!databaseUrl) {
   console.error('DATABASE_URL environment variable is required to run the seed');
   process.exit(1);
 }
+
+// PostgreSQL adapter (works for both PostgreSQL and file:// URLs with proper adapter)
 const seedPool = new Pool({ connectionString: databaseUrl });
 const seedAdapter = new PrismaPg(seedPool);
-
 const prisma = new PrismaClient({ adapter: seedAdapter } as any);
 
 function slugify(text: string) {
@@ -340,10 +341,13 @@ async function main() {
 
       for (let i = 0; i < products.length && allProducts.length < 120; i++) {
         const p = products[i];
-        const imgs = getProductImages(
-          { name: p.name, brand: p.brand, categorySlug: cat.slug, subcategory: sub },
-          allProducts.length
-        );
+        // ✅ FIX: No longer passing productIndex - getProductImages now uses hash-based selection
+        const imgs = getProductImages({
+          name: p.name,
+          brand: p.brand,
+          categorySlug: cat.slug,
+          subcategory: sub,
+        });
 
         allProducts.push({
           productData: p,
@@ -372,10 +376,29 @@ async function main() {
     const reviewCount = randomInt(50, 2500);
     const trendingScore = randomFloat(1, 100);
     const avgRating = randomFloat(3.5, 5.0);
-    const isFeatured = productIndex < 20 || Math.random() > 0.8;
-    const isBestSeller = soldCount > 5000 && Math.random() > 0.5;
-    const isTopRated = avgRating > 4.5;
-    const isNewArrival = productIndex < 30;
+    
+    // ✅ FIX: Make section flags MUTUALLY EXCLUSIVE to prevent duplicates
+    // Products are distributed into distinct sections based on index ranges
+    let isFeatured = false;
+    let isBestSeller = false;
+    let isNewArrival = false;
+    let isTopRated = false;
+    
+    // Assign products to sections based on index (no overlaps)
+    if (productIndex < 20) {
+      // First 20 products → Featured only
+      isFeatured = true;
+    } else if (productIndex < 40) {
+      // Products 20-39 → Best Sellers only
+      isBestSeller = soldCount > 5000; // Only if high sales
+    } else if (productIndex < 60) {
+      // Products 40-59 → New Arrivals only
+      isNewArrival = true;
+    } else if (productIndex < 80) {
+      // Products 60-79 → Top Rated only
+      isTopRated = avgRating > 4.5;
+    }
+    // Products 80+ → Regular products (no special flags)
 
     const product = await prisma.product.create({
       data: {
