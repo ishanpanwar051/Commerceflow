@@ -23,13 +23,13 @@ export class ProductController {
         maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
         minRating: query.minRating ? Number(query.minRating) : undefined,
         minDiscount: query.minDiscount ? Number(query.minDiscount) : undefined,
-        isFeatured: query.isFeatured === undefined ? undefined : query.isFeatured === 'true',
-        isBestSeller: query.isBestSeller === undefined ? undefined : query.isBestSeller === 'true',
-        isNewArrival: query.isNewArrival === undefined ? undefined : query.isNewArrival === 'true',
-        isTopRated: query.isTopRated === undefined ? undefined : query.isTopRated === 'true',
-        freeDelivery: query.freeDelivery === undefined ? undefined : query.freeDelivery === 'true',
-        cashOnDelivery: query.cashOnDelivery === undefined ? undefined : query.cashOnDelivery === 'true',
-        emiAvailable: query.emiAvailable === undefined ? undefined : query.emiAvailable === 'true',
+        isFeatured: query.isFeatured as boolean | undefined,
+        isBestSeller: query.isBestSeller as boolean | undefined,
+        isNewArrival: query.isNewArrival as boolean | undefined,
+        isTopRated: query.isTopRated as boolean | undefined,
+        freeDelivery: query.freeDelivery as boolean | undefined,
+        cashOnDelivery: query.cashOnDelivery as boolean | undefined,
+        emiAvailable: query.emiAvailable as boolean | undefined,
       });
       sendSuccess(res, products, 'Products fetched successfully', 200, calculatePaginationMeta(total, page, limit));
     } catch (error) { next(error); }
