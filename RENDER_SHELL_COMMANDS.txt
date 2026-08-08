@@ -1,0 +1,35 @@
+═══════════════════════════════════════════════════════
+  RENDER SHELL ME YE COMMANDS COPY-PASTE KARO
+═══════════════════════════════════════════════════════
+
+1. Render Dashboard pe jao:
+   https://render.com/dashboard
+
+2. "commerceflow-api" service pe click karo
+
+3. Top right me "Shell" tab pe click karo
+
+4. Shell load hone ke baad, ye commands paste karo:
+
+───────────────────────────────────────────────────────
+
+cd backend
+npx prisma generate
+npx prisma db push --accept-data-loss
+npx tsx prisma/seed.ts
+
+───────────────────────────────────────────────────────
+
+5. Wait karo 2-3 minutes
+
+6. Output me dikhega:
+   "Created 120 products with reviews..."
+
+7. Done! Website refresh karo:
+   https://commerceflow-frontend-5c7v.onrender.com
+
+═══════════════════════════════════════════════════════
+
+⚠️  IMPORTANT: Run these IN RENDER SHELL, not local!
+
+═══════════════════════════════════════════════════════
