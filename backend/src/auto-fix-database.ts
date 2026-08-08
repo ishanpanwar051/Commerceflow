@@ -34,7 +34,11 @@ async function main() {
     const productCount = await prisma.product.count();
     
     if (productCount === 0) {
-      console.log('📦 Database is empty, running seed...');
+      console.log('📦 No products found, running seed...');
+      
+      // Clear existing categories first (to avoid unique constraint)
+      console.log('🧹 Cleaning up existing categories...');
+      await prisma.category.deleteMany({});
       
       // Import and run seed
       const { default: runSeed } = await import('../prisma/seed.js');
@@ -114,8 +118,16 @@ async function main() {
     console.error('❌ Auto-fix failed:', error);
     console.log('⚠️  Continuing with server startup anyway...');
   } finally {
-    await prisma.$disconnect();
-    await pool.end();
+    try {
+      await prisma.$disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
+    try {
+      await pool.end();
+    } catch (e) {
+      // Ignore pool end errors
+    }
   }
 }
 
