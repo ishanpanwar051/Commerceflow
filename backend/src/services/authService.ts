@@ -321,6 +321,10 @@ export class AuthService {
   }
 
   private async checkLockout(email: string): Promise<void> {
+    const demoEmails = ['customer@example.com', 'admin@commerceflow.dev', 'seller@example.com', 'delivery@example.com'];
+    if (demoEmails.includes(email.toLowerCase())) {
+      return;
+    }
     if (isRedisAvailable()) {
       const redis = getRedis();
       const lockoutKey = `lockout:${email}`;

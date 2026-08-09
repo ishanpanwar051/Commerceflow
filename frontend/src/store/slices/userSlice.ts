@@ -26,9 +26,9 @@ export const login = createAsyncThunk(
       const result = await authService.login(identifier, password);
       TokenService.setTokens(result.accessToken, result.refreshToken, remember);
       return result;
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      return rejectWithValue(err.response?.data?.message || 'Login failed');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || error?.message || (typeof error === 'string' ? error : 'Login failed');
+      return rejectWithValue(msg);
     }
   }
 );

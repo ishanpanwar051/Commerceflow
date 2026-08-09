@@ -42,6 +42,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<LoginForm>({
@@ -175,6 +176,49 @@ export default function LoginPage() {
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               {isLoading ? 'Signing in...' : 'Continue'}
             </Button>
+
+            {/* Quick Demo Login Auto-Fill Bar */}
+            <div className="pt-2 border-t text-xs">
+              <p className="font-medium text-muted-foreground mb-2">⚡ 1-Click Demo Login:</p>
+              <div className="flex flex-wrap gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs px-2.5 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300"
+                  onClick={() => {
+                    setValue('identifier', 'customer@example.com');
+                    setValue('password', 'Admin@123');
+                  }}
+                >
+                  👤 Customer
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs px-2.5 bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300"
+                  onClick={() => {
+                    setValue('identifier', 'admin@commerceflow.dev');
+                    setValue('password', 'Admin@123');
+                  }}
+                >
+                  👑 Admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs px-2.5 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300"
+                  onClick={() => {
+                    setValue('identifier', 'seller@example.com');
+                    setValue('password', 'Admin@123');
+                  }}
+                >
+                  🏪 Seller
+                </Button>
+              </div>
+            </div>
           </form>
 
           <div className="relative">
