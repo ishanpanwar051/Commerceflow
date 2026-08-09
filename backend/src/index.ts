@@ -33,9 +33,21 @@ const server = app.listen(port, async (err) => {
     logger.info(`📊 Found ${productCount} products in database (legacy image check: ${isOldImage})`);
     
     if (productCount !== 168 || isOldImage) {
-      logger.info('📦 Legacy or mismatched product images detected, running seed to populate exact images...');
+      logger.info('📦 Legacy or mismatched product images detected, running clean seed to populate exact images...');
       
-      // Clear existing categories to avoid unique constraint
+      // Clear existing records in proper FK order to avoid constraints
+      await prisma.reviewImage.deleteMany({});
+      await prisma.review.deleteMany({});
+      await prisma.payment.deleteMany({});
+      await prisma.orderItem.deleteMany({});
+      await prisma.order.deleteMany({});
+      await prisma.coupon.deleteMany({});
+      await prisma.wishlistItem.deleteMany({});
+      await prisma.cartItem.deleteMany({});
+      await prisma.cart.deleteMany({});
+      await prisma.inventory.deleteMany({});
+      await prisma.productImage.deleteMany({});
+      await prisma.product.deleteMany({});
       await prisma.category.deleteMany({});
       
       // Import and run seed
@@ -43,7 +55,7 @@ const server = app.listen(port, async (err) => {
       const runSeed = seedModule.default;
       await runSeed();
       
-      logger.info('✅ Database seeded successfully!');
+      logger.info('✅ Database seeded successfully with exact product images!');
     } else {
       // Check for overlapping flags
       const featured = await prisma.product.count({ where: { isFeatured: true } });
