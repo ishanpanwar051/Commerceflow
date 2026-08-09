@@ -134,6 +134,9 @@ interface ProductSpec {
   weight?: number;
   dimensions?: string;
   warranty?: string;
+  sellerName?: string;
+  deliveryEstimate?: string;
+  returnPolicy?: string;
 }
 
 function generateProductsForSubcategory(subcategory: string, categorySlug: string): ProductSpec[] {

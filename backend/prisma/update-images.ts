@@ -48,7 +48,7 @@ async function main() {
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     include: {
-      category: { select: { id: true, slug: true, parentId: true } },
+      category: { select: { id: true, name: true, slug: true, parentId: true } },
     },
     orderBy: { createdAt: 'asc' },
   });

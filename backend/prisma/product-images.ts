@@ -1,5 +1,3 @@
-import { imagePools } from './image-pools';
-
 /**
  * Curated, HTTP-verified editorial imagery for the catalog.
  *
