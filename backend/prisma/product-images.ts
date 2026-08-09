@@ -24,109 +24,96 @@ function toUnsplashUrl(photoId: string): string {
 
 // User-provided explicit product image overrides
 const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
-  'notebook': 'photo-1544816155-12df9643f363',
+  'executive leather notebook': 'photo-1544816155-12df9643f363',
   'gel ink pen': 'photo-1583485088034-697b5bc54ccd',
-  'pen': 'photo-1583485088034-697b5bc54ccd',
   'laser printer': 'photo-1612815154858-60aa4c59eaa6',
-  'printer': 'photo-1612815154858-60aa4c59eaa6',
-  'dry-erase': 'photo-1586953208448-b95a79798f07',
-  'whiteboard': 'photo-1586953208448-b95a79798f07',
+  'dry-erase whiteboard': 'photo-1586953208448-b95a79798f07',
   'building block': 'photo-1596461404969-9ae70f2830c1',
   'off-road car': 'photo-1594787318286-3d835c1d207f',
-  'jigsaw': 'photo-1610890716171-6b1bb98ffd09',
-  'puzzle': 'photo-1610890716171-6b1bb98ffd09',
+  '1000-piece jigsaw': 'photo-1610890716171-6b1bb98ffd09',
   'motorcycle helmet': 'photo-1558981806-ec527fa84c39',
-  'helmet': 'photo-1558981806-ec527fa84c39',
   'riding jacket': 'photo-1551028719-00167b16eac5',
   'engine oil': 'photo-1625047509248-ec889cbff17f',
   'pressure washer': 'photo-1607860108855-64acf2078ed9',
-  'cricket': 'photo-1531415074968-036ba1b575da',
-  'football': 'photo-1579952363873-27f3bade9f55',
+
+  'cricket bat': 'photo-1531415074968-036ba1b575da',
+  'size 5 football': 'photo-1579952363873-27f3bade9f55',
   'yoga mat': 'photo-1601925260368-ae2f83cf8b7f',
-  'yoga': 'photo-1601925260368-ae2f83cf8b7f',
-  'dumbbell': 'photo-1583454110551-21f2fa2afe61',
-  'weight': 'photo-1583454110551-21f2fa2afe61',
-  'protein': 'photo-1593095948071-474c5cc2989d',
-  'lipstick': 'photo-1586495777744-4413f21062fa',
-  'serum': 'photo-1620916566398-39f1143ab7be',
-  'shampoo': 'photo-1556229010-6c3f2c9ca5f8',
-  'sofa': 'photo-1555041469-a586c61ea9bc',
-  'bed': 'photo-1505693416388-ac5ce068fe85',
+  'dumbbell set': 'photo-1583454110551-21f2fa2afe61',
+  'whey protein': 'photo-1593095948071-474c5cc2989d',
+  'liquid lipstick': 'photo-1586495777744-4413f21062fa',
+  'vitamin c serum': 'photo-1620916566398-39f1143ab7be',
+  'hydrating shampoo': 'photo-1556229010-6c3f2c9ca5f8',
+  'eau de parfum': 'photo-1541643600914-78b084683601',
+
+  'fabric sofa': 'photo-1555041469-a586c61ea9bc',
+  'storage bed': 'photo-1505693416388-ac5ce068fe85',
   'dining table': 'photo-1617098900591-3f90928e8c54',
-  'office chair': 'photo-1580480055273-228ff5388ef8',
-  'mesh chair': 'photo-1580480055273-228ff5388ef8',
+  'mesh office chair': 'photo-1580480055273-228ff5388ef8',
   'bookshelf': 'photo-1594620302200-9a762244a156',
-  'cookware': 'photo-1556911220-e15b29be8c8f',
+  'cookware set': 'photo-1556911220-e15b29be8c8f',
   'knife set': 'photo-1593618998160-e34014e67546',
   'pressure cooker': 'photo-1585515320310-259814833e62',
   'french press': 'photo-1572119865084-43c285814d63',
-  'coffee maker': 'photo-1572119865084-43c285814d63',
   'wall art': 'photo-1549490349-8643362247b5',
-  'cushion': 'photo-1584100936595-c0654b55a2e2',
-  'curtain': 'photo-1616486338812-3dadae4b4ace',
-  'rug': 'photo-1600166898405-da9535204843',
+  'cushion cover': 'photo-1584100936595-c0654b55a2e2',
+  'blackout curtain': 'photo-1616486338812-3dadae4b4ace',
+  'area rug': 'photo-1600166898405-da9535204843',
+  'desk lamp': 'photo-1507473885765-e6ed057f782c',
+
   'running shoe': 'photo-1542291026-7eec264c27ff',
-  'sneaker': 'photo-1495555961986-6d4c1ecb7be3',
+  'casual sneaker': 'photo-1495555961986-6d4c1ecb7be3',
   'canvas shoe': 'photo-1525966222134-fcfa99b8ae77',
-  'oxford': 'photo-1614252369475-531eba835eb1',
-  'derby': 'photo-1449247709967-d4461a6a6103',
-  'chelsea': 'photo-1638247025967-b4e38f787b76',
-  'boot': 'photo-1638247025967-b4e38f787b76',
-  'sandal': 'photo-1603487742131-4160ec999306',
+  'oxford shoe': 'photo-1614252369475-531eba835eb1',
+  'derby dress': 'photo-1449247709967-d4461a6a6103',
+  'chelsea boot': 'photo-1638247025967-b4e38f787b76',
+
   'maxi dress': 'photo-1572804013309-59a88b7e92f1',
   'cocktail dress': 'photo-1566174053879-31528523f8ae',
-  'dress': 'photo-1572804013309-59a88b7e92f1',
   'silk blouse': 'photo-1585487000160-6ebcfceb0d03',
-  'top': 'photo-1585487000160-6ebcfceb0d03',
   'banarasi saree': 'photo-1610030469983-98e550d6193c',
-  'saree': 'photo-1610030469983-98e550d6193c',
-  'kurta': 'photo-1617627143750-d86bc21e42bb',
-  'anarkali': 'photo-1594633312681-425c7b97ccd1',
+  'cotton kurta': 'photo-1583391733956-6c78276477e2',
+  'anarkali suit': 'photo-1594633312681-425c7b97ccd1',
   'denim jeans': 'photo-1541099649105-f69ad21f3246',
   'a-line skirt': 'photo-1583496661160-fb5886a0aaaa',
-  'skirt': 'photo-1583496661160-fb5886a0aaaa',
-  'legging': 'photo-1506629082955-511b1aa562c8',
+  'ankle-length legging': 'photo-1506629082955-511b1aa562c8',
   'trench coat': 'photo-1591047139829-d91aecb6caea',
   'denim jacket': 'photo-1543076447-215ad9ba6923',
-  'blazer': 'photo-1551488831-00ddcb6c6bd3',
-  'handbag': 'photo-1584917865442-de89df76afd3',
-  'clutch': 'photo-1566150905458-1bf1fc113f0d',
-  'necklace': 'photo-1599643478518-a784e5dc4c8f',
-  'earring': 'photo-1535632066927-ab7c9ab60908',
+  'oversized blazer': 'photo-1551488831-00ddcb6c6bd3',
+  'leather handbag': 'photo-1584917865442-de89df76afd3',
+  'evening clutch': 'photo-1566150905458-1bf1fc113f0d',
+  'necklace set': 'photo-1599643478518-a784e5dc4c8f',
+  'crystal earring': 'photo-1535632066927-ab7c9ab60908',
   'high heel': 'photo-1543163521-1bf539c55dd2',
-  'heel': 'photo-1543163521-1bf539c55dd2',
-  'flat': 'photo-1560343090-f0409e92791a',
-  'loafer': 'photo-1560343090-f0409e92791a',
-  'crew neck': 'photo-1521572163474-6864f9cf17ab',
-  't-shirt': 'photo-1521572163474-6864f9cf17ab',
+  'leather loafer': 'photo-1560343090-f0409e92791a',
+  'ankle boot': 'photo-1608256246200-53e635b5b65f',
+
+  'crew neck t-shirt': 'photo-1521572163474-6864f9cf17ab',
   'graphic printed tee': 'photo-1503341504253-dff4815485f1',
   'polo t-shirt': 'photo-1583743814966-8936f5b7be1a',
-  'polo': 'photo-1583743814966-8936f5b7be1a',
   'oxford shirt': 'photo-1602810318383-e386cc2a3ccf',
   'denim shirt': 'photo-1495105787522-5334e3ffa0ef',
   'linen shirt': 'photo-1596755389378-c31d21fd1273',
-  'shirt': 'photo-1602810318383-e386cc2a3ccf',
   'slim fit denim jeans': 'photo-1542272604-787c3835535d',
   'tapered blue jeans': 'photo-1475178626620-a4d074967452',
   'black jeans': 'photo-1541099649105-f69ad21f3246',
-  'jean': 'photo-1542272604-787c3835535d',
-  'chino': 'photo-1624378439575-d8705ad7ae80',
-  'trouser': 'photo-1598808503746-f34c53b9323e',
-  'cargo': 'photo-1517438476312-10d79c077509',
+  'chino pants': 'photo-1624378439575-d8705ad7ae80',
+  'formal trousers': 'photo-1598808503746-f34c53b9323e',
+  'cargo pants': 'photo-1517438476312-10d79c077509',
   'single breasted blazer': 'photo-1507679799987-c73779587ccf',
-  'tuxedo': 'photo-1594938298603-c8148c4dae35',
+  'tuxedo suit': 'photo-1594938298603-c8148c4dae35',
   'wool suit': 'photo-1555069519-127aadedf1ee',
-  'suit': 'photo-1594938298603-c8148c4dae35',
   'bomber jacket': 'photo-1551028719-00167b16eac5',
   'puffer jacket': 'photo-1548883354-7622d03aca27',
-  'sweater': 'photo-1576566588028-4147f3842f27',
-  'hoodie': 'photo-1556821840-3a63f95609a7',
-  'belt': 'photo-1624222247344-550fb60583dc',
-  'wallet': 'photo-1627123424574-724758594e93',
-  'aviator': 'photo-1511499767150-a48a237f0083',
-  'sunglasses': 'photo-1511499767150-a48a237f0083',
-  'chronograph': 'photo-1524805444758-089113d48a6d',
-  'watch': 'photo-1524805444758-089113d48a6d',
+  'wool sweater': 'photo-1576566588028-4147f3842f27',
+  'zip hoodie': 'photo-1556821840-3a63f95609a7',
+  'leather belt': 'photo-1624222247344-550fb60583dc',
+  'bi-fold wallet': 'photo-1627123424574-724758594e93',
+  'aviator sunglasses': 'photo-1511499767150-a48a237f0083',
+  'chronograph watch': 'photo-1524805444758-089113d48a6d',
+  'silk tie': 'photo-1589756823695-278bc923f962',
+  'baseball cap': 'photo-1588850561407-ed78c282e89b',
+
   's25 ultra': 'photo-1610945415295-d9bbf067e59c',
   'iphone 17': 'photo-1511707171634-5f897ff02aa9',
   'oneplus 13': 'photo-1598327105666-5b89351aff97',
@@ -200,7 +187,7 @@ const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   'jbl tour pro': 'photo-1598331668826-20cecc596b86',
   'nothing ear': 'photo-1588423771073-b8903fbb85b5',
 
-  'sony wh-1000xm6': 'photo-1505740420928-5e560c06d30e',
+  'wh-1000xm6': 'photo-1505740420928-5e560c06d30e',
   'bose quietcomfort ultra': 'photo-1546435770-a3e426bf472b',
   'sennheiser momentum': 'photo-1484704849700-f032a568e944',
   'ath-m50x': 'photo-1583394838336-acd977736f90',
@@ -235,7 +222,6 @@ const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
 
   'deco be95': 'photo-1601784551446-20c9e07cdbdb',
   'orbi 970': 'photo-1544197150-b99a580bb7a8',
-  'nest wifi pro': 'photo-1544197150-b99a580bb7a8',
 };
 
 // Granular Unsplash pools per product type / model keyword
@@ -271,8 +257,30 @@ const PHOTO_POOLS: Record<string, string[]> = {
   // Speakers & HomePod
   speaker: ['photo-1545454675-3531b543be5d', 'photo-1608043152269-423dbba4e7e1', 'photo-1508700115892-45ecd05ae2ad'],
 
-  // Smart Watches
-  watch: ['photo-1508685096489-7aacd43bd3b1', 'photo-1579586337278-3befd40fd17a', 'photo-1523275335684-37898b6baf30'],
+  // Smart Watches & Watches
+  watch: [
+    'photo-1523275335684-37898b6baf30',
+    'photo-1508685096489-7aacd43bd3b1',
+    'photo-1579586337278-3befd40fd17a',
+    'photo-1524805444758-089113d48a6d',
+    'photo-1434493789847-2f02dc6ca35d',
+    'photo-1544117519-31a4b719223d',
+  ],
+
+  // Sunglasses
+  sunglasses: [
+    'photo-1511499767150-a48a237f0083',
+    'photo-1572635196237-14b3f281503f',
+    'photo-1584036561566-baf8f5f1b144',
+    'photo-1508296695146-257a814070b4',
+  ],
+
+  // Wallets
+  wallet: [
+    'photo-1627123424574-724758594e93',
+    'photo-1553062407-98eeb64c6a62',
+    'photo-1606503153255-59d8b8b821b7',
+  ],
 
   // Power Banks & Chargers
   charger: ['photo-1583863788434-e58a36330cf0', 'photo-1585338107529-13afc5f02586', 'photo-1609081219090-a6d81d3085bf'],
@@ -284,22 +292,22 @@ const PHOTO_POOLS: Record<string, string[]> = {
   router: ['photo-1544197150-b99a580bb7a8', 'photo-1601784551446-20c9e07cdbdb', 'photo-1563770660941-20978e870e26'],
 
   // Fashion Men
-  't-shirt': ['photo-1521572267360-ee0c2909d518', 'photo-1583743814966-8936f5b7be1a', 'photo-1618354691373-d851c5c3a990'],
-  shirt: ['photo-1596755094514-f87e34085b2c', 'photo-1602810318383-e386cc2a3ccf', 'photo-1620012253295-c15cc3e65df4'],
-  jean: ['photo-1541099649105-f69ad21f3246', 'photo-1582552938357-32b906df40cb', 'photo-1604176354204-9268737828e4'],
-  trouser: ['photo-1624378439575-d8705ad7ae80', 'photo-1473966968600-fa801b869a1a', 'photo-1506629082955-511b1aa562c8'],
-  suit: ['photo-1507679799987-c73779587ccf', 'photo-1594938298603-c8148c4dae35', 'photo-1617137968427-85924c800a22'],
-  jacket: ['photo-1551028719-00167b16eac5', 'photo-1544441893-675973e31985', 'photo-1548883354-7622d03aca27'],
+  't-shirt': ['photo-1521572267360-ee0c2909d518', 'photo-1583743814966-8936f5b7be1a', 'photo-1618354691373-d851c5c3a990', 'photo-1503341504253-dff4815485f1'],
+  shirt: ['photo-1596755094514-f87e34085b2c', 'photo-1602810318383-e386cc2a3ccf', 'photo-1620012253295-c15cc3e65df4', 'photo-1495105787522-5334e3ffa0ef'],
+  jean: ['photo-1541099649105-f69ad21f3246', 'photo-1582552938357-32b906df40cb', 'photo-1604176354204-9268737828e4', 'photo-1542272604-787c3835535d'],
+  trouser: ['photo-1624378439575-d8705ad7ae80', 'photo-1473966968600-fa801b869a1a', 'photo-1506629082955-511b1aa562c8', 'photo-1598808503746-f34c53b9323e'],
+  suit: ['photo-1507679799987-c73779587ccf', 'photo-1594938298603-c8148c4dae35', 'photo-1617137968427-85924c800a22', 'photo-1555069519-127aadedf1ee'],
+  jacket: ['photo-1551028719-00167b16eac5', 'photo-1544441893-675973e31985', 'photo-1548883354-7622d03aca27', 'photo-1543076447-215ad9ba6923'],
 
   // Fashion Women
-  dress: ['photo-1595777457583-95e059d581b8', 'photo-1572804013309-59a88b7e92f1', 'photo-1515886657613-9f3515b0c78f'],
+  dress: ['photo-1595777457583-95e059d581b8', 'photo-1572804013309-59a88b7e92f1', 'photo-1515886657613-9f3515b0c78f', 'photo-1566174053879-31528523f8ae'],
   skirt: ['photo-1583496661160-fb5886a0aaaa', 'photo-1572804013309-59a88b7e92f1'],
-  kurta: ['photo-1610030469983-98e550d6193c', 'photo-1617627143750-d86bc21e42bb'],
+  kurta: ['photo-1610030469983-98e550d6193c', 'photo-1617627143750-d86bc21e42bb', 'photo-1583391733956-6c78276477e2'],
   saree: ['photo-1610030469983-98e550d6193c', 'photo-1617627143750-d86bc21e42bb'],
-  handbag: ['photo-1584917865442-de89df76afd3', 'photo-1590874103328-eac38a683ce7'],
+  handbag: ['photo-1584917865442-de89df76afd3', 'photo-1590874103328-eac38a683ce7', 'photo-1566150905458-1bf1fc113f0d'],
 
   // Shoes
-  shoe: ['photo-1542291026-7eec264c27ff', 'photo-1525966222134-fcfa99b8ae77', 'photo-1614252235316-8c857d38b5f4'],
+  shoe: ['photo-1542291026-7eec264c27ff', 'photo-1525966222134-fcfa99b8ae77', 'photo-1614252235316-8c857d38b5f4', 'photo-1495555961986-6d4c1ecb7be3', 'photo-1638247025967-b4e38f787b76'],
 
   // Home & Kitchen
   sofa: ['photo-1555041469-a586c61ea9bc', 'photo-1586023492125-27b2c045efd7'],
@@ -307,8 +315,8 @@ const PHOTO_POOLS: Record<string, string[]> = {
   cookware: ['photo-1556911220-e15b29be8c8f', 'photo-1584992236310-6edddc08acff'],
 
   // Sports & Fitness
-  sports: ['photo-1579952363873-27f3bade9f55', 'photo-1574629810360-7efbbe195018'],
-  yoga: ['photo-1544367567-0f2fcb009e0b', 'photo-1506126613408-eca07ce68773'],
+  sports: ['photo-1579952363873-27f3bade9f55', 'photo-1574629810360-7efbbe195018', 'photo-1531415074968-036ba1b575da'],
+  yoga: ['photo-1544367567-0f2fcb009e0b', 'photo-1506126613408-eca07ce68773', 'photo-1601925260368-ae2f83cf8b7f'],
 
   // Automotive
   helmet: ['photo-1558981806-ec527fa84c39', 'photo-1542282088-fe8426682b8f'],
@@ -482,9 +490,9 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
   const subLower = (product.subcategory || '').toLowerCase();
   const catKey = (product.categorySlug || '').toLowerCase();
 
-  // 0. Explicit user-provided image overrides
+  // 0. Explicit user-provided image overrides (matched by product name)
   for (const [customKey, photoId] of Object.entries(USER_CUSTOM_PRODUCT_IMAGES)) {
-    if (nameLower.includes(customKey) || subLower.includes(customKey)) {
+    if (nameLower.includes(customKey)) {
       return Array.from({ length: 4 }).map((_, order) => ({
         url: toUnsplashUrl(photoId),
         alt: `${product.name} — view ${order + 1}`,
