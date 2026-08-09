@@ -158,9 +158,12 @@ export class ProductService {
     };
   }
 
-  private async getCategoryWithDescendants(categoryId: string): Promise<string[]> {
+  private async getCategoryWithDescendants(categoryIdOrSlug: string): Promise<string[]> {
     const all = await this.categoryRepo.findAll();
-    const ids = new Set<string>([categoryId]);
+    const target = all.find((c) => c.id === categoryIdOrSlug || c.slug === categoryIdOrSlug);
+    if (!target) return [categoryIdOrSlug];
+
+    const ids = new Set<string>([target.id]);
     let changed = true;
     while (changed) {
       changed = false;

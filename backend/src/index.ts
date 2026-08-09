@@ -30,8 +30,8 @@ const server = app.listen(port, async (err) => {
     const productCount = await prisma.product.count();
     logger.info(`📊 Found ${productCount} products in database`);
     
-    if (productCount === 0 || productCount === 120) {
-      logger.info('📦 Database empty or legacy catalog detected, running seed...');
+    if (productCount !== 168) {
+      logger.info('📦 Database out of sync, running seed to populate all categories...');
       
       // Clear existing categories to avoid unique constraint
       await prisma.category.deleteMany({});
