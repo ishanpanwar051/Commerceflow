@@ -28,10 +28,11 @@ const server = app.listen(port, async (err) => {
     const prisma = getPrisma();
     
     const productCount = await prisma.product.count();
-    logger.info(`📊 Found ${productCount} products in database`);
+    const hasOldEditionProducts = await prisma.product.findFirst({ where: { name: { contains: 'Edition 1' } } });
+    logger.info(`📊 Found ${productCount} products in database (hasOldEditionProducts: ${Boolean(hasOldEditionProducts)})`);
     
-    if (productCount === 0 || productCount < 100) {
-      logger.info('📦 Incomplete or empty product catalog detected, running seed script...');
+    if (productCount === 0 || productCount < 100 || hasOldEditionProducts) {
+      logger.info('📦 Re-seeding database with curated catalog and clean titles...');
       try {
         let runSeed: any;
         try {
@@ -64,7 +65,20 @@ const server = app.listen(port, async (err) => {
         logger.error({ err: seedErr }, 'Auto-seed warning (server will continue running)');
       }
     } else {
-      // Check for overlapping flags
+      try {
+        // @ts-ignore
+        const updateImgModule = await import('./update-images.mjs');
+        const runUpdateImg = updateImgModule.default;
+        if (typeof runUpdateImg === 'function') {
+          await runUpdateImg();
+          logger.info('✅ Database images updated successfully!');
+        }
+      } catch (err) {
+        logger.error({ err }, 'Update images warning');
+      }
+    }
+
+    // Check for overlapping flags
       const featured = await prisma.product.count({ where: { isFeatured: true } });
       const bestsellers = await prisma.product.count({ where: { isBestSeller: true } });
       const newArrivals = await prisma.product.count({ where: { isNewArrival: true } });
@@ -99,9 +113,7 @@ const server = app.listen(port, async (err) => {
           }
         }
         
-        logger.info('✅ Flags fixed!');
       }
-    }
     
     logger.info('🎉 Database check complete!');
   } catch (error) {
