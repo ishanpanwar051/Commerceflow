@@ -8,6 +8,7 @@ interface UserState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isInitialized: boolean;
 }
 
 const initialState: UserState = {
@@ -15,6 +16,7 @@ const initialState: UserState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  isInitialized: false,
 };
 
 export const login = createAsyncThunk(
@@ -96,6 +98,9 @@ const userSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setInitialized: (state, action: PayloadAction<boolean>) => {
+      state.isInitialized = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -104,36 +109,43 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user as UserState['user'];
         state.isAuthenticated = true;
+        state.isInitialized = true;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.isInitialized = true;
       })
       .addCase(register.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user as UserState['user'];
         state.isAuthenticated = true;
+        state.isInitialized = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.isInitialized = true;
       })
       .addCase(googleLogin.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(googleLogin.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.user as UserState['user'];
         state.isAuthenticated = true;
+        state.isInitialized = true;
       })
       .addCase(googleLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.isInitialized = true;
       })
       .addCase(fetchProfile.pending, (state) => { state.isLoading = true; })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.isInitialized = true;
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.isLoading = false;
@@ -143,6 +155,7 @@ const userSlice = createSlice({
           state.isAuthenticated = false;
         }
         state.error = payload?.message || null;
+        state.isInitialized = true;
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
@@ -151,5 +164,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, clearError } = userSlice.actions;
+export const { setUser, clearError, setInitialized } = userSlice.actions;
 export default userSlice.reducer;

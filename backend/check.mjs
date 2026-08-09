@@ -10,9 +10,12 @@ const include = {
   category: true,
   _count: { select: { reviews: { where: { deletedAt: null, isActive: true } } } },
 };
-const products = await p.product.findMany({ where: { deletedAt: null, isActive: true }, take: 2, include, orderBy: { createdAt: 'desc' } });
+const products = await p.product.findMany({ where: { deletedAt: null, isActive: true }, take: 5, include, orderBy: { createdAt: 'desc' } });
 console.log('FOUND', products.length);
-console.log(products[0] && { name: products[0].name, hasInv: !!products[0].inventory, cat: products[0].category?.name });
+products.forEach(prod => {
+  console.log(`Product: "${prod.name}" | Category: "${prod.category?.name}"`);
+  console.log('Images:', prod.images.map(img => ({ url: img.url, order: img.order })));
+});
 const total = await p.product.count({ where: { deletedAt: null, isActive: true } });
 console.log('TOTAL', total);
 await p.$disconnect();

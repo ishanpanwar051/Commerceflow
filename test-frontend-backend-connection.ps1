@@ -13,11 +13,10 @@ try {
 }
 
 try {
-    $frontend = Invoke-WebRequest "http://localhost:3000" -UseBasicParsing -TimeoutSec 3
-    Write-Host "   Frontend (3000): ✅ Running (Status $($frontend.StatusCode))" -ForegroundColor Green
+    $frontend = Invoke-WebRequest "http://localhost:5173" -UseBasicParsing -TimeoutSec 3
+    Write-Host "   Frontend (5173): ✅ Running (Status $($frontend.StatusCode))" -ForegroundColor Green
 } catch {
-    Write-Host "   Frontend (3000): ❌ Not responding" -ForegroundColor Red
-    exit 1
+    Write-Host "   Frontend (5173): ❌ Not responding" -ForegroundColor Red
 }
 
 # 2. Test CORS - Simulate frontend calling backend

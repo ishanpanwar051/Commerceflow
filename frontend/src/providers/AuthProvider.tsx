@@ -1,7 +1,7 @@
 
 import { useEffect, ReactNode } from 'react';
 import { useAppDispatch } from '@/store/hooks';
-import { fetchProfile } from '@/store/slices/userSlice';
+import { fetchProfile, setInitialized } from '@/store/slices/userSlice';
 import { TokenService } from '@/lib/token.service';
 
 interface AuthProviderProps {
@@ -25,6 +25,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
             TokenService.clear();
           }
         }
+      } else {
+        dispatch(setInitialized(true));
       }
     };
 

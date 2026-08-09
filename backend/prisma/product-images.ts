@@ -106,42 +106,242 @@ export function imageUrl(id: string): string {
   return `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=85`;
 }
 
-export function getCategoryImage(categorySlug: string): string | undefined {
-  const poolKey = categoryToPool[categorySlug] || 'electronics';
-  const images = imagePools[poolKey] || imagePools.electronics;
+const categoryToKeyword: Record<string, string> = {
+  electronics: 'gadget',
+  'fashion-men': 'men-clothing',
+  'fashion-women': 'women-clothing',
+  sports: 'sports-equipment',
+  beauty: 'beauty-cosmetics',
+  books: 'book',
+  kids: 'kids-toy',
+  furniture: 'furniture',
+  automotive: 'car-accessories',
+  groceries: 'groceries',
+  'office-supplies': 'office-supplies',
+  shoes: 'shoes',
+  kitchen: 'kitchenware',
+  toys: 'toy',
+  fitness: 'fitness-equipment',
+  'pet-supplies': 'pet-supplies',
+};
+
+const subcategoryToKeyword: Record<string, string> = {
+  // Electronics
+  'phones': 'smartphone',
+  'laptops': 'laptop',
+  'tablets': 'tablet',
+  'monitors': 'computermonitor',
+  'keyboards': 'keyboard',
+  'mouse': 'computermouse',
+  'gaming': 'gamingconsole',
+  'cameras': 'camera',
+  'earbuds': 'earbuds',
+  'headphones': 'headphones',
+  'speakers': 'speaker',
+  'smart-watches': 'smartwatch',
+  'power-banks': 'powerbank',
+  'chargers': 'charger',
+  'ssd': 'ssd',
+  'routers': 'router',
+
+  // Fashion Men
+  't-shirts': 'tshirt',
+  'shirts': 'shirt',
+  'jeans': 'jeans',
+  'trousers': 'trousers',
+  'suits': 'suit',
+  'jackets': 'jacket',
+  'sweaters': 'sweater',
+  'shorts': 'shorts',
+  'innerwear': 'underwear',
+  'socks': 'socks',
+  'belts': 'belt',
+  'wallets': 'wallet',
+  'sunglasses': 'sunglasses',
+  'watches': 'watch',
+  'ties': 'tie',
+  'caps': 'cap',
+
+  // Fashion Women
+  'dresses': 'dress',
+  'tops': 'top,clothing',
+  'skirts': 'skirt',
+  'kurtas': 'kurta',
+  'sarees': 'saree',
+  'leggings': 'leggings',
+  'handbags': 'handbag',
+  'jewelry': 'jewelry',
+  'heels': 'heels',
+  'flats': 'flatshoes',
+  'clutches': 'clutchbag',
+
+  // Kids
+  'boys-clothing': 'boy,clothing',
+  'girls-clothing': 'girl,clothing',
+  'baby-gear': 'stroller',
+  'school-supplies': 'backpack,stationery',
+  'toys': 'toy',
+  'shoes': 'shoes',
+  'backpacks': 'backpack',
+  'accessories': 'accessories',
+
+  // Shoes
+  'running-shoes': 'runningshoes',
+  'casual-shoes': 'sneakers',
+  'formal-shoes': 'shoes',
+  'sports-shoes': 'shoes',
+  'sandals': 'sandals',
+  'slippers': 'slippers',
+  'boots': 'boots',
+  'flip-flops': 'flipflops',
+
+  // Sports
+  'cricket': 'cricket,bat',
+  'football': 'soccer',
+  'basketball': 'basketball',
+  'tennis': 'tennis',
+  'badminton': 'badminton',
+  'swimming': 'swimwear',
+  'cycling': 'bicycle',
+  'yoga': 'yoga',
+  'gym-equipment': 'dumbbells',
+  'camping': 'tent',
+
+  // Beauty
+  'makeup': 'makeup',
+  'skincare': 'skincare',
+  'haircare': 'shampoo',
+  'fragrance': 'perfume',
+  'bath-body': 'soap',
+  'nail-care': 'nailpolish',
+  'tools-brushes': 'makeupbrush',
+  'beauty-appliances': 'hairdryer',
+
+  // Home Decor
+  'wall-art': 'painting',
+  'cushions': 'cushion',
+  'curtains': 'curtains',
+  'rugs': 'rug',
+  'lamps': 'lamp',
+  'clocks': 'clock',
+  'vases': 'vase',
+  'candles': 'candle',
+  'frames': 'frame',
+  'plants': 'plant',
+
+  // Kitchen
+  'cookware': 'pot,pan',
+  'utensils': 'spoon,fork',
+  'appliances': 'blender',
+  'storage': 'box',
+  'bakeware': 'baking',
+  'barware': 'glass',
+  'coffee-tea': 'coffee',
+  'water-bottles': 'bottle',
+
+  // Furniture
+  'sofas': 'sofa',
+  'beds': 'bed',
+  'tables': 'table',
+  'chairs': 'chair',
+  'wardrobes': 'wardrobe',
+  'bookshelves': 'bookshelf',
+  'desks': 'desk',
+  'cabinets': 'cabinet',
+  'mattresses': 'mattress',
+
+  // Books
+  'fiction': 'book',
+  'non-fiction': 'book',
+  'academic': 'book',
+  'children': 'book',
+  'comics': 'comic',
+  'self-help': 'book',
+  'business': 'book',
+  'science': 'book',
+  'history': 'book',
+  'biography': 'book',
+
+  // Toys
+  'action-figures': 'actionfigure',
+  'board-games': 'boardgame',
+  'puzzles': 'puzzle',
+  'dolls': 'doll',
+  'remote-control': 'rccar',
+  'educational': 'toy',
+  'building-blocks': 'blocks',
+  'outdoor-play': 'toy',
+
+  // Fitness
+  'weights': 'weights',
+  'yoga-mats': 'yogamat',
+  'resistance-bands': 'bands',
+  'protein': 'protein',
+  'vitamins': 'vitamins',
+  'fitness-trackers': 'fitnesstracker',
+
+  // Groceries
+  'snacks': 'snacks',
+  'beverages': 'soda',
+  'cooking-oil': 'oil',
+  'spices': 'spices',
+  'rice-grains': 'rice',
+  'dairy': 'milk',
+  'bread-bakery': 'bread',
+  'cleaning-supplies': 'detergent',
+
+  // Pet Supplies
+  'dog-food': 'dogfood',
+  'cat-food': 'catfood',
+  'pet-toys': 'pettoy',
+  'pet-beds': 'petbed',
+  'collars': 'collar',
+  'grooming': 'petbrush',
+  'bowls': 'petbowl',
+  'aquariums': 'fish',
+
+  // Automotive
+  'car-care': 'carwash',
+  'interior': 'carseat',
+  'exterior': 'carcover',
+  'lubricants': 'oil',
+  'tools': 'wrench',
+  'helmets': 'helmet',
+  'riding-gear': 'motorcycle',
+  'bike-accessories': 'motorcycle',
+
+  // Office Supplies
+  'notebooks': 'notebook',
+  'pens': 'pen',
+  'printers': 'printer',
+  'paper': 'paper',
+  'folders': 'folder',
+  'desk-organizers': 'deskorganizer',
+  'staplers': 'stapler',
+  'whiteboards': 'whiteboard',
+};
+
+export function getCategoryImage(categorySlug: string): string {
+  const catKey = categorySlug.toLowerCase();
+  const keyword = categoryToKeyword[catKey] || 'category';
   const hash = simpleHash(categorySlug);
-  const idx = hash % images.length;
-  const id = images[idx] || GENERIC_IMAGE_ID;
-  return imageUrl(id);
+  return `https://loremflickr.com/800/800/${encodeURIComponent(keyword)}?lock=${hash % 10000}`;
 }
 
-/**
- * Generate stable, deterministic product images based on product identity.
- * 
- * Uses hash of product name + brand to ensure:
- * - Same product always gets same images (stable)
- * - Different products get different images (unique)
- * - Images match product's category (category-aware)
- * 
- * @param product Product information (name, brand, categorySlug)
- * @param _productIndex DEPRECATED - kept for backward compatibility but not used
- * @returns Array of 4 image objects with url, alt, and order
- */
 export function getProductImages(product: ProductInfo, _productIndex?: number) {
-  const poolKey = categoryToPool[product.categorySlug] || 'electronics';
-  const images = imagePools[poolKey] || imagePools.electronics;
+  const subKey = (product.subcategory || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const catKey = (product.categorySlug || '').toLowerCase();
 
-  // Create stable product identity from name and brand
+  const keyword = subcategoryToKeyword[subKey] || categoryToKeyword[catKey] || 'product';
   const productIdentity = `${product.name}:${product.brand || 'generic'}`;
+  const hash = simpleHash(productIdentity);
 
-  // Pick 4 distinct photo IDs spread across the category pool
-  // Images are stable - same product always gets same images
-  const indices = pickImageIndices(images.length, 4, productIdentity);
-
-  return indices.map((idx, order) => {
-    const photoId = images[idx];
+  return Array.from({ length: 4 }).map((_, order) => {
+    const lockSeed = (hash + order * 13) % 10000;
+    const url = `https://loremflickr.com/800/800/${encodeURIComponent(keyword)}?lock=${lockSeed}`;
+    
     return {
-      url: imageUrl(photoId),
+      url,
       alt: `${product.name} — view ${order + 1}`,
       order,
     };

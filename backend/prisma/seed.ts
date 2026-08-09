@@ -257,6 +257,22 @@ const REVIEWER_AVATARS = [
 
 async function main() {
   console.log('🌱 Seeding comprehensive product database...');
+
+  console.log('🧹 Wiping existing database records...');
+  await prisma.reviewImage.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.orderItem.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.coupon.deleteMany();
+  await prisma.wishlistItem.deleteMany();
+  await prisma.cartItem.deleteMany();
+  await prisma.cart.deleteMany();
+  await prisma.inventory.deleteMany();
+  await prisma.productImage.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+
   const hashedPassword = await bcrypt.hash('Admin@123', 12);
 
   // Create Users
@@ -339,7 +355,7 @@ async function main() {
       const subSlug = slugify(sub);
       const products = generateProductsForSubcategory(sub, cat.slug);
 
-      for (let i = 0; i < products.length && allProducts.length < 120; i++) {
+      for (let i = 0; i < Math.min(products.length, 1); i++) {
         const p = products[i];
         // ✅ FIX: No longer passing productIndex - getProductImages now uses hash-based selection
         const imgs = getProductImages({

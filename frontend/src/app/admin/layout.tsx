@@ -4,13 +4,12 @@ import { useEffect, useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { useAppSelector } from '@/store/hooks';
-import { TokenService } from '@/lib/token.service';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
+  const { user, isAuthenticated, isInitialized } = useAppSelector((state) => state.user);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('adminSidebarCollapsed');
@@ -19,15 +18,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return false;
   });
 
-  const restoringSession = !isAuthenticated && TokenService.hasTokens();
-
   useEffect(() => {
-    if (isLoading || restoringSession) return;
+    if (!isInitialized) return;
     if (!isAuthenticated) { router.push('/admin/login'); }
     else if (user?.role !== 'ADMIN') { router.push('/'); }
-  }, [isAuthenticated, user, isLoading, restoringSession, router]);
+  }, [isAuthenticated, user, isInitialized, router]);
 
-  if (isLoading || restoringSession) {
+  if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -4,23 +4,20 @@ import { useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { DeliverySidebar } from '@/components/layout/DeliverySidebar';
 import { useAppSelector } from '@/store/hooks';
-import { TokenService } from '@/lib/token.service';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 export default function DeliveryLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
-
-  const restoringSession = !isAuthenticated && TokenService.hasTokens();
+  const { user, isAuthenticated, isInitialized } = useAppSelector((state) => state.user);
 
   useEffect(() => {
-    if (isLoading || restoringSession) return;
+    if (!isInitialized) return;
     if (!isAuthenticated) { router.push('/delivery/login'); }
     else if (user?.role !== 'DELIVERY_BOY') { router.push('/'); }
-  }, [isAuthenticated, user, isLoading, restoringSession, router]);
+  }, [isAuthenticated, user, isInitialized, router]);
 
-  if (isLoading || restoringSession) {
+  if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

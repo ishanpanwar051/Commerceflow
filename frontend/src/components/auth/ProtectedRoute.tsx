@@ -2,7 +2,6 @@
 import { useEffect, ReactNode } from 'react';
 import { useRouter } from '@/lib/navigation';
 import { useAppSelector } from '@/store/hooks';
-import { TokenService } from '@/lib/token.service';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -20,23 +19,11 @@ export default function ProtectedRoute({
   redirectTo = '/login',
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.user);
+  const { user, isAuthenticated, isInitialized } = useAppSelector((state) => state.user);
 
   useEffect(() => {
-    if (!isLoading && requireAuth) {
-      const hasTokens = TokenService.hasTokens();
-      
-      if (!hasTokens) {
-        router.push(redirectTo);
-        return;
-      }
-
-      if (!isAuthenticated && hasTokens) {
-        // Tokens exist but user not loaded yet, wait for fetch
-        return;
-      }
-
-      if (!isAuthenticated) {
+    if (isInitialized) {
+      if (requireAuth && !isAuthenticated) {
         router.push(redirectTo);
         return;
       }
@@ -49,9 +36,9 @@ export default function ProtectedRoute({
         }
       }
     }
-  }, [isAuthenticated, isLoading, requireAuth, requireRole, user, router, redirectTo]);
+  }, [isAuthenticated, isInitialized, requireAuth, requireRole, user, router, redirectTo]);
 
-  if (isLoading) {
+  if (!isInitialized) {
     return <>{fallback}</>;
   }
 
