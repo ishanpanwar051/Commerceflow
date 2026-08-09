@@ -33,7 +33,6 @@ function getPrismaInstance() {
  * grace period even with a large catalog.
  */
 async function main() {
-  resetUsedImages();
   const prisma = getPrismaInstance();
   // 1. Category images
   const categories = await prisma.category.findMany({
@@ -58,6 +57,9 @@ async function main() {
     },
     orderBy: { createdAt: 'asc' },
   });
+
+  // Pre-seed the uniqueness tracker with catalog product images
+  resetUsedImages(products.map((p: any) => ({ name: p.name })));
 
   const imageRows: {
     productId: string;
