@@ -22,6 +22,27 @@ function toUnsplashUrl(photoId: string): string {
   return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=800&q=80`;
 }
 
+// User-provided explicit product image overrides
+const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
+  'notebook': 'photo-1544816155-12df9643f363',
+  'gel ink pen': 'photo-1583485088034-697b5bc54ccd',
+  'pen': 'photo-1583485088034-697b5bc54ccd',
+  'laser printer': 'photo-1612815154858-60aa4c59eaa6',
+  'printer': 'photo-1612815154858-60aa4c59eaa6',
+  'dry-erase': 'photo-1586953208448-b95a79798f07',
+  'whiteboard': 'photo-1586953208448-b95a79798f07',
+  'building block': 'photo-1596461404969-9ae70f2830c1',
+  'off-road car': 'photo-1594787318286-3d835c1d207f',
+  'jigsaw': 'photo-1610890716171-6b1bb98ffd09',
+  'puzzle': 'photo-1610890716171-6b1bb98ffd09',
+  'motorcycle helmet': 'photo-1558981806-ec527fa84c39',
+  'helmet': 'photo-1558981806-ec527fa84c39',
+  'riding jacket': 'photo-1551028719-00167b16eac5',
+  'engine oil': 'photo-1625047509248-ec889cbff17f',
+  'pressure washer': 'photo-1607860108855-64acf2078ed9',
+  'wh-1000xm6': 'photo-1505740420928-5e560c06d30e',
+};
+
 // Granular Unsplash pools per product type / model keyword
 const PHOTO_POOLS: Record<string, string[]> = {
   // Headphones & Earbuds
@@ -70,15 +91,15 @@ const PHOTO_POOLS: Record<string, string[]> = {
   // Fashion Men
   't-shirt': ['photo-1521572267360-ee0c2909d518', 'photo-1583743814966-8936f5b7be1a', 'photo-1618354691373-d851c5c3a990'],
   shirt: ['photo-1596755094514-f87e34085b2c', 'photo-1602810318383-e386cc2a3ccf', 'photo-1620012253295-c15cc3e65df4'],
-  jean: ['photo-1541099649105-f69ad21f3246', 'photo-1582552938357-32b906df40cb', 'photo-1542272604-780c36856f61'],
+  jean: ['photo-1541099649105-f69ad21f3246', 'photo-1582552938357-32b906df40cb', 'photo-1604176354204-9268737828e4'],
   trouser: ['photo-1624378439575-d8705ad7ae80', 'photo-1473966968600-fa801b869a1a', 'photo-1506629082955-511b1aa562c8'],
-  suit: ['photo-1507679799987-c73779587ccf', 'photo-1594938298603-c8148c4dae35', 'photo-1593032465175-481ac7f402a1'],
+  suit: ['photo-1507679799987-c73779587ccf', 'photo-1594938298603-c8148c4dae35', 'photo-1617137968427-85924c800a22'],
   jacket: ['photo-1551028719-00167b16eac5', 'photo-1544441893-675973e31985', 'photo-1548883354-7622d03aca27'],
 
   // Fashion Women
   dress: ['photo-1595777457583-95e059d581b8', 'photo-1572804013309-59a88b7e92f1', 'photo-1515886657613-9f3515b0c78f'],
   skirt: ['photo-1583496661160-fb5886a0aaaa', 'photo-1572804013309-59a88b7e92f1'],
-  kurta: ['photo-1583391733956-6c78276477e2', 'photo-1617627143750-d86bc21e42bb'],
+  kurta: ['photo-1610030469983-98e550d6193c', 'photo-1617627143750-d86bc21e42bb'],
   saree: ['photo-1610030469983-98e550d6193c', 'photo-1617627143750-d86bc21e42bb'],
   handbag: ['photo-1584917865442-de89df76afd3', 'photo-1590874103328-eac38a683ce7'],
 
@@ -265,6 +286,17 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
   const nameLower = (product.name || '').toLowerCase();
   const subLower = (product.subcategory || '').toLowerCase();
   const catKey = (product.categorySlug || '').toLowerCase();
+
+  // 0. Explicit user-provided image overrides
+  for (const [customKey, photoId] of Object.entries(USER_CUSTOM_PRODUCT_IMAGES)) {
+    if (nameLower.includes(customKey) || subLower.includes(customKey)) {
+      return Array.from({ length: 4 }).map((_, order) => ({
+        url: toUnsplashUrl(photoId),
+        alt: `${product.name} — view ${order + 1}`,
+        order,
+      }));
+    }
+  }
 
   let pool: string[] = [];
 
