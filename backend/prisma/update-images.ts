@@ -76,7 +76,7 @@ async function main() {
           name: p.name, 
           brand: p.brand || 'CommerceFlow', 
           categorySlug,
-          subcategory: parent ? category?.name : undefined
+          subcategory: category?.name || ''
         },
         i
       );
