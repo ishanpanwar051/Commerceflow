@@ -994,23 +994,27 @@ const KEYWORD_ALIASES: Record<string, string> = {
 };
 
 const CATEGORY_DEFAULT_IMAGE: Record<string, string> = {
-  electronics: 'photo-1498049860654-af1a5c566876',
-  'fashion-men': 'photo-1617137968427-85924c800a22',
-  'fashion-women': 'photo-1483985988355-763728e1935b',
-  kids: 'photo-1515488042361-ee00e0ddd4e4',
-  shoes: 'photo-1542291026-7eec264c27ff',
-  sports: 'photo-1461896836934-ffe607ba8211',
-  beauty: 'photo-1522337360788-8b13dee7a37e',
-  'home-decor': 'photo-1513694203232-719a280e022f',
-  kitchen: 'photo-1556911220-e15b29be8c8f',
-  furniture: 'photo-1555041469-a586c61ea9bc',
-  books: 'photo-1497633762265-9d179a990aa6',
-  toys: 'photo-1566576912321-d58ddd7a6088',
-  fitness: 'photo-1517838277536-f5f99be501cd',
-  groceries: 'photo-1542838132-92c53300491e',
-  'pet-supplies': 'photo-1583511655857-d19b40a7a54e',
-  automotive: 'photo-1503376780353-7e6692767b70',
-  'office-supplies': 'photo-1456735190827-d1262f71b8a3',
+  electronics: 'https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=800&q=80',
+  'fashion-men': 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80',
+  'fashion-women': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
+  'shoes-footwear': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+  shoes: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+  'home-kitchen-furniture': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+  'home-decor': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+  kitchen: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
+  furniture: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+  'sports-fitness-beauty': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80',
+  sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80',
+  beauty: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
+  fitness: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80',
+  'office-toys-groceries-automotive': 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+  groceries: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+  kids: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80',
+  toys: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80',
+  books: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
+  'pet-supplies': 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80',
+  automotive: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+  'office-supplies': 'https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?auto=format&fit=crop&w=800&q=80',
 };
 
 export function getCategoryImage(categorySlug: string): string {
@@ -1090,15 +1094,21 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
     pool = imagePools[catKey];
   }
 
-  // 4. Ultimate fallback pool
+  // 4. Ultimate category-aware fallback pool
   if (pool.length === 0) {
-    pool = [
-      'photo-1498049860654-af1a5c566876',
-      'photo-1505740420928-5e560c06d30e',
-      'photo-1523275335684-37898b6baf30',
-      'photo-1517336714731-489689fd1ca8',
-      'photo-1542291026-7eec264c27ff',
-    ];
+    if (catKey.includes('shoes')) {
+      pool = ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80'];
+    } else if (catKey.includes('fashion') || catKey.includes('apparel')) {
+      pool = ['https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80'];
+    } else if (catKey.includes('home') || catKey.includes('furniture')) {
+      pool = ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'];
+    } else if (catKey.includes('groceries') || catKey.includes('food')) {
+      pool = ['https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'];
+    } else if (catKey.includes('sports') || catKey.includes('fitness')) {
+      pool = ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80'];
+    } else {
+      pool = ['https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=800&q=80'];
+    }
   }
 
   const identity = `${product.name}:${product.brand || 'generic'}:${productIndex}`;
