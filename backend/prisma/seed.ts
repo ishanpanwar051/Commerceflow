@@ -2,26 +2,24 @@ import { createRequire } from 'module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
 import { getProductImages, getCategoryImage } from './product-images';
+import { USER_CATALOG } from './user-catalog';
 
 const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
 
-let prisma: any;
-
-function getPrismaInstance() {
-  if (!prisma) {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new Error('DATABASE_URL environment variable is required to run the seed');
-    }
-    const seedPool = new Pool({ connectionString: databaseUrl });
-    const seedAdapter = new PrismaPg(seedPool);
-    prisma = new PrismaClient({ adapter: seedAdapter } as any);
-  }
-  return prisma;
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error('DATABASE_URL environment variable is required to run the seed');
+  process.exit(1);
 }
+
+const seedPool = new Pool({
+  connectionString: databaseUrl,
+  ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
+});
+
+const prisma: any = new PrismaClient({ adapter: new PrismaPg(seedPool) } as any);
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
@@ -30,138 +28,27 @@ function slugify(text: string) {
 function randomInt(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function randomFloat(min: number, max: number, decimals = 2) { return parseFloat((Math.random() * (max - min) + min).toFixed(decimals)); }
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
-function pickN<T>(arr: T[], n: number): T[] { const shuffled = [...arr].sort(() => 0.5 - Math.random()); return shuffled.slice(0, n); }
-
-
-
-interface CategoryDef {
-  name: string;
-  slug: string;
-  description: string;
-  subcategories: string[];
+function pickMany<T>(arr: T[], count: number): T[] {
+  const pool = [...arr];
+  const out: T[] = [];
+  while (out.length < count && pool.length > 0) {
+    out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  return out;
 }
-
-const CATEGORIES: CategoryDef[] = [
-  { name: 'Electronics', slug: 'electronics', description: 'Electronic devices and accessories', subcategories: ['Phones', 'Laptops', 'Tablets', 'Monitors', 'Keyboards', 'Mouse', 'Gaming', 'Cameras', 'Earbuds', 'Headphones', 'Speakers', 'Smart Watches', 'Power Banks', 'Chargers', 'SSD', 'Routers'] },
-  { name: 'Fashion Men', slug: 'fashion-men', description: 'Men\'s clothing and accessories', subcategories: ['T-Shirts', 'Shirts', 'Jeans', 'Trousers', 'Suits', 'Jackets', 'Sweaters', 'Shorts', 'Innerwear', 'Socks', 'Belts', 'Wallets', 'Sunglasses', 'Watches', 'Ties', 'Caps'] },
-  { name: 'Fashion Women', slug: 'fashion-women', description: 'Women\'s clothing and accessories', subcategories: ['Dresses', 'Tops', 'Jeans', 'Skirts', 'Kurtas', 'Sarees', 'Leggings', 'Jackets', 'Handbags', 'Jewelry', 'Watches', 'Sunglasses', 'Scarves', 'Heels', 'Flats', 'Clutches'] },
-  { name: 'Kids', slug: 'kids', description: 'Kids clothing, toys and essentials', subcategories: ['Boys Clothing', 'Girls Clothing', 'Baby Gear', 'School Supplies', 'Toys', 'Shoes', 'Backpacks', 'Accessories'] },
-  { name: 'Shoes', slug: 'shoes', description: 'Footwear for everyone', subcategories: ['Running Shoes', 'Casual Shoes', 'Formal Shoes', 'Sports Shoes', 'Sandals', 'Slippers', 'Boots', 'Flip Flops'] },
-  { name: 'Sports', slug: 'sports', description: 'Sports equipment and activewear', subcategories: ['Cricket', 'Football', 'Basketball', 'Tennis', 'Badminton', 'Swimming', 'Cycling', 'Yoga', 'Gym Equipment', 'Camping'] },
-  { name: 'Beauty', slug: 'beauty', description: 'Beauty and personal care products', subcategories: ['Makeup', 'Skincare', 'Haircare', 'Fragrance', 'Bath & Body', 'Nail Care', 'Tools & Brushes', 'Beauty Appliances'] },
-  { name: 'Home Decor', slug: 'home-decor', description: 'Home decoration and interior products', subcategories: ['Wall Art', 'Cushions', 'Curtains', 'Rugs', 'Lamps', 'Clocks', 'Vases', 'Candles', 'Frames', 'Plants'] },
-  { name: 'Kitchen', slug: 'kitchen', description: 'Kitchen appliances and cookware', subcategories: ['Cookware', 'Utensils', 'Appliances', 'Storage', 'Bakeware', 'Barware', 'Coffee & Tea', 'Water Bottles'] },
-  { name: 'Furniture', slug: 'furniture', description: 'Home and office furniture', subcategories: ['Sofas', 'Beds', 'Tables', 'Chairs', 'Wardrobes', 'Bookshelves', 'Desks', 'Cabinets', 'Mattresses', 'Storage'] },
-  { name: 'Books', slug: 'books', description: 'Books across all genres', subcategories: ['Fiction', 'Non-Fiction', 'Academic', 'Children', 'Comics', 'Self-Help', 'Business', 'Science', 'History', 'Biography'] },
-  { name: 'Toys', slug: 'toys', description: 'Toys and games for all ages', subcategories: ['Action Figures', 'Board Games', 'Puzzles', 'Dolls', 'Remote Control', 'Educational', 'Building Blocks', 'Outdoor Play'] },
-  { name: 'Fitness', slug: 'fitness', description: 'Fitness equipment and supplements', subcategories: ['Gym Equipment', 'Weights', 'Yoga Mats', 'Resistance Bands', 'Protein', 'Vitamins', 'Fitness Trackers', 'Water Bottles'] },
-  { name: 'Groceries', slug: 'groceries', description: 'Daily groceries and essentials', subcategories: ['Snacks', 'Beverages', 'Cooking Oil', 'Spices', 'Rice & Grains', 'Dairy', 'Bread & Bakery', 'Cleaning Supplies'] },
-  { name: 'Pet Supplies', slug: 'pet-supplies', description: 'Pet food, toys and accessories', subcategories: ['Dog Food', 'Cat Food', 'Pet Toys', 'Pet Beds', 'Collars', 'Grooming', 'Bowls', 'Aquariums'] },
-  { name: 'Automotive', slug: 'automotive', description: 'Car and bike accessories', subcategories: ['Car Care', 'Interior', 'Exterior', 'Lubricants', 'Tools', 'Helmets', 'Riding Gear', 'Bike Accessories'] },
-  { name: 'Office Supplies', slug: 'office-supplies', description: 'Office and stationery products', subcategories: ['Notebooks', 'Pens', 'Printers', 'Paper', 'Folders', 'Desk Organizers', 'Staplers', 'Whiteboards'] },
-];
-
-const BRANDS: Record<string, string[]> = {
-  'Phones': ['Samsung', 'Apple', 'OnePlus', 'Xiaomi', 'Google', 'Nothing', 'Realme', 'Vivo', 'Oppo', 'Motorola'],
-  'Laptops': ['Apple', 'Dell', 'HP', 'Lenovo', 'ASUS', 'Acer', 'Microsoft', 'Samsung', 'MSI', 'Razer'],
-  'Tablets': ['Apple', 'Samsung', 'Microsoft', 'Lenovo', 'Xiaomi', 'OnePlus', 'Huawei', 'Amazon'],
-  'Monitors': ['Dell', 'ASUS', 'LG', 'Samsung', 'Apple', 'Gigabyte', 'Acer', 'BenQ'],
-  'Keyboards': ['Logitech', 'Razer', 'Corsair', 'Keychron', 'Royal Kludge', 'Ducky', 'SteelSeries', 'HyperX'],
-  'Mouse': ['Logitech', 'Razer', 'SteelSeries', 'Glorious', 'Corsair', 'ASUS', 'HyperX', 'Finalmouse'],
-  'Gaming': ['Sony', 'Microsoft', 'Nintendo', 'ASUS', 'Valve', 'Razer', 'SteelSeries', 'HyperX'],
-  'Cameras': ['Sony', 'Canon', 'Nikon', 'Fujifilm', 'DJI', 'GoPro', 'Panasonic', 'Leica'],
-  'Earbuds': ['Apple', 'Samsung', 'Sony', 'Bose', 'JBL', 'Nothing', 'OnePlus', 'Google'],
-  'Headphones': ['Sony', 'Bose', 'Sennheiser', 'Audio-Technica', 'JBL', 'Beats', 'Skullcandy', 'Marshall', 'AKG', 'Philips'],
-  'Speakers': ['Apple', 'Sonos', 'JBL', 'Marshall', 'Bose', 'Ultimate Ears', 'Sony', 'Denon'],
-  'Smart Watches': ['Apple', 'Samsung', 'Google', 'Garmin', 'OnePlus', 'Amazfit', 'Mobvoi', 'Suunto'],
-  'Power Banks': ['Anker', 'UGREEN', 'Baseus', 'Xiaomi', 'Samsung', 'RAVPower', 'Belkin', 'Aukey'],
-  'Chargers': ['Anker', 'UGREEN', 'Baseus', 'Samsung', 'Apple', 'Belkin', 'Spigen', 'RAVPower'],
-  'SSD': ['Samsung', 'WD', 'Seagate', 'Crucial', 'SK Hynix', 'Sabrent', 'Corsair', 'SanDisk'],
-  'Routers': ['TP-Link', 'Netgear', 'ASUS', 'Linksys', 'Ubiquiti', 'Google', 'Amazon', 'Eero'],
-  'T-Shirts': ['Nike', 'Adidas', 'Puma', 'Under Armour', 'Levi\'s', 'H&M', 'Zara', 'USPA', 'Tommy Hilfiger', 'Calvin Klein'],
-};
-
-const PRODUCT_NAMES: Record<string, string[]> = {
-  'Phones': ['Galaxy S25 Ultra', 'iPhone 17 Pro Max', 'OnePlus 13', 'Xiaomi 16 Pro', 'Pixel 10 Pro', 'Nothing Phone 3', 'Realme GT 7', 'Vivo X200 Pro', 'Oppo Find N5', 'Moto Edge 60'],
-  'Laptops': ['MacBook Pro 16"', 'XPS 15', 'Spectre x360 16', 'ThinkPad X1 Carbon Gen 12', 'ZenBook Pro Duo', 'Predator Helios 18', 'Surface Laptop 7', 'Galaxy Book 4 Ultra', 'Stealth 18', 'Blade 18'],
-  'Tablets': ['iPad Pro M4 13"', 'Galaxy Tab S10 Ultra', 'Surface Pro 11', 'Lenovo Tab P14', 'Xiaomi Pad 7 Pro', 'OnePlus Pad 3', 'Huawei MatePad Pro', 'Amazon Fire Max 15', 'Redmi Pad Pro 2', 'Honor Pad V9'],
-  'Monitors': ['UltraSharp 49"', 'ROG Swift OLED PG49WCD', 'Predator X34 V2', 'ThinkVision P44w', 'Pro Display XDR 2', 'GigaByte M32U', 'Dell S2722QC', 'LG UltraGear 45"', 'ASUS ProArt PA329C', 'BenQ EW3880U'],
-  'Keyboards': ['MX Mechanical Mini', 'BlackWidow V4 Pro', 'K70 RGB Pro', 'Huntsman V3 Pro', 'RK Royal Kludge R75', 'Keychron Q6', 'Logitech G915', 'Corsair K100', 'SteelSeries Apex Pro', 'HyperX Alloy Elite 2'],
-  'Mouse': ['MX Master 4S', 'G502 X Plus', 'Viper V3 Pro', 'DeathAdder V3 Pro', 'Model O 2 Pro', 'Superlight 3', 'ROG Keris II', 'G Pro X Superlight 2', 'Corsair Darkstar Wireless', 'SteelSeries Aerox 5'],
-  'Gaming': ['PlayStation 6 Console', 'Xbox Series Z Pro', 'Nintendo Switch 3 OLED', 'ROG Ally X Handheld', 'Steam Deck OLED 1TB', 'PS VR3 Gaming Headset', 'Xbox Controller Elite 3', 'DualSense Edge Wireless', 'Logitech G Cloud 2', 'Razer Edge 5G Gaming'],
-  'Cameras': ['Sony A1 II Mirrorless', 'Canon EOS R5 Mark II', 'Nikon Z9 Professional', 'Fujifilm GFX200 Medium Format', 'DJI Osmo Pocket 4', 'GoPro Hero 14 Black', 'Sony ZV-E10 II Vlogging', 'Panasonic Lumix S5IIX', 'Leica Q3 Monochrom', 'Blackmagic Cinema 6K'],
-  'Earbuds': ['AirPods Pro 3 Wireless', 'Galaxy Buds 4 Pro', 'Sony WF-1000XM6 Wireless', 'Bose QuietComfort Earbuds 3', 'JBL Tour Pro 3', 'Nothing Ear 4 Transparent', 'OnePlus Buds Pro 4', 'Pixel Buds Pro 3 ANC', 'Beats Fit Pro 2', 'Sennheiser Momentum True Wireless 4'],
-  'Headphones': ['Sony WH-1000XM6 Noise Cancelling', 'Bose QuietComfort Ultra 2', 'Sennheiser Momentum 5', 'Audio-Technica ATH-M50xBT3', 'JBL Tour One M3', 'Beats Studio Pro+', 'Skullcandy Crusher ANC 3', 'Bang & Olufsen H9i 4th Gen', 'Marshall Monitor III Voice', 'AKG N90Q Reference'],
-  'Speakers': ['Apple HomePod 3 Smart', 'Sonos Era 300 Spatial', 'JBL Charge 6 Portable', 'Marshall Stanmore IV Bluetooth', 'Bose SoundLink Max', 'Ultimate Ears Hyperboom 2', 'Sony SRS-RA5000 360', 'Denon Home 350 Wireless', 'Harman Kardon Aura Studio 4', 'Anker Soundcore Motion X600'],
-  'Smart Watches': ['Apple Watch Ultra 3 Titanium', 'Galaxy Watch 8 Pro LTE', 'Pixel Watch 4 Stainless', 'Garmin Fenix 9 Solar', 'TicWatch Pro 6 Ultra', 'OnePlus Watch 3 Classic', 'Amazfit T-Rex 4 Rugged', 'Suunto Vertical Titanium', 'Fitbit Sense 3 Advanced', 'Huawei Watch GT 5 Pro'],
-  'Power Banks': ['Anker Prime 27650mAh 250W', 'UGREEN 25000mAh 145W', 'Baseus Blade 2 Slim 100W', 'Mi 20000mAh Pro 50W', 'Samsung 20000mAh Super Fast', 'RAVPower 26800mAh PD', 'Belkin BoostCharge 20K 65W', 'Aukey 30000mAh Power Studio', 'Spigen ArcPack 20000mAh', 'Anker MagGo 10000mAh Qi2'],
-  'Chargers': ['Anker GaNPrime 200W Multi-Port', 'UGREEN Nexode 160W Desktop', 'Baseus 100W GaN Fast Charger', 'Samsung 65W Trio Power Adapter', 'Apple 140W USB-C Power Adapter', 'Belkin BoostCharge Pro 108W', 'Spigen ArcStation Pro 120W', 'RAVPower 90W Dual USB-C', 'Aukey Omnia 100W PD', 'Anker 737 Charger 120W'],
-  'SSD': ['Samsung 990 Pro 4TB NVMe', 'WD Black SN850X 4TB PCIe 4.0', 'Seagate FireCuda 540 Gen5 2TB', 'Crucial T700 4TB Gen5 NVMe', 'SK Hynix Platinum P41 2TB', 'Sabrent Rocket 5 Gen5 4TB', 'Corsair MP700 Pro 2TB', 'SanDisk Extreme Pro 4TB Portable', 'Kingston FURY Renegade 4TB', 'Lexar NM790 4TB NVMe'],
-  'T-Shirts': ['Cotton Crew Neck T-Shirt', 'Graphic Printed Tee', 'Slim Fit Polo T-Shirt', 'Over-Sized Streetwear Tee', 'V-Neck Cotton Shirt', 'Striped Casual T-Shirt', 'Performance Gym Tee', 'Heavyweight Premium T-Shirt'],
-  'Shirts': ['Formal Oxford Shirt', 'Casual Denim Shirt', 'Linen Button-Down Shirt', 'Checked Flannel Shirt', 'Slim Fit Printed Shirt', 'Mandarin Collar Shirt', 'Corduroy Casual Shirt'],
-  'Jeans': ['Slim Fit Denim Jeans', 'Tapered Blue Jeans', 'Regular Fit Black Jeans', 'Skinny Fit Distressed Jeans', 'Straight Leg Vintage Jeans', 'Relaxed Fit Stretch Jeans'],
-  'Trousers': ['Stretch Chino Pants', 'Tailored Formal Trousers', 'Slim Fit Suit Pants', 'Pleated Cotton Trousers', 'Pinstripe Dress Pants'],
-  'Cargo': ['Cargo Pants', 'Tactical Multi-Pocket Cargo', 'Slim Fit Cargo Trousers', 'Relaxed Cotton Cargo'],
-  'Suits': ['Single Breasted Blazer', 'Tuxedo Suit 2-Piece', 'Slim Fit Wool Suit', 'Double Breasted Blazer', 'Formal Wedding Suit'],
-  'Jackets': ['Leather Bomber Jacket', 'Puffer Winter Jacket', 'Fitted Denim Jacket', 'Fleece Zip Jacket', 'Biker Leather Jacket'],
-  'Watches': ['Chronograph Watch', 'Apple Watch Ultra 3', 'Galaxy Watch 8 Pro', 'Pixel Watch 4', 'Automatic Skeleton Watch', 'Casio G-Shock Rugged Watch'],
-  'Sunglasses': ['Aviator Sunglasses', 'Wayfarer Polarized Sunglasses', 'Retro Round Sunglasses', 'Square Frame Sunglasses', 'Sport Shield Sunglasses'],
-  'Wallets': ['Bi-Fold Wallet', 'RFID Slim Cardholder Wallet', 'Leather Zip Around Wallet', 'Coin Pocket Wallet', 'Executive Trifold Wallet'],
-  'Belts': ['Leather Belt', 'Reversible Formal Belt', 'Braided Leather Casual Belt', 'Canvas Webbed Belt'],
-  'Socks': ['Ankle Cotton Socks 3-Pack', 'Cushioned Athletic Crew Socks', 'Compression Sport Socks', 'Patterned Dress Socks'],
-
-  'Dresses': ['Floral Summer Maxi Dress', 'Cocktail Evening Dress', 'Bodycon Party Dress', 'A-Line Wrap Dress', 'Printed Midi Dress'],
-  'Tops': ['Silk Blouse Top', 'Crop Top', 'Peplum Lace Top', 'Off-Shoulder Blouse', 'Chiffon Casual Top'],
-  'Sarees': ['Designer Banarasi Saree', 'Kanjeevaram Silk Saree', 'Chiffon Floral Saree', 'Georgette Printed Saree'],
-  'Kurtas': ['Embroidered Cotton Kurta', 'Anarkali Suit Set', 'Printed Straight Kurta', 'Silk Festive Kurti'],
-  'Skirts': ['Pleated A-Line Skirt', 'High-Waisted Denim Skirt', 'Leather Pencil Skirt', 'Maxi Tiered Skirt'],
-  'Leggings': ['Ankle-Length Leggings', 'High-Waisted Workout Tights', 'Seamless Active Leggings', 'Cotton Stretch Treggings'],
-  'Coats': ['Trench Coat', 'Wool Blend Overcoat', 'Parka Winter Coat', 'Double Breasted Trench'],
-  'Handbags': ['Structured Leather Handbag', 'Evening Clutch', 'Canvas Tote Bag', 'Crossbody Shoulder Bag', 'Satchel Handbag'],
-  'Jewelry': ['Gold Plated Necklace Set', 'Crystal Earrings', 'Sterling Silver Bracelet', 'Pearl Drop Earrings'],
-
-  'Shoes': ['High-Performance Running Shoes', 'Retro Leather Casual Sneakers', 'Slip-On Canvas Shoes', 'Genuine Leather Oxford Shoes', 'Derby Dress Shoes', 'Chelsea Leather Boots', 'Outdoor Sport Sandals', 'Memory Foam Slippers', 'Flip Flops'],
-  'Running Shoes': ['High-Performance Running Shoes', 'Pro Cushion Trainers', 'Trail Running Shoes'],
-  'Casual Shoes': ['Retro Leather Casual Sneakers', 'Slip-On Canvas Shoes', 'Loafer Shoes'],
-  'Formal Shoes': ['Genuine Leather Oxford Shoes', 'Derby Dress Shoes', 'Monk Strap Shoes'],
-  'Boots': ['Chelsea Leather Boots', 'Chukka Suede Boots', 'Ankle Combat Boots'],
-  'Sandals': ['Outdoor Sport Sandals', 'Leather Strap Sandals', 'Comfort Slide Sandals'],
-
-  'Sofas': ['3-Seater Fabric Sofa', 'Leather Recliner Armchair', 'L-Shaped Sectional Sofa', 'Velvet Convertible Sofa Bed'],
-  'Beds': ['Queen Size Storage Bed', 'King Size Upholstered Bed', 'Solid Wood Platform Bed', 'Hydraulic Lift Storage Bed'],
-  'Tables': ['Solid Wood Dining Table', 'Minimalist Coffee Table', 'Study Writing Desk', 'Foldable Bed Table'],
-  'Chairs': ['Ergonomic Mesh Office Chair', 'Executive Leather High-Back Chair', 'Velvet Dining Chair', 'Accent Lounge Armchair'],
-  'Bookshelves': ['Bookshelf', '5-Tier Ladder Bookshelf', 'Wall Mounted Shelving Unit', 'Corner Display Shelf'],
-
-  'Cookware': ['Non-Stick Cookware Set', 'Chef Knife Set 5-Piece', 'Stainless Steel Pressure Cooker', 'French Press Coffee Maker'],
-  'Wall Art': ['Canvas Wall Art 3-Piece', 'Framed Botanical Prints', 'Abstract Metal Wall Sculpture'],
-  'Cushions': ['Velvet Cushion Covers', 'Embroidered Throw Pillows', 'Cotton Linen Cushion Set'],
-  'Curtains': ['Blackout Curtains', 'Sheer Window Drapes', 'Grommet Thermal Curtains'],
-  'Rugs': ['Handwoven Area Rug', 'Bohemian Runner Rug', 'Fluffy Shag Carpet'],
-  'Lamps': ['Minimalist Desk Lamp', 'Modern Floor Lamp', 'Bedside Touch Lamp'],
-
-  'Sports': ['English Willow Cricket Bat', 'Official Size 5 Football', 'Badminton Racket Set', 'Tennis Racket Pro'],
-  'Gym Equipment': ['Adjustable Dumbbell Set', 'Anti-Burst Yoga Mat', 'Resistance Loop Bands', 'Kettlebell 10kg'],
-  'Protein': ['Whey Protein Isolate', 'Plant Based Vegan Protein', 'Creatine Monohydrate Powder'],
-
-  'Makeup': ['Matte Liquid Lipstick', 'Full Coverage Foundation', 'Waterproof Mascara', 'Eyeshadow Palette'],
-  'Skincare': ['Vitamin C Serum 30ml', 'Hyaluronic Acid Moisturizer', 'Sunscreen Gel SPF 50', 'Foaming Face Wash'],
-  'Haircare': ['Hydrating Shampoo 500ml', 'Argan Hair Serum', 'Nourishing Hair Mask', 'Biotin Conditioner'],
-  'Fragrance': ['Eau de Parfum 100ml Spray', 'Fresh Citrus Cologne', 'Floral Eau de Toilette'],
-
-  'Notebooks': ['Executive Leather Notebook', 'Spiral Grid Journal', 'Hardcover Pocket Notebook'],
-  'Pens': ['Gel Ink Pens 10-Pack', 'Fountain Pen Fine Nib', 'Rollerball Executive Pen'],
-  'Printers': ['All-in-One Laser Printer', 'Wireless Inkjet Photo Printer', 'Thermal Label Printer'],
-  'Whiteboards': ['Magnetic Dry-Erase Whiteboard', 'Mobile Double-Sided Whiteboard'],
-
-  'Car Care': ['Car Pressure Washer Tool', 'Microfiber Car Cleaning Cloth', 'Car Polish Wax'],
-  'Lubricants': ['Synthetic 5W-40 Engine Oil 4L', 'Chain Lube Spray', 'Brake Fluid DOT 4'],
-  'Helmets': ['Full Face Motorcycle Helmet', 'Modular Flip-Up Helmet', 'Open Face Riding Helmet'],
-  'Riding Gear': ['Leather Riding Jacket', 'Armored Riding Gloves', 'Knee Guard Protectors'],
-};
 
 const FIRST_NAMES = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan', 'Ananya', 'Diya', 'Myra', 'Sara', 'Aadhya', 'Riya', 'Priya', 'Kavya', 'Neha', 'Tanvi', 'Shruti', 'Pooja', 'Anjali', 'Nandini', 'Meera', 'Lakshmi'];
 const LAST_NAMES = ['Sharma', 'Verma', 'Patel', 'Singh', 'Kumar', 'Gupta', 'Reddy', 'Nair', 'Menon', 'Joshi', 'Deshmukh', 'Pillai', 'Rao', 'Chopra', 'Malhotra', 'Saxena', 'Mehta', 'Agarwal', 'Mishra', 'Kapoor', 'Khanna', 'Bhatt', 'Trivedi', 'Srinivasan', 'Iyer', 'Das'];
+
+const REVIEWER_AVATARS = [
+  'https://i.pravatar.cc/150?u=1', 'https://i.pravatar.cc/150?u=2', 'https://i.pravatar.cc/150?u=3',
+  'https://i.pravatar.cc/150?u=4', 'https://i.pravatar.cc/150?u=5', 'https://i.pravatar.cc/150?u=6',
+  'https://i.pravatar.cc/150?u=7', 'https://i.pravatar.cc/150?u=8', 'https://i.pravatar.cc/150?u=9',
+  'https://i.pravatar.cc/150?u=10', 'https://i.pravatar.cc/150?u=11', 'https://i.pravatar.cc/150?u=12',
+  'https://i.pravatar.cc/150?u=13', 'https://i.pravatar.cc/150?u=14', 'https://i.pravatar.cc/150?u=15',
+  'https://i.pravatar.cc/150?u=16', 'https://i.pravatar.cc/150?u=17', 'https://i.pravatar.cc/150?u=18',
+  'https://i.pravatar.cc/150?u=19', 'https://i.pravatar.cc/150?u=20',
+];
 
 const REVIEW_TITLES = [
   'Absolutely love it!', 'Best purchase ever', 'Great quality', 'Excellent product', 'Very satisfied',
@@ -184,147 +71,292 @@ const REVIEW_COMMENTS = [
   'Perfect for my needs. Does exactly what it says on the tin. No complaints at all. Would buy again.',
 ];
 
-interface ProductSpec {
-  name: string;
-  categorySlug: string;
-  subcategory: string;
-  brand: string;
-  price: number;
-  description: string;
-  specs: Record<string, string>;
-  features: string[];
-  box: string[];
-  material?: string;
-  weight?: number;
-  dimensions?: string;
-  warranty?: string;
-  sellerName?: string;
-  deliveryEstimate?: string;
-  returnPolicy?: string;
-}
-
-function generateProductsForSubcategory(subcategory: string, categorySlug: string): ProductSpec[] {
-  const names = PRODUCT_NAMES[subcategory] || Array.from({ length: 10 }, (_, i) => `${subcategory} ${pick(['Premium', 'Classic', 'Elite', 'Pro', 'Ultra', 'Essential', 'Deluxe', 'Prime', 'Style', 'Luxe'])} Edition ${i + 1}`);
-  const brands = BRANDS[subcategory] || ['Generic'];
-  const products: ProductSpec[] = [];
-
-  for (let i = 0; i < Math.min(names.length, 10); i++) {
-    const basePrice = subcategory === 'Phones' ? randomFloat(19999, 159999) :
-      subcategory === 'Laptops' ? randomFloat(39999, 299999) :
-      subcategory === 'Headphones' ? randomFloat(1999, 34999) :
-      subcategory === 'Earbuds' ? randomFloat(1499, 24999) :
-      subcategory === 'Speakers' ? randomFloat(1999, 89999) :
-      subcategory === 'Smart Watches' ? randomFloat(4999, 69999) :
-      subcategory === 'Monitors' ? randomFloat(14999, 199999) :
-      subcategory === 'Cameras' ? randomFloat(29999, 399999) :
-      subcategory === 'Gaming' ? randomFloat(29999, 79999) :
-      subcategory === 'Tablets' ? randomFloat(14999, 119999) :
-      subcategory === 'Power Banks' ? randomFloat(999, 5999) :
-      subcategory === 'Chargers' ? randomFloat(999, 7999) :
-      subcategory === 'SSD' ? randomFloat(2999, 24999) :
-      subcategory === 'Routers' ? randomFloat(2999, 39999) :
-      subcategory === 'Keyboards' ? randomFloat(1499, 24999) :
-      subcategory === 'Mouse' ? randomFloat(999, 14999) :
-      subcategory === 'T-Shirts' || subcategory === 'Tops' ? randomFloat(399, 2999) :
-      subcategory === 'Jeans' || subcategory === 'Trousers' ? randomFloat(999, 4999) :
-      subcategory === 'Dresses' || subcategory === 'Kurtas' || subcategory === 'Sarees' ? randomFloat(999, 8999) :
-      subcategory === 'Shoes' || subcategory === 'Running Shoes' || subcategory === 'Casual Shoes' ? randomFloat(1499, 12999) :
-      subcategory === 'Handbags' ? randomFloat(999, 15999) :
-      subcategory === 'Jewelry' ? randomFloat(499, 49999) :
-      subcategory === 'Skincare' || subcategory === 'Makeup' ? randomFloat(199, 4999) :
-      subcategory === 'Sofas' || subcategory === 'Beds' ? randomFloat(9999, 89999) :
-      subcategory === 'Tables' || subcategory === 'Chairs' ? randomFloat(2999, 39999) :
-      subcategory === 'Cookware' ? randomFloat(499, 9999) :
-      subcategory === 'Books' || subcategory.startsWith('Book') ? randomFloat(199, 2999) :
-      subcategory === 'Toys' || subcategory === 'Action Figures' || subcategory === 'Board Games' ? randomFloat(299, 5999) :
-      subcategory === 'Protein' || subcategory === 'Vitamins' ? randomFloat(599, 4999) :
-      subcategory === 'Gym Equipment' || subcategory === 'Weights' ? randomFloat(999, 29999) :
-      subcategory === 'Dog Food' || subcategory === 'Cat Food' ? randomFloat(299, 4999) :
-      subcategory === 'Car Care' ? randomFloat(199, 3999) :
-      categorySlug === 'fashion-men' ? randomFloat(399, 7999) :
-      categorySlug === 'fashion-women' ? randomFloat(399, 8999) :
-      randomFloat(199, 9999);
-
-    const discountPercent = randomInt(0, 50);
-    const originalPrice = discountPercent > 0 ? parseFloat((basePrice / (1 - discountPercent / 100)).toFixed(0)) : basePrice;
-
-    const specs: Record<string, string> = {};
-    if (subcategory === 'Phones') {
-      specs['Processor'] = pick(['Snapdragon 8 Gen 4', 'A19 Bionic', 'Dimensity 9400', 'Exynos 2600']);
-      specs['RAM'] = pick(['8 GB', '12 GB', '16 GB', '24 GB']);
-      specs['Storage'] = pick(['128 GB', '256 GB', '512 GB', '1 TB']);
-      specs['Display'] = pick(['6.8" AMOLED 120Hz', '6.9" LTPO OLED 144Hz', '6.7" Dynamic AMOLED 2X', '6.82" Super AMOLED']);
-      specs['Battery'] = pick(['5000 mAh', '5500 mAh', '6000 mAh', '4800 mAh']);
-      specs['Charging'] = pick(['65W Fast Charging', '100W Turbo Charging', '45W Fast Charging', '80W Super Charging']);
-      specs['OS'] = pick(['Android 16', 'iOS 20', 'Android 15', 'One UI 7']);
-      specs['IP Rating'] = pick(['IP68', 'IP69', 'IP67']);
-    } else if (subcategory === 'Laptops') {
-      specs['Processor'] = pick(['M4 Max', 'Core Ultra 9 285HX', 'Ryzen AI 9 HX 370', 'Snapdragon X Elite']);
-      specs['RAM'] = pick(['16 GB', '32 GB', '64 GB', '128 GB']);
-      specs['Storage'] = pick(['512 GB SSD', '1 TB SSD', '2 TB SSD', '4 TB SSD']);
-      specs['Display'] = pick(['16.2" Liquid Retina XDR', '16" OLED 4K 120Hz', '16" mini-LED 165Hz', '15.6" 4K OLED']);
-      specs['Battery'] = pick(['100 Wh', '99 Wh', '97 Wh', '86 Wh']);
-      specs['Weight'] = pick(['2.1 kg', '1.8 kg', '2.4 kg', '1.6 kg']);
-      specs['OS'] = pick(['macOS 16', 'Windows 12 Pro', 'Windows 12 Home']);
-    } else if (subcategory === 'Headphones' || subcategory === 'Earbuds') {
-      specs['Driver'] = pick(['40mm Neodymium', '50mm Beryllium', '30mm Dynamic', '11mm Dynamic']);
-      specs['Noise Cancellation'] = pick(['Adaptive ANC', 'Hybrid ANC', 'Active NC', 'Premium ANC']);
-      specs['Battery Life'] = pick(['40 hours', '60 hours', '30 hours', '50 hours']);
-      specs['Charging'] = pick(['USB-C Fast Charge', 'Wireless Charging', 'USB-C', 'MagSafe Charging']);
-      specs['Codec'] = pick(['LDAC, AAC, SBC', 'AAC, SBC, aptX HD', 'LDAC, aptX Adaptive', 'AAC, SBC, aptX Lossless']);
-    }
-
-    const features = [
-      `Premium ${subcategory.toLowerCase()} with cutting-edge technology`,
-      `${pick(['1 year', '2 year', '3 year'])} manufacturer warranty`,
-      `${pick(['Free', 'Express'])} delivery available`,
-      `${pick(['Easy returns within 15 days', 'Easy returns within 30 days', 'No questions asked returns'])}`,
-    ];
-
-    const box = [
-      `1x ${names[i]}`,
-      `1x ${pick(['Charging Cable', 'USB-C Cable', 'Power Adapter', 'Charging Case'])}`,
-      `1x ${pick(['User Manual', 'Quick Start Guide', 'Documentation Kit'])}`,
-      pick(['1x SIM Ejector Tool', '1x Warranty Card', '1x Carrying Case', '1x Cleaning Cloth']),
-    ];
-
-    products.push({
-      name: names[i],
-      categorySlug,
-      subcategory,
-      brand: brands[i % brands.length],
-      price: basePrice,
-      description: pick([
-        `The ${names[i]} delivers exceptional ${subcategory.toLowerCase()} performance with cutting-edge technology and premium design. Perfect for everyday use.`,
-        `Elevate your experience with the ${names[i]}. Featuring top-tier specs, stunning build quality, and intelligent features tailored for modern lifestyles.`,
-        `${names[i]} combines style, power, and reliability in one complete package. Engineered to exceed expectations and built to last.`,
-        `Discover the ${names[i]} — where innovation meets craftsmanship. Packed with advanced features and designed for maximum comfort and usability.`,
-        `Uncompromising quality meets thoughtful design in the ${names[i]}. Every detail crafted to deliver the best ${subcategory.toLowerCase()} experience.`,
-      ]),
-      specs,
-      features,
-      box,
-    });
-  }
-
-  return products;
-}
-
-const REVIEWER_AVATARS = [
-  'https://i.pravatar.cc/150?u=1', 'https://i.pravatar.cc/150?u=2', 'https://i.pravatar.cc/150?u=3',
-  'https://i.pravatar.cc/150?u=4', 'https://i.pravatar.cc/150?u=5', 'https://i.pravatar.cc/150?u=6',
-  'https://i.pravatar.cc/150?u=7', 'https://i.pravatar.cc/150?u=8', 'https://i.pravatar.cc/150?u=9',
-  'https://i.pravatar.cc/150?u=10', 'https://i.pravatar.cc/150?u=11', 'https://i.pravatar.cc/150?u=12',
-  'https://i.pravatar.cc/150?u=13', 'https://i.pravatar.cc/150?u=14', 'https://i.pravatar.cc/150?u=15',
-  'https://i.pravatar.cc/150?u=16', 'https://i.pravatar.cc/150?u=17', 'https://i.pravatar.cc/150?u=18',
-  'https://i.pravatar.cc/150?u=19', 'https://i.pravatar.cc/150?u=20',
+// ─── Catalog-driven detail derivation ─────────────────────────────────────────
+// Brand inference: ordered keyword hints (first match wins).
+const BRAND_HINTS: Array<[string, string]> = [
+  ['galaxy', 'Samsung'], ['samsung', 'Samsung'], ['iphone', 'Apple'], ['apple', 'Apple'],
+  ['oneplus', 'OnePlus'], ['xiaomi', 'Xiaomi'], ['mi 20', 'Xiaomi'], ['pixel', 'Google'], ['google', 'Google'],
+  ['nothing', 'Nothing'], ['realme', 'Realme'], ['vivo', 'Vivo'], ['oppo', 'Oppo'], ['moto', 'Motorola'],
+  ['macbook', 'Apple'], ['ipad', 'Apple'], ['airpods', 'Apple'], ['homepod', 'Apple'],
+  ['xps', 'Dell'], ['dell', 'Dell'], ['ultrasharp', 'Dell'],
+  ['spectre', 'HP'], ['omen', 'HP'],
+  ['thinkpad', 'Lenovo'], ['lenovo', 'Lenovo'], ['thinkvision', 'Lenovo'],
+  ['zenbook', 'ASUS'], ['rog', 'ASUS'], ['asus', 'ASUS'],
+  ['predator', 'Acer'], ['acer', 'Acer'],
+  ['surface', 'Microsoft'], ['microsoft', 'Microsoft'], ['xbox', 'Microsoft'],
+  ['lg', 'LG'], ['ultragear', 'LG'],
+  ['logitech', 'Logitech'], ['mx master', 'Logitech'], ['mx mechanical', 'Logitech'], ['g915', 'Logitech'], ['g502', 'Logitech'], ['superlight', 'Logitech'], ['g pro x', 'Logitech'],
+  ['razer', 'Razer'], ['blackwidow', 'Razer'], ['huntsman', 'Razer'], ['viper v3', 'Razer'], ['deathadder', 'Razer'],
+  ['corsair', 'Corsair'], ['k70', 'Corsair'], ['k100', 'Corsair'],
+  ['royal kludge', 'Royal Kludge'], ['keychron', 'Keychron'],
+  ['glorious', 'Glorious'], ['model o', 'Glorious'],
+  ['sony', 'Sony'], ['playstation', 'Sony'], ['ps vr', 'Sony'], ['dualsense', 'Sony'],
+  ['nintendo', 'Nintendo'],
+  ['canon', 'Canon'], ['nikon', 'Nikon'], ['fujifilm', 'Fujifilm'], ['osmo', 'DJI'], ['gopro', 'GoPro'],
+  ['bose', 'Bose'], ['sennheiser', 'Sennheiser'], ['audio-technica', 'Audio-Technica'], ['jbl', 'JBL'],
+  ['beats', 'Beats'], ['marshall', 'Marshall'], ['sonos', 'Sonos'],
+  ['garmin', 'Garmin'], ['amazfit', 'Amazfit'], ['fenix', 'Garmin'],
+  ['anker', 'Anker'], ['ugreen', 'UGREEN'], ['baseus', 'Baseus'],
+  ['wd black', 'WD'], ['seagate', 'Seagate'], ['crucial', 'Crucial'], ['sabrent', 'Sabrent'], ['sandisk', 'SanDisk'],
+  ['tp-link', 'TP-Link'], ['netgear', 'Netgear'], ['eero', 'Eero'],
+  ['nike', 'Nike'], ['adidas', 'Adidas'], ['puma', 'Puma'], ["levi's", "Levi's"], ['levis', "Levi's"],
+  ['uspa', 'USPA'], ['tommy hilfiger', 'Tommy Hilfiger'], ['calvin klein', 'Calvin Klein'],
 ];
 
+const CATEGORY_DEFAULT_BRAND: Record<string, string> = {
+  electronics: 'Samsung',
+  'fashion-men': "Levi's",
+  'fashion-women': 'Zara',
+  'shoes-footwear': 'Nike',
+  'home-kitchen-furniture': 'Godrej',
+  'sports-fitness-beauty': 'Decathlon',
+  'office-toys-groceries-automotive': 'Generic',
+};
 
+// Price inference: ordered [keyword, min, max] rules (first match wins).
+const PRICE_RULES: Array<[string, number, number]> = [
+  ['mirrorless', 29999, 399999], ['eos', 29999, 399999], ['nikon', 29999, 399999], ['gopro', 14999, 79999],
+  ['galaxy', 19999, 159999], ['iphone', 59999, 169999], ['oneplus', 34999, 99999], ['pixel', 29999, 109999],
+  ['nothing', 19999, 44999], ['realme', 12999, 45999], ['vivo', 19999, 89999], ['oppo', 14999, 99999], ['moto', 12999, 49999],
+  ['macbook', 109999, 349999], ['xps', 99999, 249999], ['spectre', 89999, 219999], ['thinkpad', 84999, 259999],
+  ['zenbook', 64999, 219999], ['predator', 99999, 299999], ['surface laptop', 79999, 199999], ['galaxy book', 74999, 189999],
+  ['ipad', 49999, 169999], ['galaxy tab', 39999, 129999], ['surface pro', 69999, 159999],
+  ['ultrasharp', 39999, 149999], ['swift oled', 49999, 199999], ['predator x34', 39999, 119999],
+  ['thinkvision', 29999, 99999], ['pro display', 49999, 199999], ['s2722qc', 24999, 49999], ['ultragear', 29999, 89999],
+  ['keyboard', 1499, 24999], ['blackwidow', 5999, 19999], ['k70', 7999, 19999], ['huntsman', 8999, 22999],
+  ['royal kludge', 2499, 9999], ['keychron', 3499, 14999], ['g915', 12999, 19999], ['k100', 12999, 21999], ['apex pro', 9999, 19999],
+  ['mouse', 999, 14999], ['g502', 2999, 8999], ['viper v3', 3999, 9999], ['deathadder', 2999, 8999],
+  ['model o', 2499, 6999], ['superlight', 6999, 12999],
+  ['playstation', 39999, 79999], ['xbox', 39999, 74999], ['nintendo', 19999, 44999], ['steam deck', 29999, 59999],
+  ['rog ally', 39999, 74999], ['ps vr', 49999, 89999], ['dualsense', 3999, 9999],
+  ['airpods', 12999, 29999], ['buds', 9999, 24999], ['wf-1000', 19999, 34999], ['tour pro', 15999, 24999], ['nothing ear', 9999, 19999],
+  ['headphones', 1999, 34999], ['wh-1000', 24999, 39999], ['quietcomfort', 19999, 39999], ['momentum', 19999, 44999],
+  ['ath-m50', 9999, 24999], ['tour one', 14999, 29999], ['studio pro', 19999, 34999],
+  ['homepod', 29999, 59999], ['sonos', 24999, 69999], ['jbl charge', 9999, 19999], ['marshall', 19999, 44999], ['soundlink', 19999, 34999],
+  ['watch ultra', 54999, 89999], ['galaxy watch', 14999, 49999], ['pixel watch', 19999, 39999], ['garmin', 24999, 89999],
+  ['amazfit', 6999, 24999],
+  ['mah', 999, 5999], ['power bank', 999, 5999],
+  ['charger', 999, 7999], ['ganprime', 3999, 9999], ['nexode', 2999, 8999], ['gaN', 1999, 7999],
+  ['ssd', 2999, 24999], ['nvme', 4999, 29999], ['990 pro', 11999, 34999], ['sn850', 9999, 29999],
+  ['firecuda', 8999, 29999], ['t700', 12999, 34999], ['rocket', 8999, 29999],
+  ['router', 2999, 39999], ['deco', 14999, 39999], ['orbi', 19999, 49999], ['raptor', 29999, 59999],
+  ['eero', 9999, 29999], ['nest wifi', 9999, 29999],
+  ['sofa', 9999, 89999], ['bed', 9999, 89999],
+  ['table', 2999, 39999], ['chair', 2999, 39999], ['bookshelf', 1999, 19999], ['shelf', 999, 9999],
+  ['wall art', 499, 9999], ['cushion', 299, 2999], ['curtain', 499, 4999], ['rug', 999, 9999], ['lamp', 499, 7999],
+  ['cookware', 999, 9999], ['knife', 999, 8999], ['pressure cooker', 999, 5999], ['french press', 499, 2999],
+  ['cricket bat', 1499, 9999], ['football', 499, 2999], ['badminton', 499, 2999], ['tennis', 999, 4999],
+  ['yoga mat', 299, 1999], ['dumbbell', 1499, 14999], ['kettlebell', 999, 7999], ['bands', 299, 1499],
+  ['protein', 599, 4999], ['creatine', 599, 2999],
+  ['lipstick', 199, 1499], ['foundation', 299, 1999], ['mascara', 199, 1499], ['eyeshadow', 399, 1999],
+  ['serum', 299, 2499], ['moisturizer', 199, 1499], ['sunscreen', 199, 1499], ['face wash', 199, 999],
+  ['shampoo', 199, 1499], ['hair', 299, 1999], ['perfume', 799, 4999], ['cologne', 499, 3999], ['eau de', 499, 3999],
+  ['notebook', 199, 1499], ['pens', 199, 999], ['printer', 4999, 24999], ['whiteboard', 999, 4999],
+  ['blocks', 299, 1999], ['off-road car', 999, 4999], ['jigsaw', 199, 999],
+  ['helmet', 1499, 14999], ['riding jacket', 2999, 19999], ['engine oil', 499, 2499], ['pressure washer', 2999, 19999],
+  // Clothing & footwear fallbacks
+  ['t-shirt', 399, 2999], ['tee', 399, 1999], ['polo', 599, 2499], ['shirt', 499, 3499], ['blouse', 599, 2999], ['top', 399, 2999],
+  ['jeans', 999, 4999], ['chino', 999, 3999], ['trousers', 999, 3999], ['pants', 899, 3499],
+  ['dress', 999, 8999], ['saree', 1499, 9999], ['kurta', 799, 5999], ['kurti', 699, 4999], ['skirt', 699, 4499],
+  ['leggings', 399, 1999], ['coat', 1999, 14999], ['jacket', 1499, 11999], ['hoodie', 899, 4999], ['sweater', 899, 4499],
+  ['suit', 3999, 24999], ['blazer', 2499, 14999],
+  ['belt', 299, 1999], ['wallet', 299, 2999], ['sunglasses', 399, 5999], ['watch', 999, 49999], ['tie', 199, 1499], ['cap', 199, 1499],
+  ['running shoes', 1499, 12999], ['sneakers', 1499, 9999], ['shoes', 1499, 12999], ['sandals', 699, 3999],
+  ['slippers', 299, 1999], ['boots', 1999, 14999], ['heels', 999, 7999], ['loafers', 1499, 9999], ['oxford', 1999, 8999],
+  ['handbag', 999, 15999], ['clutch', 999, 7999], ['tote', 699, 5999], ['necklace', 499, 14999],
+  ['earrings', 299, 9999], ['bracelet', 299, 7999],
+];
+
+const CATEGORY_DEFAULT_PRICE: Record<string, [number, number]> = {
+  electronics: [999, 19999],
+  'fashion-men': [399, 4999],
+  'fashion-women': [399, 8999],
+  'shoes-footwear': [999, 9999],
+  'home-kitchen-furniture': [499, 19999],
+  'sports-fitness-beauty': [199, 9999],
+  'office-toys-groceries-automotive': [199, 9999],
+};
+
+// Spec builders: keyword group → spec pool. Pick one value per key.
+const SPEC_BUILDERS: Array<[string[], Record<string, string[]>]> = [
+  [['galaxy', 'iphone', 'oneplus', 'xiaomi', 'pixel', 'nothing', 'realme', 'vivo', 'oppo', 'moto', 'phone'], {
+    'Processor': ['Snapdragon 8 Gen 4', 'A19 Bionic', 'Dimensity 9400', 'Exynos 2600'],
+    'RAM': ['8 GB', '12 GB', '16 GB', '24 GB'],
+    'Storage': ['128 GB', '256 GB', '512 GB', '1 TB'],
+    'Display': ['6.8" AMOLED 120Hz', '6.9" LTPO OLED 144Hz', '6.7" Dynamic AMOLED 2X', '6.82" Super AMOLED'],
+    'Battery': ['5000 mAh', '5500 mAh', '6000 mAh', '4800 mAh'],
+    'Charging': ['65W Fast Charging', '100W Turbo Charging', '45W Fast Charging', '80W Super Charging'],
+    'OS': ['Android 16', 'iOS 20', 'Android 15', 'One UI 7'],
+    'IP Rating': ['IP68', 'IP69', 'IP67'],
+  }],
+  [['macbook', 'xps', 'spectre', 'thinkpad', 'zenbook', 'predator', 'surface laptop', 'galaxy book', 'laptop'], {
+    'Processor': ['M4 Max', 'Core Ultra 9 285HX', 'Ryzen AI 9 HX 370', 'Snapdragon X Elite'],
+    'RAM': ['16 GB', '32 GB', '64 GB', '128 GB'],
+    'Storage': ['512 GB SSD', '1 TB SSD', '2 TB SSD', '4 TB SSD'],
+    'Display': ['16.2" Liquid Retina XDR', '16" OLED 4K 120Hz', '16" mini-LED 165Hz', '15.6" 4K OLED'],
+    'Battery': ['100 Wh', '99 Wh', '97 Wh', '86 Wh'],
+    'Weight': ['2.1 kg', '1.8 kg', '2.4 kg', '1.6 kg'],
+    'OS': ['macOS 16', 'Windows 12 Pro', 'Windows 12 Home'],
+  }],
+  [['ipad', 'galaxy tab', 'surface pro', 'tab p14', 'xiaomi pad', 'oneplus pad', 'tablet'], {
+    'Processor': ['Apple M4', 'Snapdragon 8 Gen 4', 'Dimensity 9300', 'Exynos 2400'],
+    'RAM': ['8 GB', '12 GB', '16 GB'],
+    'Storage': ['128 GB', '256 GB', '512 GB', '1 TB'],
+    'Display': ['13" 120Hz OLED', '12.4" AMOLED', '11" IPS 144Hz', '12.9" mini-LED'],
+    'Battery': ['10000 mAh', '12000 mAh', '9800 mAh'],
+    'Weight': ['579 g', '612 g', '648 g'],
+  }],
+  [['ultrasharp', 'swift oled', 'predator x34', 'thinkvision', 'pro display', 's2722qc', 'ultragear', 'monitor'], {
+    'Panel': ['IPS', 'OLED', 'Mini-LED', 'VA'],
+    'Resolution': ['4K UHD', '2K QHD', '5K2K', '1080p FHD'],
+    'Refresh Rate': ['144Hz', '165Hz', '240Hz', '60Hz'],
+    'Response Time': ['1ms', '0.03ms', '0.5ms', '4ms'],
+    'HDR': ['HDR10', 'HDR600', 'Dolby Vision', 'HDR10+'],
+  }],
+  [['keyboard', 'blackwidow', 'k70', 'huntsman', 'royal kludge', 'keychron', 'g915', 'k100', 'apex pro', 'alloy'], {
+    'Switch Type': ['Mechanical Red', 'Tactile Brown', 'Optical Linear', 'Magnetic Hall Effect'],
+    'Connectivity': ['USB-C Wired', '2.4GHz Wireless', 'Bluetooth + Wired', 'Tri-Mode'],
+    'Layout': ['Full Size', 'Tenkeyless', '75%', '65%'],
+    'Backlight': ['RGB Per-Key', 'White LED', 'Razer Chroma RGB', 'Corsair iCUE RGB'],
+  }],
+  [['mouse', 'g502', 'viper v3', 'deathadder', 'model o', 'superlight', 'g pro x', 'aerox'], {
+    'DPI': ['16000', '26000', '30000', '32000'],
+    'Sensor': ['HERO 2', 'Focus Pro 26K', 'HYPERSMART', 'BAMF 2.0'],
+    'Connectivity': ['USB Wireless', '2.4GHz + Bluetooth', 'Wired USB-C', 'Tri-Mode'],
+    'Weight': ['63 g', '58 g', '70 g', '74 g'],
+  }],
+  [['playstation', 'xbox', 'nintendo', 'steam deck', 'rog ally', 'ps vr', 'dualsense', 'gaming'], {
+    'Console': ['Next-Gen', 'Handheld', 'Hybrid', 'VR Ready'],
+    'Resolution': ['4K 120FPS', '8K Upscaled', '1080p 144Hz'],
+    'Storage': ['1 TB', '2 TB', '512 GB'],
+    'Connectivity': ['Wi-Fi 7', 'Wi-Fi 6E', 'Bluetooth 5.4'],
+  }],
+  [['mirrorless', 'eos', 'nikon', 'gopro', 'osmo', 'zv-e10', 'lumix', 'leica', 'camera', 'cinema'], {
+    'Sensor': ['Full-Frame 61MP', 'APS-C 26MP', 'Full-Frame 45MP', '1" 20MP'],
+    'Video': ['8K 30p', '4K 120p', '4K 60p', '5.7K 360'],
+    'Autofocus': ['Dual Pixel AF', 'Hybrid AF', 'AI Tracking AF'],
+    'Stabilization': ['5-Axis IBIS', 'Sensor Shift', 'Electronic'],
+  }],
+  [['airpods', 'buds', 'wf-1000', 'tour pro', 'nothing ear', 'earbud'], {
+    'Driver': ['11mm Dynamic', '10mm Graphene', 'Dual Driver', '8mm Titanium'],
+    'ANC': ['Adaptive ANC', 'Hybrid ANC', 'Active Noise Cancelling', 'Dual-Device ANC'],
+    'Battery Life': ['6+18 hours', '8+24 hours', '10+30 hours'],
+    'Rating': ['IPX4', 'IP55', 'IP68', 'IPX5'],
+  }],
+  [['headphones', 'wh-1000', 'quietcomfort', 'momentum', 'ath-m50', 'tour one', 'studio pro', 'skullcandy', 'marshall', 'akg'], {
+    'Driver': ['40mm Neodymium', '50mm Beryllium', '30mm Dynamic', '11mm Dynamic'],
+    'Noise Cancellation': ['Adaptive ANC', 'Hybrid ANC', 'Active NC', 'Premium ANC'],
+    'Battery Life': ['40 hours', '60 hours', '30 hours', '50 hours'],
+    'Charging': ['USB-C Fast Charge', 'Wireless Charging', 'USB-C', 'MagSafe Charging'],
+  }],
+  [['homepod', 'sonos', 'jbl charge', 'marshall', 'soundlink', 'speaker', 'echo'], {
+    'Driver': ['Full-Range Woofer', 'Dual Tweeter', 'Bass Radiator', 'Coaxial Array'],
+    'Connectivity': ['Wi-Fi + Bluetooth', 'Bluetooth 5.4', 'AirPlay 2', 'Multi-Room'],
+    'Battery': ['12 hours', '20 hours', '24 hours', 'AC Powered'],
+    'Water Resistance': ['IP67', 'IPX4', 'None'],
+  }],
+  [['watch ultra', 'galaxy watch', 'pixel watch', 'garmin', 'amazfit', 'fenix', 'fitbit'], {
+    'Display': ['LTPO OLED Always-On', 'AMOLED 2K', 'MIP Solar', 'Super AMOLED'],
+    'Battery': ['36 hours', '7 days', '14 days', '30 days'],
+    'Sensors': ['HR + SpO2 + ECG', 'HR + GPS + Compass', 'Multi-Band GPS'],
+    'Water Rating': ['5 ATM', '10 ATM', 'IP68'],
+  }],
+  [['mah', 'power bank', 'powerbank'], {
+    'Capacity': ['10000 mAh', '20000 mAh', '25000 mAh', '27000 mAh'],
+    'Output': ['20W PD', '65W PD', '100W PD', '250W PD'],
+    'Ports': ['USB-C x2', 'USB-C + USB-A', '2C + 2A'],
+    'Charging': ['Qi2 Wireless', 'Fast Charge', 'Pass-Through'],
+  }],
+  [['charger', 'ganprime', 'nexode', 'gaN', 'adapter'], {
+    'Output': ['65W', '100W', '140W', '200W'],
+    'Ports': ['2x USB-C', '3x USB-C + 1x USB-A', '4x USB-C'],
+    'Technology': ['GaN II', 'GaNPrime', 'GaN Fast'],
+    'Compatibility': ['PD 3.1', 'QC 5', 'PPS'],
+  }],
+  [['ssd', 'nvme', '990 pro', 'sn850', 'firecuda', 't700', 'rocket', 'extreme pro', 'nm790'], {
+    'Interface': ['PCIe 5.0 NVMe', 'PCIe 4.0 NVMe', 'USB 3.2 Gen 2'],
+    'Capacity': ['1 TB', '2 TB', '4 TB'],
+    'Read Speed': ['7450 MB/s', '12400 MB/s', '1050 MB/s'],
+    'Form Factor': ['M.2 2280', '2.5" Portable', 'M.2 + Heatsink'],
+  }],
+  [['router', 'deco', 'orbi', 'raptor', 'eero', 'nest wifi', 'mesh'], {
+    'Standard': ['Wi-Fi 7', 'Wi-Fi 6E', 'Wi-Fi 6'],
+    'Bands': ['Tri-Band', 'Quad-Band', 'Dual-Band'],
+    'Speed': ['BE22000', 'AX11000', 'AX6000'],
+    'Coverage': ['7000 sq ft', '5000 sq ft', '3000 sq ft'],
+  }],
+];
+
+// ─── Derivation helpers ───────────────────────────────────────────────────────
+function deriveBrand(name: string, categorySlug: string): string {
+  const lower = name.toLowerCase();
+  for (const [hint, brand] of BRAND_HINTS) {
+    if (lower.includes(hint)) return brand;
+  }
+  return CATEGORY_DEFAULT_BRAND[categorySlug] || 'Generic';
+}
+
+function derivePrice(name: string, categorySlug: string): number {
+  const lower = name.toLowerCase();
+  for (const [keyword, min, max] of PRICE_RULES) {
+    if (lower.includes(keyword)) return randomFloat(min, max);
+  }
+  const [min, max] = CATEGORY_DEFAULT_PRICE[categorySlug] || [199, 9999];
+  return randomFloat(min, max);
+}
+
+function deriveSpecs(name: string): Record<string, string> {
+  const lower = name.toLowerCase();
+  for (const [keywords, builder] of SPEC_BUILDERS) {
+    if (keywords.some((k) => lower.includes(k))) {
+      const specs: Record<string, string> = {};
+      for (const [key, values] of Object.entries(builder)) {
+        specs[key] = pick(values);
+      }
+      return specs;
+    }
+  }
+  return { 'Model': 'Standard Edition', 'Compatibility': 'Universal', 'In The Box': 'Main Unit + Accessories' };
+}
+
+function buildDescription(name: string, brand: string, subcategory: string): string {
+  return pick([
+    `The ${name} by ${brand} delivers exceptional ${subcategory} performance with cutting-edge technology and premium design. Perfect for everyday use.`,
+    `Elevate your experience with the ${name} by ${brand}. Featuring top-tier specs, stunning build quality, and intelligent features tailored for modern lifestyles.`,
+    `${name} by ${brand} combines style, power, and reliability in one complete package. Engineered to exceed expectations and built to last.`,
+    `Discover the ${name} by ${brand} — where innovation meets craftsmanship. Packed with advanced features and designed for maximum comfort and usability.`,
+    `Uncompromising quality meets thoughtful design in the ${name} by ${brand}. Every detail crafted to deliver the best ${subcategory} experience.`,
+  ]);
+}
+
+function buildFeatures(name: string, subcategory: string): string[] {
+  return [
+    `Premium ${subcategory} with cutting-edge technology`,
+    `${pick(['1 year', '2 year', '3 year'])} manufacturer warranty`,
+    `${pick(['Free', 'Express'])} delivery available`,
+    `${pick(['Easy returns within 15 days', 'Easy returns within 30 days', 'No questions asked returns'])}`,
+  ];
+}
+
+function buildBox(name: string): string[] {
+  return [
+    `1x ${name}`,
+    `1x ${pick(['Charging Cable', 'USB-C Cable', 'Power Adapter', 'Charging Case'])}`,
+    `1x ${pick(['User Manual', 'Quick Start Guide', 'Documentation Kit'])}`,
+    pick(['1x Warranty Card', '1x Carrying Case', '1x Cleaning Cloth', '1x SIM Ejector Tool']),
+  ];
+}
+
+const SELLERS = ['Reliance Digital', 'Croma', 'Tata CLiQ', 'Flipkart Seller', 'Amazon India', 'Vijay Sales', 'Poorvika Mobiles', 'Bajaj Electronics'];
+const RETURN_POLICIES = ['15 Days Easy Return', '30 Days Return Policy', '7 Days Replacement', 'No Questions Asked Returns within 15 Days'];
+const DELIVERY_ESTIMATES = ['2-3 Business Days', '3-5 Business Days', 'Express 24 Hours', '1-2 Business Days', '4-6 Business Days'];
+const WARRANTIES = ['1 Year Manufacturer Warranty', '2 Year International Warranty', '3 Year Extended Warranty', '1 Year Limited Warranty'];
+const ORIGINS = ['China', 'India', 'USA', 'Japan', 'South Korea', 'Germany', 'Taiwan', 'Vietnam'];
+const MATERIALS = ['Aluminum', 'Plastic', 'Stainless Steel', 'Glass', 'Leather', 'Cotton', 'Polyester', 'Wood'];
+const GST = [5, 12, 18, 28];
 
 async function main() {
-  const prisma = getPrismaInstance();
-  console.log('🌱 Seeding comprehensive product database...');
+  console.log('🌱 Seeding catalog-driven product database...');
 
   console.log('🧹 Wiping existing database records...');
   await prisma.reviewImage.deleteMany();
@@ -368,209 +400,171 @@ async function main() {
     create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: 'DELIVERY_BOY', isEmailVerified: true, avatar: REVIEWER_AVATARS[3] },
   });
 
-  // Create more reviewer users
+  // Create reviewer users
   const reviewerUsers = await Promise.all(
     FIRST_NAMES.slice(0, 20).map((first, i) =>
       prisma.user.upsert({
         where: { email: `reviewer${i}@example.com` },
         update: {},
-      create: {
-        email: `reviewer${i}@example.com`, password: hashedPassword,
-        firstName: first, lastName: LAST_NAMES[i], role: 'CUSTOMER',
+        create: {
+          email: `reviewer${i}@example.com`, password: hashedPassword,
+          firstName: first, lastName: LAST_NAMES[i], role: 'CUSTOMER',
           isEmailVerified: true, avatar: REVIEWER_AVATARS[i],
         },
       })
     )
   );
 
-  // Create Categories and Subcategories
+  // Create categories from the user catalog
   const categoryMap = new Map<string, string>();
-  const subcategoryMap = new Map<string, string>();
-
-  for (const cat of CATEGORIES) {
+  for (const cat of USER_CATALOG) {
     const created = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: { image: getCategoryImage(cat.slug) },
+      update: { name: cat.name, description: cat.description, image: getCategoryImage(cat.slug) },
       create: { name: cat.name, slug: cat.slug, description: cat.description, image: getCategoryImage(cat.slug) },
     });
     categoryMap.set(cat.slug, created.id);
-
-    for (const sub of cat.subcategories) {
-      const subSlug = slugify(sub);
-      const existing = await prisma.category.findUnique({ where: { slug: subSlug } });
-      if (!existing) {
-        const subCat = await prisma.category.create({
-          data: { name: sub, slug: subSlug, description: `${sub} products`, parentId: created.id },
-        });
-        subcategoryMap.set(subSlug, subCat.id);
-      } else {
-        await prisma.category.update({ where: { id: existing.id }, data: { parentId: created.id } });
-        subcategoryMap.set(subSlug, existing.id);
-      }
-    }
+    console.log(`  ✓ Category: ${cat.name} (${cat.products.length} catalog products)`);
   }
 
-  // Generate all products
-  const allProducts: Array<{
-    productData: ProductSpec;
-    images: { url: string; alt: string; order: number }[];
-    categorySlug: string;
-    subcategorySlug: string;
-  }> = [];
-
-  for (const cat of CATEGORIES) {
-    for (const sub of cat.subcategories) {
-      const subSlug = slugify(sub);
-      const products = generateProductsForSubcategory(sub, cat.slug);
-
-      for (let i = 0; i < Math.min(products.length, 1); i++) {
-        const p = products[i];
-        // ✅ FIX: No longer passing productIndex - getProductImages now uses hash-based selection
-        const imgs = getProductImages({
-          name: p.name,
-          brand: p.brand,
-          categorySlug: cat.slug,
-          subcategory: sub,
-        });
-
-        allProducts.push({
-          productData: p,
-          images: imgs,
-          categorySlug: cat.slug,
-          subcategorySlug: subSlug,
-        });
-      }
-    }
-  }
-
-  console.log(`Generating ${allProducts.length} products...`);
-
+  // Generate products directly from the catalog (name + exact image)
   let productIndex = 0;
-  for (const item of allProducts) {
-    const p = item.productData;
-    const subCatId = subcategoryMap.get(item.subcategorySlug) || categoryMap.get(item.categorySlug)!;
-    const categoryId = categoryMap.get(item.categorySlug)!;
-    const uniqueId = `${productIndex}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-    const slug = slugify(p.name + '-' + p.brand + '-' + uniqueId);
-    const sku = `${p.brand.substring(0, 3).toUpperCase()}-${String(productIndex + 1000).padStart(5, '0')}-${Math.random().toString(36).substring(2, 6)}`;
-    const discountPercent = randomInt(5, 50);
-    const originalPrice = parseFloat((p.price / (1 - discountPercent / 100)).toFixed(0));
-    const stock = randomInt(10, 500);
-    const soldCount = randomInt(100, 50000);
-    const reviewCount = randomInt(50, 2500);
-    const trendingScore = randomFloat(1, 100);
-    const avgRating = randomFloat(3.5, 5.0);
-    
-    // ✅ FIX: Make section flags MUTUALLY EXCLUSIVE to prevent duplicates
-    // Products are distributed into distinct sections based on index ranges
-    let isFeatured = false;
-    let isBestSeller = false;
-    let isNewArrival = false;
-    let isTopRated = false;
-    
-    // Assign products to sections based on index (no overlaps)
-    if (productIndex < 20) {
-      // First 20 products → Featured only
-      isFeatured = true;
-    } else if (productIndex < 40) {
-      // Products 20-39 → Best Sellers only
-      isBestSeller = soldCount > 5000; // Only if high sales
-    } else if (productIndex < 60) {
-      // Products 40-59 → New Arrivals only
-      isNewArrival = true;
-    } else if (productIndex < 80) {
-      // Products 60-79 → Top Rated only
-      isTopRated = avgRating > 4.5;
-    }
-    // Products 80+ → Regular products (no special flags)
+  let totalCatalog = 0;
+  for (const cat of USER_CATALOG) {
+    totalCatalog += cat.products.length;
+  }
 
-    const product = await prisma.product.create({
-      data: {
-        name: p.name,
-        slug,
-        description: p.description,
-        longDescription: p.description + ' ' + pick([
-          `Backed by ${p.warranty || 'comprehensive warranty'} and reliable customer support. Buy with confidence from ${p.sellerName || 'trusted sellers'} with easy returns and fast delivery across India.`,
-          `Sourced from premium materials and manufactured to the highest standards. Includes ${pick(['free installation', 'setup guide', 'complimentary accessories', 'exclusive online support'])}. Order now for ${p.deliveryEstimate || 'fast delivery'} delivery.`,
-          `${p.features?.slice(0, 3)?.join(', ') || 'Top-rated features'}. Covered by ${p.returnPolicy || 'hassle-free returns'}. Shop with peace of mind on CommerceFlow.`,
-        ]),
-        basePrice: Math.round(p.price * 100),
-        originalPrice: Math.round(originalPrice * 100),
-        discountPercent,
-        brand: p.brand,
-        sku,
-        barcode: String(randomInt(100000000000, 999999999999)),
-        categoryId: subCatId,
-        weight: randomFloat(0.2, 5.0),
-        dimensions: `${randomInt(10, 50)} x ${randomInt(10, 50)} x ${randomInt(2, 20)} cm`,
-        material: p.material || pick(['Aluminum', 'Plastic', 'Stainless Steel', 'Glass', 'Leather', 'Cotton', 'Polyester', 'Wood']),
-        warranty: p.warranty || pick(['1 Year Manufacturer Warranty', '2 Year International Warranty', '3 Year Extended Warranty', '1 Year Limited Warranty']),
-        countryOfOrigin: pick(['China', 'India', 'USA', 'Japan', 'South Korea', 'Germany', 'Taiwan', 'Vietnam']),
-        sellerName: pick(['Reliance Digital', 'Croma', 'Tata CLiQ', 'Flipkart Seller', 'Amazon India', 'Vijay Sales', 'Poorvika Mobiles', 'Bajaj Electronics']),
-        returnPolicy: pick(['15 Days Easy Return', '30 Days Return Policy', '7 Days Replacement', 'No Questions Asked Returns within 15 Days']),
-        deliveryEstimate: pick(['2-3 Business Days', '3-5 Business Days', 'Express 24 Hours', '1-2 Business Days', '4-6 Business Days']),
-        gstPercent: pick([5, 12, 18, 28]),
-        cashOnDelivery: Math.random() > 0.3,
-        emiAvailable: Math.random() > 0.4,
-        freeDelivery: Math.random() > 0.3,
-        specifications: p.specs,
-        keyFeatures: p.features,
-        whatsInTheBox: p.box,
-        tags: [p.subcategory, p.brand, item.categorySlug, ...(isFeatured ? ['featured'] : []), ...(isBestSeller ? ['best-seller'] : []), ...(isNewArrival ? ['new-arrival'] : [])],
-        videoUrl: Math.random() > 0.8 ? `https://www.youtube.com/watch?v=example${productIndex}` : null,
-        isFeatured,
-        isNewArrival,
-        isBestSeller,
-        isTopRated,
-        soldCount,
-        wishlistCount: randomInt(100, 10000),
-        questionsCount: randomInt(5, 200),
-        trendingScore,
-        seoMetaTitle: `${p.name} - ${p.brand} ${p.subcategory} | CommerceFlow`,
-        seoDescription: `Buy ${p.name} by ${p.brand} at best price. ${p.description.substring(0, 100)}`,
-        seoKeywords: `${p.name}, ${p.brand}, ${p.subcategory}, buy online, best price, ${item.categorySlug}`,
-        images: {
-          create: item.images,
-        },
-        inventory: { create: { stock, reservedStock: randomInt(0, 10), lowStockThreshold: 5 } },
-      },
-    });
+  console.log(`Generating ${totalCatalog} products from catalog...`);
 
-    // Create reviews for the product (unique reviewers per product)
-    const numReviews = randomInt(5, 15);
-    const usedReviewers = new Set<string>();
-    for (let r = 0; r < numReviews; r++) {
-      let reviewer;
-      let attempts = 0;
-      do {
-        reviewer = reviewerUsers[randomInt(0, reviewerUsers.length - 1)];
-        attempts++;
-      } while (usedReviewers.has(reviewer.id) && attempts < 20);
-      if (usedReviewers.has(reviewer.id)) continue;
-      usedReviewers.add(reviewer.id);
-      
-      const rating = Math.min(5, Math.max(1, Math.round(avgRating + randomFloat(-1, 1))));
-      await prisma.review.create({
+  for (const cat of USER_CATALOG) {
+    const categoryId = categoryMap.get(cat.slug)!;
+
+    for (const catalogProduct of cat.products) {
+      const name = catalogProduct.name;
+      const brand = deriveBrand(name, cat.slug);
+      const price = derivePrice(name, cat.slug);
+      const uniqueId = `${productIndex}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const slug = slugify(name + '-' + brand + '-' + uniqueId);
+      const sku = `${brand.substring(0, 3).toUpperCase()}-${String(productIndex + 1000).padStart(5, '0')}-${Math.random().toString(36).substring(2, 6)}`;
+      const discountPercent = randomInt(5, 50);
+      const originalPrice = parseFloat((price / (1 - discountPercent / 100)).toFixed(0));
+      const stock = randomInt(10, 500);
+      const soldCount = randomInt(100, 50000);
+      const reviewCount = randomInt(50, 2500);
+      const trendingScore = randomFloat(1, 100);
+      const avgRating = randomFloat(3.5, 5.0);
+      const description = buildDescription(name, brand, cat.name);
+      const specs = deriveSpecs(name);
+
+      // Mutually exclusive section flags distributed across the catalog
+      let isFeatured = false;
+      let isBestSeller = false;
+      let isNewArrival = false;
+      let isTopRated = false;
+
+      if (productIndex < Math.round(totalCatalog * 0.12)) {
+        isFeatured = true;
+      } else if (productIndex < Math.round(totalCatalog * 0.24)) {
+        isBestSeller = soldCount > 5000;
+      } else if (productIndex < Math.round(totalCatalog * 0.36)) {
+        isNewArrival = true;
+      } else if (productIndex < Math.round(totalCatalog * 0.48)) {
+        isTopRated = avgRating > 4.5;
+      }
+
+      const images = getProductImages({
+        name,
+        brand,
+        categorySlug: cat.slug,
+        subcategory: cat.name,
+      });
+
+      const product = await prisma.product.create({
         data: {
-          userId: reviewer.id,
-          productId: product.id,
-          rating,
-          title: pick(REVIEW_TITLES),
-          comment: pick(REVIEW_COMMENTS),
-          isVerified: Math.random() > 0.3,
-          helpfulCount: randomInt(0, 50),
-          createdAt: new Date(Date.now() - randomInt(1, 365) * 24 * 60 * 60 * 1000),
+          name,
+          slug,
+          description,
+          longDescription: description + ' ' + pick([
+            `Backed by ${pick(WARRANTIES)} and reliable customer support. Buy with confidence from ${pick(SELLERS)} with easy returns and fast delivery across India.`,
+            `Sourced from premium materials and manufactured to the highest standards. Includes ${pick(['free installation', 'setup guide', 'complimentary accessories', 'exclusive online support'])}. Order now for ${pick(DELIVERY_ESTIMATES)} delivery.`,
+            `${specs ? Object.values(specs).slice(0, 3).join(', ') : 'Top-rated features'}. Covered by ${pick(RETURN_POLICIES)}. Shop with peace of mind on CommerceFlow.`,
+          ]),
+          basePrice: Math.round(price * 100),
+          originalPrice: Math.round(originalPrice * 100),
+          discountPercent,
+          brand,
+          sku,
+          barcode: String(randomInt(100000000000, 999999999999)),
+          categoryId,
+          weight: randomFloat(0.2, 5.0),
+          dimensions: `${randomInt(10, 50)} x ${randomInt(10, 50)} x ${randomInt(2, 20)} cm`,
+          material: pick(MATERIALS),
+          warranty: pick(WARRANTIES),
+          countryOfOrigin: pick(ORIGINS),
+          sellerName: pick(SELLERS),
+          returnPolicy: pick(RETURN_POLICIES),
+          deliveryEstimate: pick(DELIVERY_ESTIMATES),
+          gstPercent: pick(GST),
+          cashOnDelivery: Math.random() > 0.3,
+          emiAvailable: Math.random() > 0.4,
+          freeDelivery: Math.random() > 0.3,
+          specifications: specs,
+          keyFeatures: buildFeatures(name, cat.name),
+          whatsInTheBox: buildBox(name),
+          tags: [cat.slug, brand, ...(isFeatured ? ['featured'] : []), ...(isBestSeller ? ['best-seller'] : []), ...(isNewArrival ? ['new-arrival'] : [])],
+          videoUrl: Math.random() > 0.8 ? `https://www.youtube.com/watch?v=example${productIndex}` : null,
+          isFeatured,
+          isNewArrival,
+          isBestSeller,
+          isTopRated,
+          soldCount,
+          wishlistCount: randomInt(100, 10000),
+          questionsCount: randomInt(5, 200),
+          trendingScore,
+          seoMetaTitle: `${name} - ${brand} ${cat.name} | CommerceFlow`,
+          seoDescription: `Buy ${name} by ${brand} at best price. ${description.substring(0, 100)}`,
+          seoKeywords: `${name}, ${brand}, ${cat.name}, buy online, best price, ${cat.slug}`,
+          images: { create: images },
+          inventory: { create: { stock, reservedStock: randomInt(0, 10), lowStockThreshold: 5 } },
         },
       });
-    }
 
-    productIndex++;
-    if (productIndex % 20 === 0) {
-      console.log(`Created ${productIndex} products with reviews...`);
+      // Create reviews for the product (unique reviewers per product)
+      const numReviews = randomInt(5, 15);
+      const usedReviewers = new Set<string>();
+      for (let r = 0; r < numReviews; r++) {
+        let reviewer;
+        let attempts = 0;
+        do {
+          reviewer = reviewerUsers[randomInt(0, reviewerUsers.length - 1)];
+          attempts++;
+        } while (usedReviewers.has(reviewer.id) && attempts < 20);
+        if (usedReviewers.has(reviewer.id)) continue;
+        usedReviewers.add(reviewer.id);
+
+        const rating = Math.min(5, Math.max(1, Math.round(avgRating + randomFloat(-1, 1))));
+        await prisma.review.create({
+          data: {
+            userId: reviewer.id,
+            productId: product.id,
+            rating,
+            title: pick(REVIEW_TITLES),
+            comment: pick(REVIEW_COMMENTS),
+            isVerified: Math.random() > 0.3,
+            helpfulCount: randomInt(0, 50),
+            createdAt: new Date(Date.now() - randomInt(1, 365) * 24 * 60 * 60 * 1000),
+          },
+        });
+      }
+
+      productIndex++;
+      if (productIndex % 25 === 0) {
+        console.log(`Created ${productIndex} products with reviews...`);
+      }
     }
   }
 
-  // Create Coupon
+  // Create Coupons
   await prisma.coupon.upsert({
     where: { code: 'WELCOME10' },
     update: {},
@@ -603,7 +597,7 @@ async function main() {
 
   console.log(`\n✅ Seed completed successfully!`);
   console.log(`📦 Total products: ${productIndex}`);
-  console.log(`📁 Categories: ${CATEGORIES.length} parent categories, ${CATEGORIES.reduce((s, c) => s + c.subcategories.length, 0)} subcategories`);
+  console.log(`📁 Categories: ${USER_CATALOG.length} parent categories`);
   console.log(`👤 Admin: admin@commerceflow.dev / Admin@123`);
   console.log(`👤 Customer: customer@example.com / Admin@123`);
   console.log(`👤 Seller: seller@example.com / Admin@123`);
@@ -624,5 +618,4 @@ if (process.argv[1]?.includes('seed')) {
     });
 }
 
-// Export for programmatic use
 export default main;

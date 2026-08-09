@@ -1,4 +1,5 @@
 import { imagePools } from './image-pools';
+import { USER_CATALOG, findCatalogProduct } from './user-catalog';
 
 type ProductInfo = {
   name: string;
@@ -481,6 +482,13 @@ const CATEGORY_DEFAULT_IMAGE: Record<string, string> = {
 
 export function getCategoryImage(categorySlug: string): string {
   const catKey = (categorySlug || '').toLowerCase();
+
+  // Prefer the first product image of the matching catalog category.
+  const catalogCat = USER_CATALOG.find((c) => c.slug === catKey);
+  if (catalogCat && catalogCat.products.length > 0) {
+    return toUnsplashUrl(catalogCat.products[0].image);
+  }
+
   const photoId = CATEGORY_DEFAULT_IMAGE[catKey] || 'photo-1498049860654-af1a5c566876';
   return toUnsplashUrl(photoId);
 }
@@ -490,7 +498,28 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
   const subLower = (product.subcategory || '').toLowerCase();
   const catKey = (product.categorySlug || '').toLowerCase();
 
-  // 0. Explicit user-provided image overrides (matched by product name)
+  // 0. EXACT catalog match (user-provided names + image links).
+  //    Returns a single exact image so no duplicates are ever generated.
+  const catalogMatch = findCatalogProduct(product.name || '');
+  if (catalogMatch) {
+    const url = toUnsplashUrl(catalogMatch.product.image);
+    return [
+      { url, alt: `${product.name} — view 1`, order: 0 },
+    ];
+  }
+
+  // 1. Exact-name match inside the user catalog (case/whitespace tolerant).
+  const exactCatalog = USER_CATALOG.flatMap((c) => c.products).find(
+    (p) => p.name.trim().toLowerCase() === nameLower
+  );
+  if (exactCatalog) {
+    const url = toUnsplashUrl(exactCatalog.image);
+    return [
+      { url, alt: `${product.name} — view 1`, order: 0 },
+    ];
+  }
+
+  // 2. Explicit user-provided image overrides (matched by product name)
   for (const [customKey, photoId] of Object.entries(USER_CUSTOM_PRODUCT_IMAGES)) {
     if (nameLower.includes(customKey)) {
       return Array.from({ length: 4 }).map((_, order) => ({
