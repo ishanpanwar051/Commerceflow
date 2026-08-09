@@ -34,28 +34,40 @@ const server = app.listen(port, async (err) => {
     
     if (productCount !== 168 || isOldImage) {
       logger.info('📦 Legacy or mismatched product images detected, running clean seed to populate exact images...');
-      
-      // Clear existing records in proper FK order to avoid constraints
-      await prisma.reviewImage.deleteMany({});
-      await prisma.review.deleteMany({});
-      await prisma.payment.deleteMany({});
-      await prisma.orderItem.deleteMany({});
-      await prisma.order.deleteMany({});
-      await prisma.coupon.deleteMany({});
-      await prisma.wishlistItem.deleteMany({});
-      await prisma.cartItem.deleteMany({});
-      await prisma.cart.deleteMany({});
-      await prisma.inventory.deleteMany({});
-      await prisma.productImage.deleteMany({});
-      await prisma.product.deleteMany({});
-      await prisma.category.deleteMany({});
-      
-      // Import and run seed
-      const seedModule = await import('../prisma/seed.js');
-      const runSeed = seedModule.default;
-      await runSeed();
-      
-      logger.info('✅ Database seeded successfully with exact product images!');
+      try {
+        // Clear existing records in proper FK order to avoid constraints
+        await prisma.reviewImage.deleteMany({});
+        await prisma.review.deleteMany({});
+        await prisma.payment.deleteMany({});
+        await prisma.orderItem.deleteMany({});
+        await prisma.order.deleteMany({});
+        await prisma.coupon.deleteMany({});
+        await prisma.wishlistItem.deleteMany({});
+        await prisma.cartItem.deleteMany({});
+        await prisma.cart.deleteMany({});
+        await prisma.inventory.deleteMany({});
+        await prisma.productImage.deleteMany({});
+        await prisma.product.deleteMany({});
+        await prisma.category.deleteMany({});
+        
+        let runSeed: any;
+        try {
+          // @ts-ignore
+          const seedModule = await import('./seed.mjs');
+          runSeed = seedModule.default;
+        } catch {
+          // @ts-ignore
+          const seedModule = await import('../prisma/seed.js');
+          runSeed = seedModule.default;
+        }
+        
+        if (runSeed) {
+          await runSeed();
+          logger.info('✅ Database seeded successfully with exact product images!');
+        }
+      } catch (seedErr) {
+        logger.error({ err: seedErr }, 'Auto-seed warning (server will continue running)');
+      }
     } else {
       // Check for overlapping flags
       const featured = await prisma.product.count({ where: { isFeatured: true } });
