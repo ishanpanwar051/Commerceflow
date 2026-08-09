@@ -6,15 +6,20 @@ import { getProductImages, getCategoryImage } from './product-images';
 const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.error('DATABASE_URL environment variable is required to run the image sync');
-  process.exit(1);
-}
-const syncPool = new Pool({ connectionString: databaseUrl });
-const syncAdapter = new PrismaPg(syncPool);
+let prisma: any;
 
-const prisma = new PrismaClient({ adapter: syncAdapter } as any);
+function getPrismaInstance() {
+  if (!prisma) {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL environment variable is required to run the image sync');
+    }
+    const syncPool = new Pool({ connectionString: databaseUrl });
+    const syncAdapter = new PrismaPg(syncPool);
+    prisma = new PrismaClient({ adapter: syncAdapter } as any);
+  }
+  return prisma;
+}
 
 /**
  * One-time / deploy-time image sync.
@@ -29,6 +34,7 @@ const prisma = new PrismaClient({ adapter: syncAdapter } as any);
  * grace period even with a large catalog.
  */
 async function main() {
+  const prisma = getPrismaInstance();
   // 1. Category images
   const categories = await prisma.category.findMany({
     where: { deletedAt: null },

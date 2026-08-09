@@ -8,16 +8,20 @@ import { getProductImages, getCategoryImage } from './product-images';
 const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.error('DATABASE_URL environment variable is required to run the seed');
-  process.exit(1);
-}
+let prisma: any;
 
-// PostgreSQL adapter (works for both PostgreSQL and file:// URLs with proper adapter)
-const seedPool = new Pool({ connectionString: databaseUrl });
-const seedAdapter = new PrismaPg(seedPool);
-const prisma = new PrismaClient({ adapter: seedAdapter } as any);
+function getPrismaInstance() {
+  if (!prisma) {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL environment variable is required to run the seed');
+    }
+    const seedPool = new Pool({ connectionString: databaseUrl });
+    const seedAdapter = new PrismaPg(seedPool);
+    prisma = new PrismaClient({ adapter: seedAdapter } as any);
+  }
+  return prisma;
+}
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
@@ -259,6 +263,7 @@ const REVIEWER_AVATARS = [
 
 
 async function main() {
+  const prisma = getPrismaInstance();
   console.log('🌱 Seeding comprehensive product database...');
 
   console.log('🧹 Wiping existing database records...');
