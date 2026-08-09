@@ -281,25 +281,25 @@ async function main() {
   // Create Users
   const admin = await prisma.user.upsert({
     where: { email: 'admin@commerceflow.dev' },
-    update: {},
+    update: { password: hashedPassword, isActive: true, deletedAt: null },
     create: { email: 'admin@commerceflow.dev', password: hashedPassword, firstName: 'Admin', lastName: 'User', role: 'ADMIN', isEmailVerified: true, avatar: REVIEWER_AVATARS[0] },
   });
 
   const customer = await prisma.user.upsert({
     where: { email: 'customer@example.com' },
-    update: {},
+    update: { password: hashedPassword, isActive: true, deletedAt: null },
     create: { email: 'customer@example.com', password: hashedPassword, firstName: 'John', lastName: 'Doe', role: 'CUSTOMER', isEmailVerified: true, avatar: REVIEWER_AVATARS[1] },
   });
 
   const seller = await prisma.user.upsert({
     where: { email: 'seller@example.com' },
-    update: {},
+    update: { password: hashedPassword, isActive: true, deletedAt: null },
     create: { email: 'seller@example.com', password: hashedPassword, firstName: 'Jane', lastName: 'Baker', role: 'SELLER', isEmailVerified: true, avatar: REVIEWER_AVATARS[2] },
   });
 
   const deliveryBoy = await prisma.user.upsert({
     where: { email: 'delivery@example.com' },
-    update: {},
+    update: { password: hashedPassword, isActive: true, deletedAt: null },
     create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: 'DELIVERY_BOY', isEmailVerified: true, avatar: REVIEWER_AVATARS[3] },
   });
 
