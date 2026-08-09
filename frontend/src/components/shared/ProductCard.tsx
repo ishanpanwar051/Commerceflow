@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types/api';
+import { ProductImage } from '@/components/shared/ProductImage';
 
 interface ProductCardProps {
   product: Product;
@@ -17,12 +18,9 @@ interface ProductCardProps {
 }
 
 function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWishlist }: ProductCardProps) {
-  const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const images = product.images || [];
-  const mainImage = imgError ? '/placeholder.svg' : (images[0]?.url || '/placeholder.svg');
   const availableStock = product.inventory
     ? (product.inventory.stock ?? 0) - (product.inventory.reservedStock ?? 0)
     : undefined;
@@ -38,15 +36,10 @@ function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWish
     >
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-t-xl bg-muted">
-          {!imageLoaded && <Skeleton className="absolute inset-0 w-full h-full" />}
-          <img
-            src={mainImage}
+          <ProductImage
+            src={images[0]?.url}
             alt={product.name}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onError={() => setImgError(true)}
-            onLoad={() => setImageLoaded(true)}
+            className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-500"
           />
 
           {!inStock && (
