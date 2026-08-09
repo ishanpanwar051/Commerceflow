@@ -136,7 +136,7 @@ export default function ProductDetailPage() {
           {product.category && (
             <>
               <span>/</span>
-              <Link href={`/products?categoryId=${product.categoryId}`} className="hover:text-primary">{product.category.name}</Link>
+              <Link href={`/categories/${product.category.slug || product.categoryId}`} className="hover:text-primary">{product.category.name}</Link>
             </>
           )}
           <span>/</span>

@@ -41,10 +41,10 @@ function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWish
         <div className="relative aspect-square overflow-hidden rounded-t-xl bg-muted">
           {!imageLoaded && <Skeleton className="absolute inset-0 w-full h-full" />}
           <img
-            src={mainImage}
+            src={isHovered ? hoverImage : mainImage}
             alt={product.name}
             loading="lazy"
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setImgError(true)}
             onLoad={() => setImageLoaded(true)}
           />
