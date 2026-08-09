@@ -10,12 +10,12 @@ const include = {
   category: true,
   _count: { select: { reviews: { where: { deletedAt: null, isActive: true } } } },
 };
-const products = await p.product.findMany({ where: { deletedAt: null, isActive: true }, take: 5, include, orderBy: { createdAt: 'desc' } });
-console.log('FOUND', products.length);
-products.forEach(prod => {
-  console.log(`Product: "${prod.name}" | Category: "${prod.category?.name}"`);
-  console.log('Images:', prod.images.map(img => ({ url: img.url, order: img.order })));
-});
-const total = await p.product.count({ where: { deletedAt: null, isActive: true } });
-console.log('TOTAL', total);
+const beautyCat = await p.category.findFirst({ where: { slug: 'beauty' } });
+console.log('Beauty Category:', beautyCat?.name, 'ID:', beautyCat?.id);
+const subCats = await p.category.findMany({ where: { parentId: beautyCat.id } });
+console.log('Subcategories:', subCats.map(c => c.name));
+const subCatIds = subCats.map(c => c.id);
+const beautyProducts = await p.product.findMany({ where: { categoryId: { in: [beautyCat.id, ...subCatIds] } } });
+console.log('Beauty products found:', beautyProducts.length);
+beautyProducts.forEach(prod => console.log(' -', prod.name));
 await p.$disconnect();
