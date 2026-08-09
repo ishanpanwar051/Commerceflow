@@ -18,11 +18,64 @@ function simpleHash(str: string): number {
   return Math.abs(hash);
 }
 
+/**
+ * Hosts that are NOT allowed as product/category images.
+ *
+ * The catalog was previously "enriched" by a script that rotated the same
+ * handful of generic Pinterest CDN images across EVERY category (phones,
+ * fashion, footwear, groceries, home — the same pin URL was assigned to a
+ * notebook, a t-shirt AND a phone). Those URLs can never depict the product
+ * reliably, they render inconsistently in real browsers, and they caused the
+ * cross-category mismatches reported in production. They are hard-blocked here
+ * so every resolution branch falls through to the verified Unsplash pools.
+ */
+const BLOCKED_IMAGE_HOSTS = ['i.pinimg.com'];
+
+export function isBlockedImageUrl(url: string | null | undefined): boolean {
+  if (!url) return true;
+  try {
+    return BLOCKED_IMAGE_HOSTS.some((host) => new URL(url).hostname === host);
+  } catch {
+    return true; // unparseable URL is never valid as an image
+  }
+}
+
 function toUnsplashUrl(photoId: string): string {
-  if (!photoId) return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80';
-  if (photoId.startsWith('http')) return photoId;
-  const cleanId = photoId.replace(/[^\w-]/g, '');
+  if (!photoId) return '';
+  const trimmed = photoId.trim();
+  if (trimmed.startsWith('http')) {
+    // Preserve full URLs only when they come from an allowed, non-blocked host.
+    if (isBlockedImageUrl(trimmed)) return '';
+    return trimmed;
+  }
+  const cleanId = trimmed.replace(/[^\w-]/g, '');
+  if (!cleanId) return '';
   return `https://images.unsplash.com/${cleanId}?auto=format&fit=crop&w=800&q=80`;
+}
+
+/** Pick `count` unique image URLs deterministically from a pool. */
+function pickUniqueImages(
+  pool: string[],
+  identity: string,
+  productIndex: number,
+  count = 4,
+): string[] {
+  const hash = simpleHash(identity);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  let step = 0;
+  let guard = 0;
+  while (result.length < count && guard < 200) {
+    guard += 1;
+    const idx = (hash + result.length * 3 + productIndex * 7 + step * 5) % pool.length;
+    const url = toUnsplashUrl(pool[idx]);
+    step += 1;
+    if (url && !seen.has(url)) {
+      seen.add(url);
+      result.push(url);
+    }
+  }
+  return result;
 }
 
 // User-provided explicit product image overrides
@@ -866,27 +919,69 @@ const PHOTO_POOLS: Record<string, string[]> = {
 
   // Office
   office: ['photo-1544716278-ca5e3f4abd8c', 'photo-1517842645767-c639042777db'],
+  notebook: ['photo-1544816155-12df9643f363', 'photo-1531346878377-a5be20888e57', 'photo-1517842645767-c639042777db'],
+  pen: ['photo-1583485088034-697b5bc54ccd', 'photo-1517842645767-c639042777db', 'photo-1594733058267-e50d62174422'],
+  printer: ['photo-1612815154858-60aa4c59eaa6', 'photo-1586953208448-b95a79798f07'],
+  whiteboard: ['photo-1586953208448-b95a79798f07', 'photo-1586297135537-94bc9ba060aa'],
+
+  // Footwear (varied verified shoe photography)
+  running: ['photo-1542291026-7eec264c27ff', 'photo-1518002171953-a080ee817e1f', 'photo-1560769629-975ec94e6a86'],
+  sneaker: ['photo-1525966222134-fcfa99b8ae77', 'photo-1595950653106-6c9ebd614d3a', 'photo-1607522370275-f14206abe5d3'],
+  formal: ['photo-1614252369475-531eba835eb1', 'photo-1614252235316-8c857d38b5f4', 'photo-1638247025967-b4e38f787b76'],
+  slipper: ['photo-1543163521-1bf539c55dd2', 'photo-1591280063444-d3c514eb6e13'],
+
+  // Apparel extras
+  outerwear: ['photo-1556821840-3a63f95609a7', 'photo-1434389677669-e08b4cac3105', 'photo-1548883354-7622d03aca27'],
+  chino: ['photo-1624378439575-d8705ad7ae80', 'photo-1517438476312-10d79c077509', 'photo-1598808503746-f34c53b9323e'],
+  ethnic: ['photo-1583391733956-6c78276477e2', 'photo-1617627143750-d86bc21e42bb', 'photo-1610030469983-98e550d6193c', 'photo-1572804013309-59a88b7e92f1'],
+
+  // Home furniture & decor
+  furniture: ['photo-1555041469-a586c61ea9bc', 'photo-1586023492125-27b2c045efd7', 'photo-1617098900591-3f90928e8c54', 'photo-1580480055273-228ff5388ef8', 'photo-1594620302200-9a762244a156', 'photo-1505693416388-ac5ce068fe85'],
+  decor: ['photo-1549490349-8643362247b5', 'photo-1584100936595-c0654b55a2e2', 'photo-1616486338812-3dadae4b4ace', 'photo-1600166898405-da9535204843', 'photo-1507473885765-e6ed057f782c'],
+
+  // Appliances
+  appliance: ['photo-1593359677879-a4bb92f829d1', 'photo-1522869635100-9f4c5e86aa37', 'photo-1584568694244-14fbdf83bd30', 'photo-1571175443880-49e1d25b2bc5', 'photo-1626806787461-102c1bfaaea1', 'photo-1546039907-7fa05f864c02'],
+
+  // Groceries
+  groceries: ['photo-1542838132-92c53300491e', 'photo-1550583724-b2692b85b150', 'photo-1586201375761-83865001e31c', 'photo-1560806887-1e4cd0b6cbd6'],
+  dairy: ['photo-1550583724-b2692b85b150', 'photo-1563636619-e9143da7973b', 'photo-1508852953112-4b7d25d69a8e'],
+  grains: ['photo-1586201375761-83865001e31c', 'photo-1536304929831-ee1ca9d44906', 'photo-1518977676601-b53f82aba655'],
+  fruits: ['photo-1560806887-1e4cd0b6cbd6', 'photo-1571771894821-ce9b6c11b08e', 'photo-1547514701-42782101795e'],
+  vegetables: ['photo-1518977676601-b53f82aba655', 'photo-1618512496248-a07fe83aa8cf', 'photo-1592924357228-91a4daadcfea', 'photo-1597362925123-77861d3fbac7'],
+  spices: ['photo-1596040033229-a9821ebd058d', 'photo-1556911220-bff31c812dba', 'photo-1596040033229-a9821ebd058d'],
+  beverages: ['photo-1550966871-3ed3cdb5ed0c', 'photo-1495474472287-4d71bcdd2085', 'photo-1509042239860-f550ce710b93'],
+  snacks: ['photo-1558961363-fa8fdf82db35', 'photo-1621996346565-e3dbc646d9a9', 'photo-1599490659213-e2b9527bd087'],
+
+  // Beauty
+  beauty: ['photo-1586495777744-4413f21062fa', 'photo-1620916566398-39f1143ab7be', 'photo-1556229010-6c3f2c9ca5f8', 'photo-1541643600914-78b084683601', 'photo-1596462502278-27bfdc403348'],
+
+  // Sports, fitness & toys
+  fitness: ['photo-1517836357463-d25dfeac3438', 'photo-1583454110551-21f2fa2afe61', 'photo-1593095948071-474c5cc2989d', 'photo-1601925260368-ae2f83cf8b7f'],
+  toys: ['photo-1566576912321-d58ddd7a6088', 'photo-1560272564-c83b66b1ad12', 'photo-1493711662062-fa541adb3fc8', 'photo-1594787318286-3d835c1d207f', 'photo-1511949860663-92c5c57d48a7'],
+
+  // Books & pets
+  books: ['photo-1497633762265-9d179a990aa6', 'photo-1512820790803-83ca734da794', 'photo-1532012197267-da84d127e765'],
+  pets: ['photo-1583511655857-d19b40a7a54e', 'photo-1548199973-03cce0bbc87b', 'photo-1450778869180-41d0601e046e', 'photo-1514888286974-6c03e2ca1dba'],
+
+  // Automotive
+  auto: ['photo-1558981806-ec527fa84c39', 'photo-1551028719-00167b16eac5', 'photo-1625047509248-ec889cbff17f', 'photo-1607860108855-64acf2078ed9'],
 };
 
 // Keyword aliases mapping model names, subcategories, and search terms to PHOTO_POOLS keys
 const KEYWORD_ALIASES: Record<string, string> = {
   // Headphone & Earbud models
-  'wh-1000xm6': 'headphone',
   'wh-1000xm5': 'headphone',
   'quietcomfort': 'headphone',
   'momentum': 'headphone',
-  'ath-m50x': 'headphone',
   'tour one': 'headphone',
   'studio pro': 'headphone',
   'crown anc': 'headphone',
   'h9i': 'headphone',
-  'headphone': 'headphone',
 
   'airpods': 'earbud',
   'buds': 'earbud',
   'wf-1000xm6': 'earbud',
   'tour pro': 'earbud',
-  'earbud': 'earbud',
   'earphone': 'earbud',
 
   // Gaming models
@@ -894,11 +989,8 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'xbox': 'gaming',
   'nintendo': 'gaming',
   'dualsense': 'gaming',
-  'steam deck': 'gaming',
-  'rog ally': 'gaming',
   'ps vr': 'gaming',
   'game': 'gaming',
-  'gaming': 'gaming',
 
   // Speaker models
   'homepod': 'speaker',
@@ -906,7 +998,6 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'jbl': 'speaker',
   'marshall': 'speaker',
   'echo': 'speaker',
-  'speaker': 'speaker',
 
   // Cameras
   'sony a1': 'camera',
@@ -916,7 +1007,6 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'osmo': 'camera',
   'gopro': 'camera',
   'lumix': 'camera',
-  'camera': 'camera',
 
   // Routers
   'deco': 'router',
@@ -924,19 +1014,15 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'archer': 'router',
   'nighthawk': 'router',
   'mesh': 'router',
-  'router': 'router',
 
   // SSD
   '990 pro': 'ssd',
   'sn850': 'ssd',
-  'ssd': 'ssd',
-  'crucial t700': 'ssd',
   'sabrent': 'ssd',
 
   // Chargers & Power
   'ganprime': 'charger',
   'anker': 'charger',
-  'charger': 'charger',
   'power bank': 'charger',
 
   // Phones & Tablets & Laptops & Monitors
@@ -945,7 +1031,6 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'pixel': 'phone',
   'oneplus': 'phone',
   'xiaomi': 'phone',
-  'phone': 'phone',
   'smartphone': 'phone',
 
   'macbook': 'laptop',
@@ -955,50 +1040,234 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'zenbook': 'laptop',
   'predator': 'laptop',
   'surface laptop': 'laptop',
-  'laptop': 'laptop',
 
   'ipad': 'tablet',
   'galaxy tab': 'tablet',
   'surface pro': 'tablet',
-  'tablet': 'tablet',
 
   'ultrasharp': 'monitor',
   'rog swift': 'monitor',
   'pro display': 'monitor',
-  'monitor': 'monitor',
 
-  'keyboard': 'keyboard',
-  'mouse': 'mouse',
 
   // Clothing & Footwear
-  't-shirt': 't-shirt',
-  'shirt': 'shirt',
-  'jean': 'jean',
-  'trouser': 'trouser',
-  'suit': 'suit',
-  'jacket': 'jacket',
-  'dress': 'dress',
-  'skirt': 'skirt',
-  'kurta': 'kurta',
-  'saree': 'saree',
-  'handbag': 'handbag',
-  'shoe': 'shoe',
-  'sneaker': 'shoe',
   'boot': 'shoe',
   'sandal': 'shoe',
 
   // Home & Sports & Auto & Office
-  'sofa': 'sofa',
-  'bed': 'bed',
-  'cookware': 'cookware',
   'cricket': 'sports',
   'football': 'sports',
-  'yoga': 'yoga',
-  'helmet': 'helmet',
-  'car': 'car',
-  'printer': 'office',
   'stapler': 'office',
-  'whiteboard': 'office',
+  'notes': 'notebook',
+  'journal': 'notebook',
+  'diary': 'notebook',
+  'pencils': 'pen',
+  'stationery': 'office',
+
+  // --- Footwear ---
+  'ultraboost': 'running',
+  'pegasus': 'running',
+  'air zoom': 'running',
+  'gel-kayano': 'running',
+  'fresh foam': 'running',
+  'govrn': 'running',
+  'floatride': 'running',
+  'wave rider': 'running',
+  'go run': 'running',
+  'clifton': 'running',
+  'stan smith': 'sneaker',
+  'superstar': 'sneaker',
+  'chuck taylor': 'sneaker',
+  'old skool': 'sneaker',
+  'samba': 'sneaker',
+  'air max': 'sneaker',
+  'air force': 'sneaker',
+  'nike': 'sneaker',
+  'adidas': 'sneaker',
+  'asics': 'sneaker',
+  'puma': 'sneaker',
+  'reebok': 'sneaker',
+  'skechers': 'sneaker',
+  'new balance': 'sneaker',
+  'hoka': 'sneaker',
+  'brooks': 'running',
+  'saucony': 'running',
+  'mizuno': 'running',
+  'under armour': 'running',
+  'oxford': 'formal',
+  'chelsea': 'formal',
+  'loafer': 'formal',
+  'heel': 'slipper',
+
+  // --- Apparel extras ---
+  'sweater': 'outerwear',
+  'hoodie': 'outerwear',
+  'knit': 'outerwear',
+  'cardigan': 'outerwear',
+  'full zip': 'outerwear',
+  'cargo': 'chino',
+  'denim': 'jean',
+  'blazer': 'suit',
+  'kurti': 'ethnic',
+  'lehenga': 'ethnic',
+  'anarkali': 'ethnic',
+  'salwar': 'ethnic',
+  'kurtas': 'ethnic',
+  'tie': 'suit',
+  'belt': 'suit',
+  'cap': 't-shirt',
+
+  // --- Home, furniture, decor, cookware ---
+  'sectional': 'furniture',
+  'dining': 'furniture',
+  'table': 'furniture',
+  'office chair': 'furniture',
+  'chair': 'furniture',
+  'shelf': 'furniture',
+  'wardrobe': 'furniture',
+  'dresser': 'furniture',
+  'desk': 'furniture',
+  'curtain': 'decor',
+  'cushion': 'decor',
+  'pillow': 'decor',
+  'rug': 'decor',
+  'carpet': 'decor',
+  'lamp': 'decor',
+  'vase': 'decor',
+  'mirror': 'decor',
+  'photo frame': 'decor',
+  'clock': 'decor',
+  'kadai': 'cookware',
+  'tawa': 'cookware',
+  'fry pan': 'cookware',
+  'knife': 'cookware',
+  'cutlery': 'cookware',
+  'utensil': 'cookware',
+
+  // --- Appliances ---
+  'smart tv': 'appliance',
+  'television': 'appliance',
+  'oled': 'appliance',
+  'qled': 'appliance',
+  'led tv': 'appliance',
+  'fridge': 'appliance',
+  'refrigerator': 'appliance',
+  'washing': 'appliance',
+  'washer': 'appliance',
+  'microwave': 'appliance',
+  'oven': 'appliance',
+  'toaster': 'appliance',
+  'kettle': 'appliance',
+  'induction': 'appliance',
+  'vacuum': 'appliance',
+  'air conditioner': 'appliance',
+
+  // --- Groceries ---
+  'milk': 'dairy',
+  'curd': 'dairy',
+  'yogurt': 'dairy',
+  'cheese': 'dairy',
+  'rice': 'grains',
+  'basmati': 'grains',
+  'atta': 'grains',
+  'flour': 'grains',
+  'dal': 'grains',
+  'pulses': 'grains',
+  'lentil': 'grains',
+  'oil': 'grains',
+  'wheat': 'grains',
+  'apple': 'fruits',
+  'banana': 'fruits',
+  'orange': 'fruits',
+  'mango': 'fruits',
+  'grape': 'fruits',
+  'fruit': 'fruits',
+  'cabbage': 'vegetables',
+  'pepper': 'vegetables',
+  'vegetable': 'vegetables',
+  'spice': 'spices',
+  'masala': 'spices',
+  'turmeric': 'spices',
+  'cumin': 'spices',
+  'coriander': 'spices',
+  'chilli': 'spices',
+  'tea': 'beverages',
+  'juice': 'beverages',
+  'snack': 'snacks',
+  'biscuit': 'snacks',
+  'chips': 'snacks',
+  'noodle': 'snacks',
+  'cereal': 'snacks',
+  'ice cream': 'snacks',
+
+  // --- Beauty ---
+  'lipstick': 'beauty',
+  'serum': 'beauty',
+  'shampoo': 'beauty',
+  'perfume': 'beauty',
+  'moisturizer': 'beauty',
+  'sunscreen': 'beauty',
+  'toner': 'beauty',
+  'mask': 'beauty',
+  'makeup': 'beauty',
+  'foundation': 'beauty',
+  'cream': 'beauty',
+  'lotion': 'beauty',
+  'hair oil': 'beauty',
+  'body wash': 'beauty',
+  'soap': 'beauty',
+  'toothpaste': 'beauty',
+
+  // --- Sports & fitness ---
+  'bat': 'sports',
+  'soccer': 'sports',
+  'basketball': 'sports',
+  'badminton': 'sports',
+  'tennis': 'sports',
+  'hockey': 'sports',
+  'dumbbell': 'fitness',
+  'gym': 'fitness',
+  'whey': 'fitness',
+  'protein': 'fitness',
+  'treadmill': 'fitness',
+  'cycling': 'fitness',
+
+  // --- Toys ---
+  'building block': 'toys',
+  'blocks': 'toys',
+  'puzzle': 'toys',
+  'doll': 'toys',
+  'rc car': 'toys',
+  'remote control': 'toys',
+  'lego': 'toys',
+  'plush': 'toys',
+  'board game': 'toys',
+  'toy': 'toys',
+
+  // --- Books & pets ---
+  'novel': 'books',
+  'textbook': 'books',
+  'comic': 'books',
+  'book': 'books',
+  'dog': 'pets',
+  'cat': 'pets',
+  'bird': 'pets',
+  'aquarium': 'pets',
+  'pet': 'pets',
+  'collar': 'pets',
+  'litter': 'pets',
+
+  // --- Automotive ---
+  'motorcycle': 'auto',
+  'riding jacket': 'auto',
+  'riding gloves': 'auto',
+  'riding boots': 'auto',
+  'engine oil': 'auto',
+  'car polish': 'auto',
+  'pressure washer': 'auto',
+  'car cover': 'auto',
+  'glove': 'auto',
+  'car care': 'auto',
 };
 
 const CATEGORY_DEFAULT_IMAGE: Record<string, string> = {
@@ -1010,16 +1279,9 @@ const CATEGORY_DEFAULT_IMAGE: Record<string, string> = {
   'home-kitchen-furniture': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
   'home-decor': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
   kitchen: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
-  furniture: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
   'sports-fitness-beauty': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80',
-  sports: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80',
-  beauty: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
-  fitness: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80',
   'office-toys-groceries-automotive': 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
-  groceries: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
   kids: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80',
-  toys: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80',
-  books: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
   'pet-supplies': 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80',
   automotive: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
   'office-supplies': 'https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?auto=format&fit=crop&w=800&q=80',
@@ -1028,29 +1290,81 @@ const CATEGORY_DEFAULT_IMAGE: Record<string, string> = {
 export function getCategoryImage(categorySlug: string): string {
   const catKey = (categorySlug || '').toLowerCase();
 
-  // Prefer the first product image of the matching catalog category.
+  // Prefer the first product image of the matching catalog category, but never
+  // propagate a blocked host (pin-pad) or an empty value.
   const catalogCat = USER_CATALOG.find((c) => c.slug === catKey);
   if (catalogCat && catalogCat.products.length > 0) {
-    return toUnsplashUrl(catalogCat.products[0].image);
+    const url = toUnsplashUrl(catalogCat.products[0].image);
+    if (url) return url;
   }
 
   const photoId = CATEGORY_DEFAULT_IMAGE[catKey] || 'photo-1498049860654-af1a5c566876';
-  return toUnsplashUrl(photoId);
+  return toUnsplashUrl(photoId) || 'https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=800&q=80';
+}
+
+/** Most-specific (longest alias) non-blocked PHOTO_POOLS pool for a product. */
+function resolveTypePool(nameLower: string, subLower: string): string[] {
+  let best: string[] = [];
+  let bestLen = -1;
+  for (const [alias, poolKey] of Object.entries(KEYWORD_ALIASES)) {
+    if ((nameLower.includes(alias) || subLower.includes(alias)) && alias.length > bestLen) {
+      const photos = (PHOTO_POOLS[poolKey] || []).filter((p) => toUnsplashUrl(p));
+      if (photos.length > 0) {
+        best = photos;
+        bestLen = alias.length;
+      }
+    }
+  }
+  if (best.length > 0) return best;
+  if (subLower.length > 0) {
+    for (const [poolKey, photosRaw] of Object.entries(PHOTO_POOLS)) {
+      if (subLower.includes(poolKey) || poolKey.includes(subLower)) {
+        const photos = photosRaw.filter((p) => toUnsplashUrl(p));
+        if (photos.length > 0) return photos;
+      }
+    }
+  }
+  return [];
+}
+
+/** Build a gallery of DISTINCT images, primary first, from a resolved pool. */
+function buildImageList(pool: string[], name: string, productIndex: number): { url: string; alt: string; order: number }[] {
+  const poolClean = pool.filter((p) => toUnsplashUrl(p));
+  if (poolClean.length === 0) return [];
+  const identity = name.toLowerCase();
+  // First pool entry is the authoritative primary (exact match / override);
+  // the rest are deterministic alternatives so no two cards share everything.
+  const primary = toUnsplashUrl(poolClean[0]);
+  const alternatives = pickUniqueImages(poolClean.slice(1), identity, productIndex, 3);
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const url of [primary, ...alternatives]) {
+    if (url && !seen.has(url)) {
+      seen.add(url);
+      urls.push(url);
+    }
+  }
+  return urls.map((url, order) => ({
+    url,
+    alt: `${name} — view ${order + 1}`,
+    order,
+  }));
 }
 
 export function getProductImages(product: ProductInfo, productIndex: number = 0) {
   const nameLower = (product.name || '').toLowerCase();
   const subLower = (product.subcategory || '').toLowerCase();
   const catKey = (product.categorySlug || '').toLowerCase();
+  const typePool = resolveTypePool(nameLower, subLower);
 
-  // 0. EXACT catalog match (user-provided names + image links).
-  //    Returns a single exact image so no duplicates are ever generated.
+  // 0. EXACT catalog match (user-provided names + image links). Never propagate
+  //    a blocked host — a curated link that came from the pin-pad falls through
+  //    to the verified type pools instead of being displayed.
   const catalogMatch = findCatalogProduct(product.name || '');
   if (catalogMatch) {
     const url = toUnsplashUrl(catalogMatch.product.image);
-    return [
-      { url, alt: `${product.name} — view 1`, order: 0 },
-    ];
+    const pool = url ? [url, ...typePool] : typePool;
+    if (pool.length > 0) return buildImageList(pool, product.name, productIndex);
   }
 
   // 1. Exact-name match inside the user catalog (case/whitespace tolerant).
@@ -1059,76 +1373,56 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
   );
   if (exactCatalog) {
     const url = toUnsplashUrl(exactCatalog.image);
-    return [
-      { url, alt: `${product.name} — view 1`, order: 0 },
-    ];
+    const pool = url ? [url, ...typePool] : typePool;
+    if (pool.length > 0) return buildImageList(pool, product.name, productIndex);
   }
 
-  // 2. Explicit user-provided image overrides (matched by product name)
+  // 2. Explicit user-provided image overrides (matched by product name).
+  //    Blocked (pin-pad) overrides are skipped so they can never win over the
+  //    verified type pools.
   for (const [customKey, photoId] of Object.entries(USER_CUSTOM_PRODUCT_IMAGES)) {
     if (nameLower.includes(customKey)) {
-      return Array.from({ length: 4 }).map((_, order) => ({
-        url: toUnsplashUrl(photoId),
-        alt: `${product.name} — view ${order + 1}`,
-        order,
-      }));
+      const url = toUnsplashUrl(photoId);
+      const pool = url ? [url, ...typePool] : typePool;
+      if (pool.length > 0) return buildImageList(pool, product.name, productIndex);
     }
   }
 
-  let pool: string[] = [];
+  // 3. Subcategory/alias pool matched from the product name.
+  if (typePool.length > 0) {
+    return buildImageList(typePool, product.name, productIndex);
+  }
 
-  // 1. Search model / subcategory aliases in product name and subcategory
-  for (const [alias, poolKey] of Object.entries(KEYWORD_ALIASES)) {
-    if (nameLower.includes(alias) || subLower.includes(alias)) {
-      if (PHOTO_POOLS[poolKey] && PHOTO_POOLS[poolKey].length > 0) {
-        pool = PHOTO_POOLS[poolKey];
-        break;
-      }
+  // 4. Main category pool from image-pools.ts (verified Unsplash photos).
+  if (imagePools[catKey] && imagePools[catKey].length > 0) {
+    const categoryPhotos = imagePools[catKey].filter((p) => toUnsplashUrl(p));
+    if (categoryPhotos.length > 0) {
+      return buildImageList(categoryPhotos, product.name, productIndex);
     }
   }
 
-  // 2. Subcategory matching fallback
-  if (pool.length === 0 && subLower.length > 0) {
-    for (const [poolKey, photos] of Object.entries(PHOTO_POOLS)) {
-      if (subLower.includes(poolKey) || poolKey.includes(subLower)) {
-        pool = photos;
-        break;
-      }
-    }
+  // 5. Ultimate category-aware fallback pool.
+  const fallbackPool: string[] = [];
+  if (catKey.includes('shoes')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80');
+    fallbackPool.push('https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('fashion') || catKey.includes('apparel')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80');
+    fallbackPool.push('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('home') || catKey.includes('furniture')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80');
+    fallbackPool.push('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('groceries') || catKey.includes('food')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('sports') || catKey.includes('fitness')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('kids') || catKey.includes('toy')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('auto') || catKey.includes('automotive')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80');
+  } else {
+    fallbackPool.push('https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=800&q=80');
   }
 
-  // 3. Main category pool from image-pools.ts
-  if (pool.length === 0 && imagePools[catKey] && imagePools[catKey].length > 0) {
-    pool = imagePools[catKey];
-  }
-
-  // 4. Ultimate category-aware fallback pool
-  if (pool.length === 0) {
-    if (catKey.includes('shoes')) {
-      pool = ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80'];
-    } else if (catKey.includes('fashion') || catKey.includes('apparel')) {
-      pool = ['https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80'];
-    } else if (catKey.includes('home') || catKey.includes('furniture')) {
-      pool = ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'];
-    } else if (catKey.includes('groceries') || catKey.includes('food')) {
-      pool = ['https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80'];
-    } else if (catKey.includes('sports') || catKey.includes('fitness')) {
-      pool = ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80'];
-    } else {
-      pool = ['https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=800&q=80'];
-    }
-  }
-
-  const identity = `${product.name}:${product.brand || 'generic'}:${productIndex}`;
-  const hash = simpleHash(identity);
-
-  return Array.from({ length: 4 }).map((_, order) => {
-    const photoIdx = (hash + order * 3 + productIndex * 7) % pool.length;
-    const photoId = pool[photoIdx];
-    return {
-      url: toUnsplashUrl(photoId),
-      alt: `${product.name} — view ${order + 1}`,
-      order,
-    };
-  });
+  return buildImageList(fallbackPool, product.name, productIndex);
 }

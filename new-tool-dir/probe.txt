@@ -1,0 +1,5 @@
+This placeholder file (and directory) was created during a workspace tooling
+probe and is not part of the CommerceFlow project. Can be removed.
+
+The real browser-verification script lives at:
+  browser-tests/verify-live-images.mjs
