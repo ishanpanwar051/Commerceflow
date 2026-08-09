@@ -69,6 +69,16 @@ function resolvePoolKey(categorySlug: string, subcategory?: string, productName?
   const sub = (subcategory || '').toLowerCase();
   const name = (productName || '').toLowerCase();
 
+  // Product names are the strongest signal. This pass intentionally runs before
+  // category matching because legacy databases contain broad or incorrect category
+  // slugs; an earbud must never receive a fashion or home image because of that.
+  if (name.includes('headphone') || name.includes('earphone') || name.includes('earbud') || name.includes('buds') || name.includes('headset') || name.includes('airpods') || name.includes('wh-') || name.includes('wf-') || name.includes('tour pro') || name.includes('jbl') || name.includes('sony linkbuds') || name.includes('quietcomfort') || name.includes('momentum') || name.includes('soundcore') || name.includes('crusher') || name.includes('tune') || name.includes('quantum') || name.includes('ath-') || name.includes('beats') || name.includes('marshall') || name.includes('mdr-')) return 'headphones';
+  if (name.includes('watch') || name.includes('fitbit') || name.includes('garmin') || name.includes('amazfit') || name.includes('storm') || name.includes('colorfit') || name.includes('venu') || name.includes('fenix')) return 'smartwatches';
+  if (name.includes('phone') || name.includes('iphone') || name.includes('galaxy s') || name.includes('pixel') || name.includes('oneplus') || name.includes('xiaomi') || name.includes('nothing phone') || name.includes('realme') || name.includes('vivo') || name.includes('oppo') || name.includes('motorola') || name.includes('honor')) return 'smartphones';
+  if (name.includes('deathadder') || name.includes('viper v3') || name.includes('g502') || name.includes('mx master') || name.includes('computer mouse') || name.includes('wireless mouse')) return 'laptops';
+  if (name.includes('laptop') || name.includes('notebook') || name.includes('macbook') || name.includes('thinkpad') || name.includes('zenbook') || name.includes('surface laptop') || name.includes('book4') || name.includes('inspiron') || name.includes('pavilion') || name.includes('ideapad') || name.includes('xps') || name.includes('spectre') || name.includes('zephyrus') || name.includes('swift')) return 'laptops';
+  if (name.includes('shoe') || name.includes('sneaker') || name.includes('sandal') || name.includes('slipper') || name.includes('boot') || name.includes('flop') || name.includes('heel') || name.includes('loafer') || name.includes('flat')) return 'running-shoes';
+
   // --- Phase 1: Category-aware keyword matching ---
   // Only match product-type keywords that make sense for the product's actual parent category.
 
@@ -167,7 +177,14 @@ const RELATED_POOLS: Record<string, string[]> = {
 /** Single deterministic and unique image for a product. */
 export function getProductImages(product: ProductInfo, _productIndex: number = 0): { url: string; alt: string; order: number }[] {
   const name = product.name || '';
-  
+  const normalizedName = name.toLowerCase();
+
+  // Legacy catalogs contain several mouse products without a dedicated pool.
+  // Keep them on a real computer-mouse image instead of a random category photo.
+  if (normalizedName.includes('deathadder') || normalizedName.includes('viper v3') || normalizedName.includes('g502') || normalizedName.includes('mx master') || normalizedName.includes('computer mouse') || normalizedName.includes('wireless mouse')) {
+    return [{ url: toUnsplashUrl('photo-1527814050087-3793815479db'), alt: name, order: 0 }];
+  }
+
   // 1. Exact catalog product match (has unique images in catalog by default)
   const exact = findCatalogProduct(name);
   if (exact) {
