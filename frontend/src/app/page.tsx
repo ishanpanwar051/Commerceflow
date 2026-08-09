@@ -154,20 +154,37 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const { data: featuredData } = useQuery({
+  const { data: featuredData, isLoading: featuredLoading, refetch: refetchFeatured } = useQuery({
     queryKey: ['products', 'featured'],
     queryFn: () => productService.getProducts({ isFeatured: true, limit: 8 }),
   });
 
-  const { data: bestSellerData } = useQuery({
+  const { data: bestSellerData, isLoading: bestSellerLoading, refetch: refetchBestSeller } = useQuery({
     queryKey: ['products', 'bestsellers'],
     queryFn: () => productService.getProducts({ isBestSeller: true, limit: 8 }),
   });
 
-  const { data: newArrivalsData } = useQuery({
+  const { data: newArrivalsData, isLoading: newArrivalsLoading, refetch: refetchNewArrivals } = useQuery({
     queryKey: ['products', 'new-arrivals'],
     queryFn: () => productService.getProducts({ isNewArrival: true, limit: 8 }),
   });
+
+  const { data: fallbackData, isLoading: fallbackLoading } = useQuery({
+    queryKey: ['products', 'fallback'],
+    queryFn: () => productService.getProducts({ limit: 12 }),
+  });
+
+  const featuredProducts = (featuredData?.products && featuredData.products.length > 0)
+    ? featuredData.products.slice(0, 4)
+    : (fallbackData?.products?.slice(0, 4) || []);
+
+  const bestSellerProducts = (bestSellerData?.products && bestSellerData.products.length > 0)
+    ? bestSellerData.products.slice(0, 8)
+    : (fallbackData?.products?.slice(4, 12) || []);
+
+  const newArrivalProducts = (newArrivalsData?.products && newArrivalsData.products.length > 0)
+    ? newArrivalsData.products.slice(0, 8)
+    : (fallbackData?.products?.slice(0, 8) || []);
 
   useEffect(() => {
     if (isAuthenticated) dispatch(fetchCart());
@@ -320,7 +337,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <ProductGrid products={featuredData?.products?.slice(0, 4) || []} isLoading={!featuredData} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} />
+          <ProductGrid products={featuredProducts} isLoading={featuredLoading && fallbackLoading} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} onRetry={refetchFeatured} />
         </div>
       </section>
 
@@ -390,7 +407,7 @@ export default function HomePage() {
               <Button variant="ghost" size="sm" className="gap-1 text-xs font-bold">View All <ArrowRight className="h-3.5 w-3.5" /></Button>
             </Link>
           </div>
-          <ProductGrid products={bestSellerData?.products || []} isLoading={!bestSellerData} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} />
+          <ProductGrid products={bestSellerProducts} isLoading={bestSellerLoading && fallbackLoading} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} onRetry={refetchBestSeller} />
         </div>
       </section>
 
@@ -429,7 +446,7 @@ export default function HomePage() {
               <Button variant="ghost" size="sm" className="gap-1 text-xs font-bold">View All <ArrowRight className="h-3.5 w-3.5" /></Button>
             </Link>
           </div>
-          <ProductGrid products={newArrivalsData?.products || []} isLoading={!newArrivalsData} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} />
+          <ProductGrid products={newArrivalProducts} isLoading={newArrivalsLoading && fallbackLoading} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} onRetry={refetchNewArrivals} />
         </div>
       </section>
 

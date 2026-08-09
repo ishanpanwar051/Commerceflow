@@ -1,6 +1,8 @@
 
 import { ProductCard } from './ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, ShoppingBag } from 'lucide-react';
 import type { Product } from '@/types/api';
 
 interface ProductGridProps {
@@ -9,9 +11,19 @@ interface ProductGridProps {
   onAddToCart?: (productId: string) => void;
   onToggleWishlist?: (productId: string) => void;
   isInWishlist?: (productId: string) => boolean;
+  emptyMessage?: string;
+  onRetry?: () => void;
 }
 
-export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist, isInWishlist }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  isLoading,
+  onAddToCart,
+  onToggleWishlist,
+  isInWishlist,
+  emptyMessage = 'No products found.',
+  onRetry,
+}: ProductGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
@@ -31,8 +43,28 @@ export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist
 
   if (products.length === 0) {
     return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">No products found.</p>
+      <div className="flex flex-col items-center justify-center text-center py-12 px-4 rounded-xl border border-dashed bg-muted/20 my-4">
+        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+          <ShoppingBag className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <p className="text-sm font-medium text-foreground mb-1">{emptyMessage}</p>
+        <p className="text-xs text-muted-foreground mb-4 max-w-sm">
+          Products may still be loading or server is warming up. Click refresh below to retry.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 text-xs font-semibold"
+          onClick={() => {
+            if (onRetry) {
+              onRetry();
+            } else {
+              window.location.reload();
+            }
+          }}
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Reload Products
+        </Button>
       </div>
     );
   }
@@ -51,3 +83,4 @@ export function ProductGrid({ products, isLoading, onAddToCart, onToggleWishlist
     </div>
   );
 }
+

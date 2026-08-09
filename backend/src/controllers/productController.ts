@@ -23,13 +23,13 @@ export class ProductController {
         maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
         minRating: query.minRating ? Number(query.minRating) : undefined,
         minDiscount: query.minDiscount ? Number(query.minDiscount) : undefined,
-        isFeatured: query.isFeatured as boolean | undefined,
-        isBestSeller: query.isBestSeller as boolean | undefined,
-        isNewArrival: query.isNewArrival as boolean | undefined,
-        isTopRated: query.isTopRated as boolean | undefined,
-        freeDelivery: query.freeDelivery as boolean | undefined,
-        cashOnDelivery: query.cashOnDelivery as boolean | undefined,
-        emiAvailable: query.emiAvailable as boolean | undefined,
+        isFeatured: query.isFeatured !== undefined ? (query.isFeatured === 'true' || query.isFeatured === true) : undefined,
+        isBestSeller: query.isBestSeller !== undefined ? (query.isBestSeller === 'true' || query.isBestSeller === true) : undefined,
+        isNewArrival: query.isNewArrival !== undefined ? (query.isNewArrival === 'true' || query.isNewArrival === true) : undefined,
+        isTopRated: query.isTopRated !== undefined ? (query.isTopRated === 'true' || query.isTopRated === true) : undefined,
+        freeDelivery: query.freeDelivery !== undefined ? (query.freeDelivery === 'true' || query.freeDelivery === true) : undefined,
+        cashOnDelivery: query.cashOnDelivery !== undefined ? (query.cashOnDelivery === 'true' || query.cashOnDelivery === true) : undefined,
+        emiAvailable: query.emiAvailable !== undefined ? (query.emiAvailable === 'true' || query.emiAvailable === true) : undefined,
       });
       sendSuccess(res, products, 'Products fetched successfully', 200, calculatePaginationMeta(total, page, limit));
     } catch (error) { next(error); }
