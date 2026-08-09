@@ -121,8 +121,12 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch((e) => {
-  console.error(e);
-  prisma.$disconnect();
-  process.exit(1);
-});
+if (process.argv[1]?.includes('update-images')) {
+  main().catch((e) => {
+    console.error(e);
+    prisma.$disconnect();
+    process.exit(1);
+  });
+}
+
+export default main;

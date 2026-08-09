@@ -30,8 +30,8 @@ const server = app.listen(port, async (err) => {
     const productCount = await prisma.product.count();
     logger.info(`📊 Found ${productCount} products in database`);
     
-    if (productCount === 0) {
-      logger.info('📦 Empty product catalog detected, running seed script...');
+    if (productCount === 0 || productCount < 100) {
+      logger.info('📦 Incomplete or empty product catalog detected, running seed script...');
       try {
         let runSeed: any;
         try {
@@ -44,9 +44,21 @@ const server = app.listen(port, async (err) => {
           runSeed = seedModule.default;
         }
         
-        if (runSeed) {
+        if (typeof runSeed === 'function') {
           await runSeed();
           logger.info('✅ Database seeded successfully!');
+        }
+
+        try {
+          // @ts-ignore
+          const updateImgModule = await import('./update-images.mjs');
+          const runUpdateImg = updateImgModule.default;
+          if (typeof runUpdateImg === 'function') {
+            await runUpdateImg();
+            logger.info('✅ Database images updated successfully!');
+          }
+        } catch (imgErr) {
+          logger.error({ err: imgErr }, 'Update images warning');
         }
       } catch (seedErr) {
         logger.error({ err: seedErr }, 'Auto-seed warning (server will continue running)');

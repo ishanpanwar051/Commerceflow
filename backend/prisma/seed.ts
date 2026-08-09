@@ -545,17 +545,19 @@ async function main() {
   console.log(`👤 Delivery Boy: delivery@example.com / Admin@123`);
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-    await seedPool.end();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect().catch(() => {});
-    await seedPool.end().catch(() => {});
-    process.exit(1);
-  });
+if (process.argv[1]?.includes('seed')) {
+  main()
+    .then(async () => {
+      await prisma.$disconnect();
+      await seedPool.end();
+    })
+    .catch(async (e) => {
+      console.error(e);
+      await prisma.$disconnect().catch(() => {});
+      await seedPool.end().catch(() => {});
+      process.exit(1);
+    });
+}
 
 // Export for programmatic use
 export default main;
