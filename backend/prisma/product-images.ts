@@ -918,56 +918,75 @@ const PHOTO_POOLS: Record<string, string[]> = {
   helmet: ['photo-1558981806-ec527fa84c39', 'photo-1542282088-fe8426682b8f'],
        car: ['photo-1492144534655-ae79c964c9d7', 'photo-1503376780353-7e6692767b70'],
 
-  // Watches (canonical verified Unsplash watch gallery)
+    // Watches (canonical verified gallery)
+  watch: ['photo-1523275335684-37898b6baf30', 'photo-1508685096489-7aacd43bd3b1', 'photo-1579586337278-3befd40fd17a', 'photo-1524805444758-089113d48a6d', 'photo-1434493789847-2f02dc6ca35d'],
 
-  // Office
-  office: ['photo-1544716278-ca5e3f4abd8c', 'photo-1517842645767-c639042777db'],
-  notebook: ['photo-1544816155-12df9643f363', 'photo-1531346878377-a5be20888e57', 'photo-1517842645767-c639042777db'],
-  pen: ['photo-1583485088034-697b5bc54ccd', 'photo-1517842645767-c639042777db', 'photo-1594733058267-e50d62174422'],
-  printer: ['photo-1612815154858-60aa4c59eaa6', 'photo-1586953208448-b95a79798f07'],
-  whiteboard: ['photo-1586953208448-b95a79798f07', 'photo-1586297135537-94bc9ba060aa'],
+  // Accessories (verified)
+  sunglasses: ['photo-1511499767150-a48a237f0083', 'photo-1572635196237-14b3f281503f', 'photo-1508296695146-257a814070b4'],
+     wallet: ['photo-1627123424574-724758594e93', 'photo-1553062407-98eeb64c6a62'],
+  belt: ['photo-1624222247344-550fb60583dc'],
+  socks: ['photo-1586350977771-b3b0abd50c82'],
+  cap: ['photo-1588850561407-ed78c282e89b'],
 
-  // Footwear (varied verified shoe photography)
+  // Office & stationery (verified)
+  notebook: ['photo-1544816155-12df9643f363'],
+  pen: ['photo-1583485088034-697b5bc54ccd'],
+  printer: ['photo-1612815154858-60aa4c59eaa6'],
+  whiteboard: ['photo-1586953208448-b95a79798f07'],
+
+  // Footwear (verified shoe gallery)
   running: ['photo-1542291026-7eec264c27ff', 'photo-1518002171953-a080ee817e1f', 'photo-1560769629-975ec94e6a86'],
-  sneaker: ['photo-1525966222134-fcfa99b8ae77', 'photo-1595950653106-6c9ebd614d3a', 'photo-1607522370275-f14206abe5d3'],
+  sneaker: ['photo-1525966222134-fcfa99b8ae77', 'photo-1595950653106-6c9ebd614d3a'],
   formal: ['photo-1614252369475-531eba835eb1', 'photo-1614252235316-8c857d38b5f4', 'photo-1638247025967-b4e38f787b76'],
-  slipper: ['photo-1543163521-1bf539c55dd2', 'photo-1591280063444-d3c514eb6e13'],
+  slipper: ['photo-1543163521-1bf539c55dd2'],
 
-  // Apparel extras
-  outerwear: ['photo-1556821840-3a63f95609a7', 'photo-1434389677669-e08b4cac3105', 'photo-1548883354-7622d03aca27'],
+  // Apparel extras (verified)
+  outerwear: ['photo-1556821840-3a63f95609a7', 'photo-1548883354-7622d03aca27'],
   chino: ['photo-1624378439575-d8705ad7ae80', 'photo-1517438476312-10d79c077509', 'photo-1598808503746-f34c53b9323e'],
   ethnic: ['photo-1583391733956-6c78276477e2', 'photo-1617627143750-d86bc21e42bb', 'photo-1610030469983-98e550d6193c', 'photo-1572804013309-59a88b7e92f1'],
 
-  // Home furniture & decor
+  // Home furniture & decor (verified)
   furniture: ['photo-1555041469-a586c61ea9bc', 'photo-1586023492125-27b2c045efd7', 'photo-1617098900591-3f90928e8c54', 'photo-1580480055273-228ff5388ef8', 'photo-1594620302200-9a762244a156', 'photo-1505693416388-ac5ce068fe85'],
   decor: ['photo-1549490349-8643362247b5', 'photo-1584100936595-c0654b55a2e2', 'photo-1616486338812-3dadae4b4ace', 'photo-1600166898405-da9535204843', 'photo-1507473885765-e6ed057f782c'],
 
-  // Appliances
+  // Groceries (verified)
+  groceries: ['photo-1542838132-92c53300491e', 'photo-1550583724-b2692b85b150', 'photo-1586201375761-83865001e31c', 'photo-1560806887-1e4cd0b6cbd6'],
+  grains: ['photo-1586201375761-83865001e31c', 'photo-1518977676601-b53f82aba655'],
+
+  // Beauty (verified)
+  beauty: ['photo-1586495777744-4413f21062fa', 'photo-1620916566398-39f1143ab7be', 'photo-1556229010-6c3f2c9ca5f8', 'photo-1541643600914-78b084683601'],
+
+  // Sports & fitness (verified)
+  sports: ['photo-1579952363873-27f3bade9f55', 'photo-1531415074968-036ba1b575da', 'photo-1574629810360-7efbbe195018'],
+  fitness: ['photo-1517836357463-d25dfeac3438', 'photo-1583454110551-21f2fa2afe61', 'photo-1593095948071-474c5cc2989d', 'photo-1601925260368-ae2f83cf8b7f'],
+
+  // Toys (verified)
+  toys: ['photo-1515488042361-1e7ec8ecf176'],
+
+  // Books (verified)
+  books: ['photo-1497633762265-9d179a990aa6', 'photo-1512820790803-83ca734da794'],
+
+  // Pets (verified)
+  pets: ['photo-1583511655857-d19b40a7a54e'],
+
+    // Automotive (verified)
+  auto: ['photo-1492144534655-ae79c964c9d7', 'photo-1503376780353-7e6692767b70'],
+
+  // Office & stationery (verified)
+  office: ['photo-1456735190827-d1262f71b8a3', 'photo-1517842645767-c639042777db'],
+
+  // Appliances (TVs, kitchen appliances, laundry)
   appliance: ['photo-1593359677879-a4bb92f829d1', 'photo-1522869635100-9f4c5e86aa37', 'photo-1584568694244-14fbdf83bd30', 'photo-1571175443880-49e1d25b2bc5', 'photo-1626806787461-102c1bfaaea1', 'photo-1546039907-7fa05f864c02'],
 
-  // Groceries
+  // Groceries sub-types
   groceries: ['photo-1542838132-92c53300491e', 'photo-1550583724-b2692b85b150', 'photo-1586201375761-83865001e31c', 'photo-1560806887-1e4cd0b6cbd6'],
   dairy: ['photo-1550583724-b2692b85b150', 'photo-1563636619-e9143da7973b', 'photo-1508852953112-4b7d25d69a8e'],
   grains: ['photo-1586201375761-83865001e31c', 'photo-1536304929831-ee1ca9d44906', 'photo-1518977676601-b53f82aba655'],
   fruits: ['photo-1560806887-1e4cd0b6cbd6', 'photo-1571771894821-ce9b6c11b08e', 'photo-1547514701-42782101795e'],
   vegetables: ['photo-1518977676601-b53f82aba655', 'photo-1618512496248-a07fe83aa8cf', 'photo-1592924357228-91a4daadcfea', 'photo-1597362925123-77861d3fbac7'],
-  spices: ['photo-1596040033229-a9821ebd058d', 'photo-1556911220-bff31c812dba', 'photo-1596040033229-a9821ebd058d'],
+  spices: ['photo-1596040033229-a9821ebd058d', 'photo-1556911220-bff31c812dba'],
   beverages: ['photo-1550966871-3ed3cdb5ed0c', 'photo-1495474472287-4d71bcdd2085', 'photo-1509042239860-f550ce710b93'],
   snacks: ['photo-1558961363-fa8fdf82db35', 'photo-1621996346565-e3dbc646d9a9', 'photo-1599490659213-e2b9527bd087'],
-
-  // Beauty
-  beauty: ['photo-1586495777744-4413f21062fa', 'photo-1620916566398-39f1143ab7be', 'photo-1556229010-6c3f2c9ca5f8', 'photo-1541643600914-78b084683601', 'photo-1596462502278-27bfdc403348'],
-
-  // Sports, fitness & toys
-  fitness: ['photo-1517836357463-d25dfeac3438', 'photo-1583454110551-21f2fa2afe61', 'photo-1593095948071-474c5cc2989d', 'photo-1601925260368-ae2f83cf8b7f'],
-  toys: ['photo-1566576912321-d58ddd7a6088', 'photo-1560272564-c83b66b1ad12', 'photo-1493711662062-fa541adb3fc8', 'photo-1594787318286-3d835c1d207f', 'photo-1511949860663-92c5c57d48a7'],
-
-  // Books & pets
-  books: ['photo-1497633762265-9d179a990aa6', 'photo-1512820790803-83ca734da794', 'photo-1532012197267-da84d127e765'],
-  pets: ['photo-1583511655857-d19b40a7a54e', 'photo-1548199973-03cce0bbc87b', 'photo-1450778869180-41d0601e046e', 'photo-1514888286974-6c03e2ca1dba'],
-
-  // Automotive
-  auto: ['photo-1558981806-ec527fa84c39', 'photo-1551028719-00167b16eac5', 'photo-1625047509248-ec889cbff17f', 'photo-1607860108855-64acf2078ed9'],
 };
 
 // Keyword aliases mapping model names, subcategories, and search terms to PHOTO_POOLS keys
@@ -1116,9 +1135,9 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'anarkali': 'ethnic',
   'salwar': 'ethnic',
   'kurtas': 'ethnic',
-  'tie': 'suit',
-  'belt': 'suit',
-  'cap': 't-shirt',
+    'tie': 'suit',
+  'belt': 'belt',
+  'cap': 'cap',
 
   // --- Home, furniture, decor, cookware ---
   'sectional': 'furniture',
@@ -1330,23 +1349,50 @@ function resolveTypePool(nameLower: string, subLower: string): string[] {
   return [];
 }
 
-/** Build a gallery of DISTINCT images, primary first, from a resolved pool. */
-function buildImageList(pool: string[], name: string, productIndex: number): { url: string; alt: string; order: number }[] {
+/** Build a gallery of DISTINCT images, primary first, from a resolved pool.
+ *
+ * When `forcedPrimary` is supplied (the curated-catalog / user-override path),
+ * that single image is pinned as the primary and the remaining slots are
+ * filled with deterministic, hash-driven alternatives from `pool` — so the
+ * curated image is always the hero but the rest of the gallery still varies
+ * per product.
+ *
+ * When `forcedPrimary` is omitted (type/alias/category/fallback pools), EVERY
+ * slot — including the primary — is hash-driven by product identity. This is
+ * what prevents the category-wide "every product shows the same primary image"
+ * bug: different products resolve to different starting offsets in the same pool.
+ */
+function buildImageList(
+  pool: string[],
+  name: string,
+  productIndex: number,
+  forcedPrimary?: string,
+): { url: string; alt: string; order: number }[] {
   const poolClean = pool.filter((p) => toUnsplashUrl(p));
-  if (poolClean.length === 0) return [];
   const identity = name.toLowerCase();
-  // First pool entry is the authoritative primary (exact match / override);
-  // the rest are deterministic alternatives so no two cards share everything.
-  const primary = toUnsplashUrl(poolClean[0]);
-  const alternatives = pickUniqueImages(poolClean.slice(1), identity, productIndex, 3);
   const seen = new Set<string>();
   const urls: string[] = [];
-  for (const url of [primary, ...alternatives]) {
+
+  if (forcedPrimary) {
+    const primary = toUnsplashUrl(forcedPrimary);
+    if (primary) {
+      seen.add(primary);
+      urls.push(primary);
+    }
+  }
+
+  const remaining = poolClean.filter((p) => {
+    const u = toUnsplashUrl(p);
+    return u && !seen.has(u);
+  });
+  const count = forcedPrimary ? 3 : 4;
+  for (const url of pickUniqueImages(remaining, identity, productIndex, count)) {
     if (url && !seen.has(url)) {
       seen.add(url);
       urls.push(url);
     }
   }
+
   return urls.map((url, order) => ({
     url,
     alt: `${name} — view ${order + 1}`,
@@ -1360,34 +1406,42 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
   const catKey = (product.categorySlug || '').toLowerCase();
   const typePool = resolveTypePool(nameLower, subLower);
 
-  // 0. EXACT catalog match (user-provided names + image links). Never propagate
-  //    a blocked host — a curated link that came from the pin-pad falls through
-  //    to the verified type pools instead of being displayed.
-  const catalogMatch = findCatalogProduct(product.name || '');
-  if (catalogMatch) {
-    const url = toUnsplashUrl(catalogMatch.product.image);
-    const pool = url ? [url, ...typePool] : typePool;
-    if (pool.length > 0) return buildImageList(pool, product.name, productIndex);
-  }
+     // 0. EXACT catalog match (user-provided names + image links). The catalog's
+   //    curated image is an authoritative primary; blocked-host (pin-pad) links
+   //    are skipped via toUnsplashUrl so they can never win over the verified
+   //    type pools. The remaining gallery slots come from the type pool so the
+   //    primary stays curated but the other views vary per product.
+   const catalogMatch = findCatalogProduct(product.name || '');
+   if (catalogMatch) {
+     const curated = toUnsplashUrl(catalogMatch.product.image) || undefined;
+     if (curated) {
+       return buildImageList(typePool, product.name, productIndex, catalogMatch.product.image);
+     }
+     if (typePool.length > 0) return buildImageList(typePool, product.name, productIndex);
+   }
 
   // 1. Exact-name match inside the user catalog (case/whitespace tolerant).
   const exactCatalog = USER_CATALOG.flatMap((c) => c.products).find(
     (p) => p.name.trim().toLowerCase() === nameLower
   );
-  if (exactCatalog) {
-    const url = toUnsplashUrl(exactCatalog.image);
-    const pool = url ? [url, ...typePool] : typePool;
-    if (pool.length > 0) return buildImageList(pool, product.name, productIndex);
+    if (exactCatalog) {
+    const curated = toUnsplashUrl(exactCatalog.image) || undefined;
+    if (curated) {
+      return buildImageList(typePool, product.name, productIndex, exactCatalog.image);
+    }
+    if (typePool.length > 0) return buildImageList(typePool, product.name, productIndex);
   }
 
   // 2. Explicit user-provided image overrides (matched by product name).
   //    Blocked (pin-pad) overrides are skipped so they can never win over the
   //    verified type pools.
   for (const [customKey, photoId] of Object.entries(USER_CUSTOM_PRODUCT_IMAGES)) {
-    if (nameLower.includes(customKey)) {
-      const url = toUnsplashUrl(photoId);
-      const pool = url ? [url, ...typePool] : typePool;
-      if (pool.length > 0) return buildImageList(pool, product.name, productIndex);
+        if (nameLower.includes(customKey)) {
+      const curated = toUnsplashUrl(photoId) || undefined;
+      if (curated) {
+        return buildImageList(typePool, product.name, productIndex, photoId);
+      }
+      if (typePool.length > 0) return buildImageList(typePool, product.name, productIndex);
     }
   }
 
@@ -1421,7 +1475,7 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
     fallbackPool.push('https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80');
   } else if (catKey.includes('kids') || catKey.includes('toy')) {
     fallbackPool.push('https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80');
-      } else if (catKey.includes('auto') || catKey.includes('automotive')) {
+        } else if (catKey.includes('auto') || catKey.includes('automotive')) {
     fallbackPool.push('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80');
   } else if (catKey.includes('beauty') || catKey.includes('cosmetic')) {
     fallbackPool.push('https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=800&q=80');
