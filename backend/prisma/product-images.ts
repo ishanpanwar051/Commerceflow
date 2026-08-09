@@ -19,8 +19,10 @@ function simpleHash(str: string): number {
 }
 
 function toUnsplashUrl(photoId: string): string {
+  if (!photoId) return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80';
   if (photoId.startsWith('http')) return photoId;
-  return `https://images.unsplash.com/photo-1542291026-7eec264c27ff}?auto=format&fit=crop&w=800&q=80`;
+  const cleanId = photoId.replace(/[^\w-]/g, '');
+  return `https://images.unsplash.com/${cleanId}?auto=format&fit=crop&w=800&q=80`;
 }
 
 // User-provided explicit product image overrides

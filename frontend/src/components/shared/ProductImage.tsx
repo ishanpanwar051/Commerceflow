@@ -21,7 +21,8 @@ interface ProductImageProps {
  */
 export function ProductImage({ src, alt, className = '', fallback = '/placeholder.svg', eager = false }: ProductImageProps) {
   const [errored, setErrored] = useState(false);
-  const resolved = src && !errored ? src : fallback;
+  const cleanSrc = src ? src.replace(/[\{\}]/g, '').trim() : src;
+  const resolved = cleanSrc && !errored ? cleanSrc : fallback;
 
   return (
     <img
