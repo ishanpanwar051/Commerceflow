@@ -415,29 +415,49 @@ async function main() {
     )
   );
 
-  // Create categories from the user catalog
-  const categoryMap = new Map<string, string>();
+  // Remove any stale catalog rows so old duplicate images never survive a seed.
+  // Ordered to satisfy FK constraints (dependent rows first).
+  await prisma.productImage.deleteMany();
+  await prisma.cartItem.deleteMany();
+  await prisma.wishlistItem.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.idempotencyRecord.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.inventory.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+
+  // Create category hierarchy: 4 parent groups -> 15 subcategories
+  const subcategoryCategoryMap = new Map<string, string>();
+  let totalCatalog = 0;
   for (const cat of USER_CATALOG) {
-    const created = await prisma.category.upsert({
+    const parent = await prisma.category.upsert({
       where: { slug: cat.slug },
       update: { name: cat.name, description: cat.description, image: getCategoryImage(cat.slug) },
       create: { name: cat.name, slug: cat.slug, description: cat.description, image: getCategoryImage(cat.slug) },
     });
-    categoryMap.set(cat.slug, created.id);
-    console.log(`  ✓ Category: ${cat.name} (${cat.products.length} catalog products)`);
+
+    for (const subcat of cat.subcategories) {
+      const child = await prisma.category.upsert({
+        where: { slug: subcat.slug },
+        update: { name: subcat.name, description: subcat.description, image: getCategoryImage(subcat.slug), parentId: parent.id },
+        create: { name: subcat.name, slug: subcat.slug, description: subcat.description, image: getCategoryImage(subcat.slug), parentId: parent.id },
+      });
+      subcategoryCategoryMap.set(subcat.slug, child.id);
+      totalCatalog += subcat.products.length;
+      console.log(`  ✓ Category: ${cat.name} > ${subcat.name} (${subcat.products.length} catalog products)`);
+    }
   }
 
   // Generate products directly from the catalog (name + exact image)
   let productIndex = 0;
-  let totalCatalog = 0;
-  for (const cat of USER_CATALOG) {
-    totalCatalog += cat.products.length;
-  }
 
   console.log(`Generating ${totalCatalog} products from catalog...`);
 
-  for (const cat of USER_CATALOG) {
-    const categoryId = categoryMap.get(cat.slug)!;
+  for (const parentCat of USER_CATALOG) {
+    for (const cat of parentCat.subcategories) {
+    const categoryId = subcategoryCategoryMap.get(cat.slug)!;
 
     for (const catalogProduct of cat.products) {
       const name = catalogProduct.name;
@@ -562,6 +582,7 @@ async function main() {
         console.log(`Created ${productIndex} products with reviews...`);
       }
     }
+    }
   }
 
   // Create Coupons
@@ -597,7 +618,7 @@ async function main() {
 
   console.log(`\n✅ Seed completed successfully!`);
   console.log(`📦 Total products: ${productIndex}`);
-  console.log(`📁 Categories: ${USER_CATALOG.length} parent categories`);
+  console.log(`📁 Categories: ${USER_CATALOG.length} parent groups, ${USER_CATALOG.reduce((n, c) => n + c.subcategories.length, 0)} subcategories`);
   console.log(`👤 Admin: admin@commerceflow.dev / Admin@123`);
   console.log(`👤 Customer: customer@example.com / Admin@123`);
   console.log(`👤 Seller: seller@example.com / Admin@123`);

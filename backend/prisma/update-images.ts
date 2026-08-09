@@ -26,9 +26,8 @@ function getPrismaInstance() {
  *
  * Idempotent: on every run it guarantees
  *  - every category has a category-appropriate image,
- *  - every product has exactly 4 images with a UNIQUE primary image
- *    (primaries are derived from the product's stable position in the catalog,
- *    so re-runs produce identical results and never shuffle existing data).
+ *  - every product has exactly 1 image sourced from its subcategory's verified
+ *    16-image Unsplash pool, so product images are unique across the catalog.
  *
  * Batched (not per-row awaits) so it completes well within Render's startup
  * grace period even with a large catalog.
@@ -49,8 +48,8 @@ async function main() {
   }
   console.log(`\n✓ Updated ${catUpdated} category images.`);
 
-  // 2. Product images — delete + recreate exactly 4 per product so the primary
-  //    (order 0) is unique and gallery images are evenly distributed.
+  // 2. Product images — delete + recreate exactly 1 image per product from its
+  //    subcategory pool (unique per product, no cross-category reuse).
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     include: {
@@ -58,8 +57,6 @@ async function main() {
     },
     orderBy: { createdAt: 'asc' },
   });
-
-  const catById = new Map<string, any>(categories.map((c: any) => [c.id, c]));
 
   const imageRows: {
     productId: string;
@@ -72,8 +69,7 @@ async function main() {
   for (let i = 0; i < products.length; i += 1) {
     const p = products[i];
     const category = p.category;
-    const parent = category?.parentId ? catById.get(category.parentId) : undefined;
-    const categorySlug = (parent as any)?.slug || category?.slug || 'general';
+    const categorySlug = category?.slug || 'general';
 
     let newImages;
     try {
@@ -123,7 +119,7 @@ async function main() {
     console.log(`  ...${Math.min(i + BATCH, imageRows.length)}/${totalRows} image rows`);
   }
 
-  console.log(`✓ Synced images for ${totalProducts} products (4 each, unique primaries).`);
+  console.log(`✓ Synced images for ${totalProducts} products (1 each, all unique).`);
   await prisma.$disconnect();
 }
 

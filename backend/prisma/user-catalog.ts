@@ -1,525 +1,170 @@
-// User-provided exact catalog: category -> items (name + exact image link).
-// Order and links are preserved EXACTLY as provided. No auto-generated names/images.
+// Catalog: 4 parent groups -> 15 subcategories, 16 products each.
+// Every product image comes from its subcategory's verified 16-image Unsplash
+// pool (index-aligned) so all 240 images are unique across the catalog.
+
+import { SUBCATEGORY_IMAGE_POOLS } from './subcategory-image-pools';
 
 export interface UserCatalogProduct {
   name: string;
   image: string;
 }
 
-export interface UserCatalogCategory {
+export interface UserCatalogSubcategory {
   name: string;
   slug: string;
   description: string;
   products: UserCatalogProduct[];
 }
 
+export interface UserCatalogCategory {
+  name: string;
+  slug: string;
+  description: string;
+  subcategories: UserCatalogSubcategory[];
+}
+
+const img = (poolKey: string, index: number): string =>
+  `https://images.unsplash.com/${SUBCATEGORY_IMAGE_POOLS[poolKey][index]}?auto=format&fit=crop&w=800&q=80`;
+
+function sub(name: string, slug: string, description: string, names: string[]): UserCatalogSubcategory {
+  const pool = SUBCATEGORY_IMAGE_POOLS[slug];
+  if (!pool) throw new Error(`No image pool for subcategory "${slug}"`);
+  if (names.length !== 16) throw new Error(`Subcategory "${slug}" must have 16 products (got ${names.length})`);
+  return { name, slug, description, products: names.map((productName, i) => ({ name: productName, image: img(slug, i) })) };
+}
+
+const S = (
+  name: string,
+  slug: string,
+  description: string,
+  ...names: string[][]
+): UserCatalogSubcategory => sub(name, slug, description, names.flat());
+
 export const USER_CATALOG: UserCatalogCategory[] = [
   {
-    "name": "Electronics",
-    "slug": "electronics",
-    "description": "Electronic devices and accessories",
-    "products": [
-      {
-        "name": "iPhone 17 Pro Max",
-        "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "iPhone 17 Pro",
-        "image": "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Samsung Galaxy S26 Ultra",
-        "image": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Samsung Galaxy S26+",
-        "image": "https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Google Pixel 10 Pro XL",
-        "image": "https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Google Pixel 10 Pro",
-        "image": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "OnePlus 13",
-        "image": "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Xiaomi 16 Pro",
-        "image": "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Nothing Phone 3",
-        "image": "https://images.unsplash.com/photo-1567581935884-3349723552ca?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Realme GT 7 Pro",
-        "image": "https://images.unsplash.com/photo-1533228876829-65c94e7b5025?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Vivo X200 Pro",
-        "image": "https://images.unsplash.com/photo-1556656793-08538906a9f8?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "OPPO Find N5",
-        "image": "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "MacBook Pro 16-inch",
-        "image": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "MacBook Air 15-inch",
-        "image": "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Dell XPS 16",
-        "image": "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Dell XPS 14",
-        "image": "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
+    name: 'Electronics',
+    slug: 'electronics',
+    description: 'Phones, laptops, headphones and smartwatches from top brands',
+    subcategories: [
+      S('Smartphones', 'smartphones', 'Latest smartphones with powerful cameras',
+        ['iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 16e', 'Samsung Galaxy S26 Ultra'],
+        ['Samsung Galaxy S26+', 'Samsung Galaxy Z Fold 7', 'Google Pixel 10 Pro XL', 'Google Pixel 10 Pro'],
+        ['OnePlus 13', 'Xiaomi 16 Pro', 'Nothing Phone 3', 'Realme GT 7 Pro'],
+        ['Vivo X200 Pro', 'OPPO Find N5', 'Motorola Edge 60 Pro', 'Honor Magic 7 Pro']),
+      S('Laptops', 'laptops', 'Premium laptops for work, study and gaming',
+        ['MacBook Pro 16-inch', 'MacBook Pro 14-inch', 'MacBook Air 15-inch', 'MacBook Air 13-inch'],
+        ['Dell XPS 16', 'Dell XPS 14', 'Lenovo ThinkPad X1 Carbon', 'HP Spectre x360'],
+        ['ASUS ROG Zephyrus G16', 'ASUS Zenbook 14', 'Acer Swift 5', 'Microsoft Surface Laptop 7'],
+        ['Samsung Galaxy Book4 Ultra', 'Lenovo IdeaPad Slim 5', 'HP Pavilion 15', 'Dell Inspiron 15']),
+      S('Headphones', 'headphones', 'Over-ear headphones with immersive sound',
+        ['Sony WH-1000XM6', 'Sony WH-1000XM5', 'Sony MDR-7506', 'Bose QuietComfort Ultra'],
+        ['Bose QuietComfort 45', 'Apple AirPods Max', 'Sennheiser Momentum 4', 'JBL Tune 770NC'],
+        ['JBL Quantum 910X', 'Audio-Technica ATH-M50x', 'Beats Studio Pro', 'Skullcandy Crusher ANC 2'],
+        ['Marshall Major V', 'Anker Soundcore Space One', 'Sony MDR-ZX110', 'Bose Headphones 700']),
+      S('Smartwatches', 'smartwatches', 'Fitness tracking smartwatches for every wrist',
+        ['Apple Watch Ultra 3', 'Apple Watch Series 11', 'Samsung Galaxy Watch 8', 'Samsung Galaxy Watch 8 Classic'],
+        ['Google Pixel Watch 4', 'Garmin Forerunner 965', 'Garmin Venu 3', 'Garmin Fenix 8'],
+        ['Fitbit Sense 3', 'Fitbit Charge 7', 'Amazfit GTR 5', 'Amazfit Bip 6'],
+        ['OnePlus Watch 3', 'Huawei Watch GT 5', 'boAt Storm Call 4', 'Noise ColorFit Pro 6']),
+    ],
   },
   {
-    "name": "Fashion Men",
-    "slug": "fashion-men",
-    "description": "Men's clothing and accessories",
-    "products": [
-      {
-        "name": "Classic White T-Shirt",
-        "image": "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Oversized Black T-Shirt",
-        "image": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Polo T-Shirt",
-        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Graphic Print T-Shirt",
-        "image": "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Plain Cotton T-Shirt",
-        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Striped T-Shirt",
-        "image": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Henley T-Shirt",
-        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Slim Fit T-Shirt",
-        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Oversized Graphic T-Shirt",
-        "image": "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Full Sleeve T-Shirt",
-        "image": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Premium Pique Polo",
-        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Basic Round Neck T-Shirt",
-        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Oxford Cotton Shirt",
-        "image": "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "White Formal Shirt",
-        "image": "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Black Casual Shirt",
-        "image": "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Denim Shirt",
-        "image": "https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
+    name: 'Fashion',
+    slug: 'fashion',
+    description: 'Men and women fashion, plus running shoes',
+    subcategories: [
+      S('Men Apparel', 'men-apparel', 'T-shirts, shirts and denim for men',
+        ['Classic White T-Shirt', 'Oversized Black T-Shirt', 'Polo T-Shirt', 'Graphic Print T-Shirt'],
+        ['Plain Cotton T-Shirt', 'Striped T-Shirt', 'Henley T-Shirt', 'Slim Fit T-Shirt'],
+        ['Oversized Graphic T-Shirt', 'Full Sleeve T-Shirt', 'Premium Pique Polo', 'Basic Round Neck T-Shirt'],
+        ['Oxford Cotton Shirt', 'White Formal Shirt', 'Black Casual Shirt', 'Denim Shirt']),
+      S('Women Collection', 'women-collection', 'Dresses, ethnic wear and accessories for women',
+        ['Floral Summer Maxi Dress', 'Cocktail Evening Dress', 'Silk Blouse Top', 'Designer Banarasi Saree'],
+        ['Embroidered Cotton Kurta', 'Anarkali Suit Set', 'High-Waisted Denim Jeans', 'Pleated A-Line Skirt'],
+        ['Ankle-Length Leggings', 'Trench Coat', 'Fitted Denim Jacket', 'Oversized Blazer'],
+        ['Structured Leather Handbag', 'Evening Clutch', 'Gold Plated Necklace Set', 'Crystal Earrings']),
+      S('Running Shoes', 'running-shoes', 'Cushioned running and lifestyle sneakers',
+        ['Nike Air Zoom Pegasus', 'Adidas Ultraboost', 'ASICS Gel-Kayano', 'New Balance Fresh Foam'],
+        ['Brooks Ghost', 'Hoka Clifton', 'Puma Velocity Nitro', 'Saucony Ride'],
+        ['Under Armour HOVR', 'Reebok Floatride', 'Mizuno Wave Rider', 'Skechers Go Run'],
+        ['Nike Air Force 1', 'Adidas Stan Smith', 'Adidas Superstar', 'Converse Chuck Taylor']),
+    ],
   },
   {
-    "name": "Fashion Women",
-    "slug": "fashion-women",
-    "description": "Women's clothing and accessories",
-    "products": [
-      {
-        "name": "Floral Summer Maxi Dress",
-        "image": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Cocktail Evening Dress",
-        "image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Silk Blouse Top",
-        "image": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Designer Banarasi Saree",
-        "image": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Embroidered Cotton Kurta",
-        "image": "https://i.pinimg.com/736x/91/c3/82/91c382be2031c07666296ed9e5db4eeb.jpg"
-      },
-      {
-        "name": "Anarkali Suit Set",
-        "image": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "High-Waisted Denim Jeans",
-        "image": "https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Pleated A-Line Skirt",
-        "image": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Ankle-Length Leggings",
-        "image": "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Trench Coat",
-        "image": "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Fitted Denim Jacket",
-        "image": "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Oversized Blazer",
-        "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Structured Leather Handbag",
-        "image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Evening Clutch",
-        "image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Gold Plated Necklace Set",
-        "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Crystal Earrings",
-        "image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
+    name: 'Home & Living',
+    slug: 'home-living',
+    description: 'Decor, cookware, furniture and lighting for your home',
+    subcategories: [
+      S('Home Decor', 'home-decor', 'Vases, art, rugs and accents to style your space',
+        ['Ceramic Vase Set', 'Wall Art Canvas Print', 'Scented Candle Trio', 'Artificial Bonsai Plant'],
+        ['Decorative Wall Clock', 'Boho Area Rug', 'Faux Fur Throw Blanket', 'Decorative Throw Pillow Set'],
+        ['Oversized Wall Mirror', 'Wall Photo Collage Frames', 'Cushion Cover Set', 'Marble Centerpiece Bowl'],
+        ['Wall Hanging Tapestry', 'Table Runner Set', 'Decorative Bookend Set', 'Indoor Plant Stand']),
+      S('Cookware', 'cookware', 'Pans, pots and kitchen essentials',
+        ['Non-Stick Frying Pan 24cm', 'Stainless Steel Cookware Set', 'Cast Iron Skillet', 'Pressure Cooker 5L'],
+        ['Kitchen Knife Set', 'Induction Base Kadhai', 'Wok Pan 30cm', 'Sauce Pan Set'],
+        ['Steamer Basket', 'Bakeware Muffin Tray', 'Mixing Bowl Set', 'Silicone Spatula Set'],
+        ['Non-Stick Tawa', 'Idli Steamer', 'Glass Food Containers Set', 'Spice Box Set']),
+      S('Sofas & Beds', 'sofas-beds', 'Sofas, sectionals and comfortable beds',
+        ['Modern 3-Seater Sofa', 'L-Shaped Sectional Sofa', 'Velvet Sofa', 'Leather Sofa'],
+        ['Recliner Sofa', 'Chesterfield Sofa', 'Modular Sofa', 'Loveseat Sofa'],
+        ['Sleeper Sofa', 'Minimalist Sofa', 'U-Shaped Sectional Sofa', 'Boucle Sofa'],
+        ['King Size Platform Bed', 'Queen Size Upholstered Bed', 'Wooden King Bed', 'Storage Bed']),
+      S('Lighting & Lamps', 'lighting-lamps', 'Lamps, pendants and ambient lighting',
+        ['LED Table Lamp', 'Modern Floor Lamp', 'Brass Pendant Light', 'Crystal Chandelier'],
+        ['Smart RGB Bulb Set', 'Task Desk Lamp', 'Wall Sconce Pair', 'Fairy String Lights'],
+        ['Neon Sign Light', 'Himalayan Salt Lamp', 'Tripod Floor Lamp', 'Ceiling Pendant Set'],
+        ['Dimmable Bulb Pack', 'Bamboo Pendant Lamp', 'Bedside Reading Lamp', 'Vintage Edison Bulb Set']),
+    ],
   },
   {
-    "name": "Shoes & Footwear",
-    "slug": "shoes-footwear",
-    "description": "Footwear for everyone",
-    "products": [
-      {
-        "name": "Nike Air Zoom Pegasus",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Adidas Ultraboost",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "ASICS Gel-Kayano",
-        "image": "https://i.pinimg.com/736x/7d/d2/15/7dd21547d9a806eb7405ae816879cd4a.jpg"
-      },
-      {
-        "name": "New Balance Fresh Foam",
-        "image": "https://i.pinimg.com/1200x/73/5c/48/735c48ac1c83075d9f4ff585685e6986.jpg"
-      },
-      {
-        "name": "Brooks Ghost",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Hoka Clifton",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Puma Velocity Nitro",
-        "image": "https://i.pinimg.com/1200x/74/3e/e9/743ee97edc537591513633ea243a68bc.jpg"
-      },
-      {
-        "name": "Saucony Ride",
-        "image": "https://i.pinimg.com/736x/44/63/10/446310856511784dd1cddb8793216302.jpg"
-      },
-      {
-        "name": "Under Armour HOVR",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Reebok Floatride",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Mizuno Wave Rider",
-        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Skechers Go Run",
-        "image": "https://i.pinimg.com/1200x/9c/09/4d/9c094d4dd0217085ee081cb07494a2c1.jpg"
-      },
-      {
-        "name": "Nike Air Force 1",
-        "image": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Adidas Stan Smith",
-        "image": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Adidas Superstar",
-        "image": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Converse Chuck Taylor",
-        "image": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
+    name: 'Essentials',
+    slug: 'essentials',
+    description: 'Beauty, fitness, toys and pet essentials',
+    subcategories: [
+      S('Beauty & Skincare', 'beauty-skincare', 'Skincare, makeup and hair care products',
+        ['Matte Liquid Lipstick', 'Vitamin C Serum 30ml', 'Niacinamide Serum 30ml', 'Hydrating Shampoo 500ml'],
+        ['Volumizing Conditioner', 'Eau de Parfum 100ml Spray', 'Aloe Vera Face Wash', 'Broad Spectrum Sunscreen SPF50'],
+        ['Hair Dryer 2000W', 'Hydrating Face Toner', 'Charcoal Face Mask', 'Hyaluronic Acid Cream'],
+        ['Matte Finish Foundation', 'Long Lasting Eyeliner', 'Rose Water Toner', 'Shea Butter Body Lotion']),
+      S('Fitness & Gym', 'fitness-gym', 'Gym equipment, protein and activewear',
+        ['English Willow Cricket Bat', 'Official Size 5 Football', 'Anti-Burst Yoga Mat', 'Adjustable Dumbbell Set'],
+        ['Whey Protein Isolate', 'Skipping Rope', 'Protein Shaker Bottle', 'Resistance Bands Set'],
+        ['Sports Water Bottle', 'Kettlebell 12kg', 'Exercise Bench', 'Foam Roller'],
+        ['Pull Up Bar', 'Grip Strengthener', 'Push Up Board', 'Speed Jump Rope']),
+      S('Toys & Games', 'toys-games', 'Building blocks, puzzles and kids toys',
+        ['Educational Building Block Set', 'Remote Control Car', 'Mini Drone', 'Plush Teddy Bear'],
+        ['Rubik\'s Cube', 'Board Game Monopoly', 'Wooden Chess Set', 'Puzzle 1000 Pieces'],
+        ['Toy Train Set', 'Water Gun Blaster', 'Action Figure Set', 'Stuffed Animal Set'],
+        ['Card Game Uno', 'Balance Bike', 'Doll House', 'Lego Style Block Set']),
+      S('Pet Supplies', 'pet-supplies', 'Food, beds and accessories for your pets',
+        ['Dry Dog Food 5kg', 'Cat Food 2kg', 'Dog Leash & Collar Set', 'Cat Litter 10L'],
+        ['Pet Grooming Brush', 'Large Dog Bed', 'Cat Tree Tower', 'Pet Water Fountain'],
+        ['Dog Chew Toys', 'Cat Toy Feather Wand', 'Pet Food Bowls', 'Dog Treats Pack'],
+        ['Pet Carrier Bag', 'Pet Harness', 'Dog Shampoo', 'Interactive Treat Puzzle']),
+    ],
   },
-  {
-    "name": "Home, Kitchen & Furniture",
-    "slug": "home-kitchen-furniture",
-    "description": "Home decoration, kitchen and furniture products",
-    "products": [
-      {
-        "name": "Modern 3-Seater Sofa",
-        "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "L-Shaped Sectional Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Velvet Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Leather Sofa",
-        "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Recliner Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Chesterfield Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Modular Sofa",
-        "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Loveseat Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Sleeper Sofa",
-        "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Minimalist Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "U-Shaped Sectional Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Boucle Sofa",
-        "image": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "King Size Platform Bed",
-        "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Queen Size Upholstered Bed",
-        "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Wooden King Bed",
-        "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        "name": "Storage Bed",
-        "image": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
-  },
-  {
-    "name": "Sports, Fitness & Beauty",
-    "slug": "sports-fitness-beauty",
-    "description": "Sports equipment, fitness and beauty products",
-    "products": [
-      {
-        "name": "English Willow Cricket Bat",
-        "image": "https://i.pinimg.com/736x/8f/ae/29/8fae29b50269b647015941d2b0c5da70.jpg"
-      },
-      {
-        "name": "Official Size 5 Football",
-        "image": "https://i.pinimg.com/736x/3c/eb/83/3ceb8345436ddfeed76b421e669a0bc5.jpg"
-      },
-      {
-        "name": "Anti-Burst Yoga Mat",
-        "image": "https://i.pinimg.com/736x/18/26/16/182616c7c012a82a569cd25d49ac2f9f.jpg"
-      },
-      {
-        "name": "Adjustable Dumbbell Set",
-        "image": "https://i.pinimg.com/736x/fd/8a/0f/fd8a0f1777dc88efa38e8ad81f8a14c0.jpg"
-      },
-      {
-        "name": "Whey Protein Isolate",
-        "image": "https://i.pinimg.com/736x/2b/11/42/2b1142d9a0be3e3fcba05ed73184702a.jpg"
-      },
-      {
-        "name": "Matte Liquid Lipstick",
-        "image": "https://i.pinimg.com/736x/6e/fd/ad/6efdadbcf8b9a972a37517574b743f29.jpg"
-      },
-      {
-        "name": "Vitamin C Serum 30ml",
-        "image": "https://i.pinimg.com/736x/72/6f/b0/726fb07219ee1bc015dbca0b5ceee99c.jpg"
-      },
-      {
-        "name": "Hydrating Shampoo 500ml",
-        "image": "https://i.pinimg.com/1200x/e7/73/3c/e7733c16f0f787c2493fa061e46b3efc.jpg"
-      },
-      {
-        "name": "Eau de Parfum 100ml Spray",
-        "image": "https://i.pinimg.com/736x/79/13/c6/7913c6429723d5ab11904e8a5e8e96c8.jpg"
-      },
-      {
-        "name": "Skipping Rope",
-        "image": "https://i.pinimg.com/736x/30/71/5c/30715c525c71514484ae1d439e13b547.jpg"
-      },
-      {
-        "name": "Protein Shaker Bottle",
-        "image": "https://i.pinimg.com/736x/45/6f/30/456f304ad449ca559f24ac1db4d21630.jpg"
-      },
-      {
-        "name": "Resistance Bands Set",
-        "image": "https://i.pinimg.com/1200x/52/81/28/528128616a0aab11c6f6e08e8216c7a0.jpg"
-      },
-      {
-        "name": "Sports Water Bottle",
-        "image": "https://i.pinimg.com/1200x/39/a7/41/39a741abd3192dcbb7dd0e7ef98e44ce.jpg"
-      },
-      {
-        "name": "Aloe Vera Face Wash",
-        "image": "https://i.pinimg.com/736x/d7/2d/eb/d72deb53c947f5490f50e979bbd0fa00.jpg"
-      },
-      {
-        "name": "Broad Spectrum Sunscreen SPF50",
-        "image": "https://i.pinimg.com/736x/7b/ea/52/7bea52faf7c5fb40e281d8504c0b1311.jpg"
-      },
-      {
-        "name": "Hair Dryer 2000W",
-        "image": "https://i.pinimg.com/1200x/11/a6/ec/11a6ecbacdc5ea97375e7264362b981e.jpg"
-      }
-    ]
-  },
-  {
-    "name": "Office, Toys, Groceries & Automotive",
-    "slug": "office-toys-groceries-automotive",
-    "description": "Office supplies, toys, groceries and automotive products",
-    "products": [
-      {
-        "name": "Executive Leather Notebook",
-        "image": "https://i.pinimg.com/736x/90/c0/f8/90c0f82b8f61c346a172a424d4d0b10a.jpg"
-      },
-      {
-        "name": "Premium Leather Journal",
-        "image": "https://i.pinimg.com/736x/04/fa/33/04fa332e1b25caeb2d3f41e6081cc036.jpg"
-      },
-      {
-        "name": "Gel Ink Pen Pack",
-        "image": "https://i.pinimg.com/1200x/56/90/6b/56906b484cbff51bab870f71be30d76a.jpg"
-      },
-      {
-        "name": "Luxury Ballpoint Pen Set",
-        "image": "https://i.pinimg.com/736x/0d/18/3c/0d183c89e52f1da07091a03265d1c6cc.jpg"
-      },
-      {
-        "name": "All-in-One Laser Printer",
-        "image": "https://i.pinimg.com/736x/91/c3/82/91c382be2031c07666296ed9e5db4eeb.jpg"
-      },
-      {
-        "name": "Wireless Laser Printer",
-        "image": "https://i.pinimg.com/736x/6d/90/dd/6d90dd9d83f45259cb9972f948ed0528.jpg"
-      },
-      {
-        "name": "Magnetic Dry-Erase Whiteboard",
-        "image": "https://i.pinimg.com/1200x/df/d9/c7/dfd9c762d76443ff23d75ba6db7a8d52.jpg"
-      },
-      {
-        "name": "Desk Organizer",
-        "image": "https://i.pinimg.com/1200x/9c/27/2a/9c272a151e946a5f6e82b00f1d3d8208.jpg"
-      },
-      {
-        "name": "Document File Organizer",
-        "image": "https://i.pinimg.com/736x/17/67/c6/1767c6554d750bff3cd80b2334d49fbe.jpg"
-      },
-      {
-        "name": "Sticky Notes Set",
-        "image": "https://i.pinimg.com/736x/61/95/72/6195724cfcdca1c9970adbe2bef6d431.jpg"
-      },
-      {
-        "name": "Educational Building Block Set",
-        "image": "https://i.pinimg.com/1200x/9c/09/4d/9c094d4dd0217085ee081cb07494a2c1.jpg"
-      },
-      {
-        "name": "Full Face Motorcycle Helmet",
-        "image": "https://i.pinimg.com/1200x/f9/11/ad/f911ad7da3e9e200d1dfe15ec5c220c0.jpg"
-      },
-      {
-        "name": "Sport Bike Racing Helmet",
-        "image": "https://i.pinimg.com/736x/c1/27/06/c127061fad7834931f9b8a1bf0e19eaf.jpg"
-      },
-      {
-        "name": "Modular Motorcycle Helmet",
-        "image": "https://i.pinimg.com/1200x/35/7c/c9/357cc9de5083ac8ad3914e4c7d89cfd3.jpg"
-      },
-      {
-        "name": "Leather Motorcycle Riding Jacket",
-        "image": "https://i.pinimg.com/736x/0c/97/25/0c9725a2a235f40d57ff49e2be64dce7.jpg"
-      },
-      {
-        "name": "Premium Biker Jacket",
-        "image": "https://i.pinimg.com/1200x/a0/aa/04/a0aa04c014ea8684ce5344ccf9594289.jpg"
-      }
-    ]
-  }
 ];
 
-export function findCatalogProduct(name: string): { category: UserCatalogCategory; product: UserCatalogProduct } | null {
+export function findCatalogProduct(name: string): { subcategory: UserCatalogSubcategory; product: UserCatalogProduct } | null {
   const clean = (name || '').trim().toLowerCase();
   for (const cat of USER_CATALOG) {
-    for (const p of cat.products) {
-      if (p.name.trim().toLowerCase() === clean) {
-        return { category: cat, product: p };
+    for (const subcat of cat.subcategories) {
+      for (const p of subcat.products) {
+        if (p.name.trim().toLowerCase() === clean) {
+          return { subcategory: subcat, product: p };
+        }
       }
+    }
+  }
+  return null;
+}
+
+export function findSubcategoryBySlug(slug: string): UserCatalogSubcategory | null {
+  const clean = (slug || '').toLowerCase();
+  for (const cat of USER_CATALOG) {
+    for (const subcat of cat.subcategories) {
+      if (subcat.slug === clean) return subcat;
     }
   }
   return null;

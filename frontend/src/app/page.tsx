@@ -20,16 +20,16 @@ import { toast } from 'sonner';
 
 // Flipkart Style Category Circles
 const categoryCircles = [
-  { name: 'Electronics', slug: 'electronics', image: 'https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=300&q=80', badge: 'Up to 60% Off' },
-  { name: 'Fashion Men', slug: 'fashion-men', image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=300&q=80', badge: 'Min 50% Off' },
-  { name: 'Fashion Women', slug: 'fashion-women', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=300&q=80', badge: 'Trending' },
-  { name: 'Home & Decor', slug: 'home-decor', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=300&q=80', badge: 'Special Price' },
-  { name: 'Beauty & Care', slug: 'beauty', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=300&q=80', badge: 'Top Rated' },
-  { name: 'Shoes & Footwear', slug: 'shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80', badge: 'From ₹499' },
-  { name: 'Sports & Fitness', slug: 'sports', image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=300&q=80', badge: 'Best Selling' },
-  { name: 'Toys & Kids', slug: 'kids', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=300&q=80', badge: 'New Styles' },
-  { name: 'Kitchenware', slug: 'kitchen', image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=300&q=80', badge: 'Extra 10% Off' },
-  { name: 'Furniture', slug: 'furniture', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80', badge: 'Mega Savings' },
+  { name: 'Electronics', slug: 'electronics', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=300&q=80', badge: 'Up to 60% Off' },
+  { name: 'Men Apparel', slug: 'men-apparel', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=80', badge: 'Min 50% Off' },
+  { name: 'Women Collection', slug: 'women-collection', image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80', badge: 'Trending' },
+  { name: 'Home Decor', slug: 'home-decor', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=300&q=80', badge: 'Special Price' },
+  { name: 'Beauty & Skincare', slug: 'beauty-skincare', image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=300&q=80', badge: 'Top Rated' },
+  { name: 'Running Shoes', slug: 'running-shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80', badge: 'From ₹499' },
+  { name: 'Fitness & Gym', slug: 'fitness-gym', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=300&q=80', badge: 'Best Selling' },
+  { name: 'Toys & Games', slug: 'toys-games', image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=300&q=80', badge: 'New Styles' },
+  { name: 'Cookware', slug: 'cookware', image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=300&q=80', badge: 'Extra 10% Off' },
+  { name: 'Sofas & Beds', slug: 'sofas-beds', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80', badge: 'Mega Savings' },
 ];
 
 // Hero Banners
@@ -50,9 +50,9 @@ const heroSlides = [
     description: 'Flat 50% - 80% Off on Men & Women Clothing & Footwear.',
     bg: 'from-rose-600 via-pink-600 to-purple-700',
     cta: 'Explore Fashion',
-    ctaLink: '/categories/fashion-men',
+    ctaLink: '/categories/fashion',
     badge: 'Style Fest',
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80',
   },
   {
     title: 'Home Makeover Essentials',
@@ -82,33 +82,33 @@ const quadSpotlights = [
   {
     title: 'Fashion & Everyday Wear',
     linkText: 'Explore fashion deals',
-    linkHref: '/categories/fashion-men',
+    linkHref: '/categories/fashion',
     items: [
-      { name: "Men's Apparel", image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=300&q=80', href: '/categories/fashion-men' },
-      { name: "Women's Collection", image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=300&q=80', href: '/categories/fashion-women' },
-      { name: 'Running Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80', href: '/categories/shoes' },
-      { name: 'Bags & Accessories', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80', href: '/products?search=bag' },
+      { name: "Men's Apparel", image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=80', href: '/categories/men-apparel' },
+      { name: "Women's Collection", image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80', href: '/categories/women-collection' },
+      { name: 'Running Shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80', href: '/categories/running-shoes' },
+      { name: 'Bags & Accessories', image: 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=300&q=80', href: '/products?search=bag' },
     ]
   },
   {
     title: 'Refresh Your Living Space',
     linkText: 'Shop home decor',
-    linkHref: '/categories/home-decor',
+    linkHref: '/categories/home-living',
     items: [
       { name: 'Home Decor', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=300&q=80', href: '/categories/home-decor' },
-      { name: 'Cookware', image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=300&q=80', href: '/categories/kitchen' },
-      { name: 'Sofas & Beds', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80', href: '/categories/furniture' },
-      { name: 'Lighting & Lamps', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=300&q=80', href: '/products?search=lamp' },
+      { name: 'Cookware', image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=300&q=80', href: '/categories/cookware' },
+      { name: 'Sofas & Beds', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80', href: '/categories/sofas-beds' },
+      { name: 'Lighting & Lamps', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=300&q=80', href: '/categories/lighting-lamps' },
     ]
   },
   {
     title: 'Essentials & Everyday Care',
     linkText: 'Discover essentials',
-    linkHref: '/categories/beauty',
+    linkHref: '/categories/essentials',
     items: [
-      { name: 'Beauty & Skincare', image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=300&q=80', href: '/categories/beauty' },
-      { name: 'Fitness & Gym', image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=300&q=80', href: '/categories/fitness' },
-      { name: 'Toys & Games', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=300&q=80', href: '/categories/kids' },
+      { name: 'Beauty & Skincare', image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=300&q=80', href: '/categories/beauty-skincare' },
+      { name: 'Fitness & Gym', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=300&q=80', href: '/categories/fitness-gym' },
+      { name: 'Toys & Games', image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=300&q=80', href: '/categories/toys-games' },
       { name: 'Pet Supplies', image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=300&q=80', href: '/categories/pet-supplies' },
     ]
   }

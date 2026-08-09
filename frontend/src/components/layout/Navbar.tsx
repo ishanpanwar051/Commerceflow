@@ -24,15 +24,15 @@ const navLinks = [
 
 const categoryLinks = [
   { name: 'Electronics', slug: 'electronics', icon: '🔌' },
-  { name: 'Fashion Men', slug: 'fashion-men', icon: '👔' },
-  { name: 'Fashion Women', slug: 'fashion-women', icon: '👗' },
+  { name: 'Men Apparel', slug: 'men-apparel', icon: '👔' },
+  { name: 'Women Collection', slug: 'women-collection', icon: '👗' },
   { name: 'Home Decor', slug: 'home-decor', icon: '🏠' },
-  { name: 'Beauty', slug: 'beauty', icon: '💄' },
-  { name: 'Sports', slug: 'sports', icon: '⚽' },
-  { name: 'Books', slug: 'books', icon: '📚' },
-  { name: 'Kids', slug: 'kids', icon: '🧸' },
-  { name: 'Furniture', slug: 'furniture', icon: '🛋️' },
-  { name: 'Automotive', slug: 'automotive', icon: '🚗' },
+  { name: 'Cookware', slug: 'cookware', icon: '🍳' },
+  { name: 'Sofas & Beds', slug: 'sofas-beds', icon: '🛋️' },
+  { name: 'Beauty & Skincare', slug: 'beauty-skincare', icon: '💄' },
+  { name: 'Fitness & Gym', slug: 'fitness-gym', icon: '⚽' },
+  { name: 'Toys & Games', slug: 'toys-games', icon: '🧸' },
+  { name: 'Pet Supplies', slug: 'pet-supplies', icon: '🐾' },
 ];
 
 export function Navbar() {
