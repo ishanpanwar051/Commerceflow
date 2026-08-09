@@ -28,28 +28,11 @@ const server = app.listen(port, async (err) => {
     const prisma = getPrisma();
     
     const productCount = await prisma.product.count();
-    const sampleProduct = await prisma.product.findFirst({ where: { name: { contains: 'DualSense' } }, include: { images: true } });
-    const isOldImage = !sampleProduct?.images[0]?.url?.includes('1607604276583');
-    logger.info(`📊 Found ${productCount} products in database (legacy image check: ${isOldImage})`);
+    logger.info(`📊 Found ${productCount} products in database`);
     
-    if (productCount !== 168 || isOldImage) {
-      logger.info('📦 Legacy or mismatched product images detected, running clean seed to populate exact images...');
+    if (productCount === 0) {
+      logger.info('📦 Empty product catalog detected, running seed script...');
       try {
-        // Clear existing records in proper FK order to avoid constraints
-        await prisma.reviewImage.deleteMany({});
-        await prisma.review.deleteMany({});
-        await prisma.payment.deleteMany({});
-        await prisma.orderItem.deleteMany({});
-        await prisma.order.deleteMany({});
-        await prisma.coupon.deleteMany({});
-        await prisma.wishlistItem.deleteMany({});
-        await prisma.cartItem.deleteMany({});
-        await prisma.cart.deleteMany({});
-        await prisma.inventory.deleteMany({});
-        await prisma.productImage.deleteMany({});
-        await prisma.product.deleteMany({});
-        await prisma.category.deleteMany({});
-        
         let runSeed: any;
         try {
           // @ts-ignore
@@ -63,7 +46,7 @@ const server = app.listen(port, async (err) => {
         
         if (runSeed) {
           await runSeed();
-          logger.info('✅ Database seeded successfully with exact product images!');
+          logger.info('✅ Database seeded successfully!');
         }
       } catch (seedErr) {
         logger.error({ err: seedErr }, 'Auto-seed warning (server will continue running)');
