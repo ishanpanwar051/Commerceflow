@@ -1,7 +1,7 @@
 import { createRequire } from 'module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { getProductImages, getCategoryImage } from './product-images';
+import { getProductImages, getCategoryImage, resetUsedImages } from './product-images';
 
 const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
@@ -33,6 +33,7 @@ function getPrismaInstance() {
  * grace period even with a large catalog.
  */
 async function main() {
+  resetUsedImages();
   const prisma = getPrismaInstance();
   // 1. Category images
   const categories = await prisma.category.findMany({

@@ -138,22 +138,91 @@ function resolvePoolKey(categorySlug: string, subcategory?: string, productName?
   return null;
 }
 
-/** Single deterministic image for a product. */
+const usedUrls = new Set<string>();
+
+export function resetUsedImages(products?: { name: string }[]) {
+  usedUrls.clear();
+  if (products) {
+    for (const p of products) {
+      const exact = findCatalogProduct(p.name);
+      if (exact && exact.product.image) {
+        usedUrls.add(exact.product.image);
+      }
+    }
+  }
+  console.log('RESET USED IMAGES: preloaded', usedUrls.size, 'active catalog image URLs');
+}
+
+const RELATED_POOLS: Record<string, string[]> = {
+  electronics: ['smartphones', 'laptops', 'headphones', 'smartwatches'],
+  'fashion-men': ['men-apparel', 'running-shoes', 'women-collection'],
+  'fashion-women': ['women-collection', 'running-shoes', 'men-apparel'],
+  'home-kitchen-furniture': ['home-decor', 'cookware', 'sofas-beds', 'lighting-lamps'],
+  'office-toys-groceries-automotive': ['toys-games', 'pet-supplies', 'home-decor'],
+  'shoes-footwear': ['running-shoes', 'men-apparel', 'women-collection'],
+  'sports-fitness-beauty': ['fitness-gym', 'beauty-skincare', 'pet-supplies'],
+};
+
+/** Single deterministic and unique image for a product. */
 export function getProductImages(product: ProductInfo, _productIndex: number = 0): { url: string; alt: string; order: number }[] {
   const name = product.name || '';
+  
+  // 1. Exact catalog product match (has unique images in catalog by default)
   const exact = findCatalogProduct(name);
   if (exact) {
     return [{ url: exact.product.image, alt: name, order: 0 }];
   }
 
+  const hash = simpleHash(name + (product.brand || ''));
   const poolKey = resolvePoolKey(product.categorySlug, product.subcategory, name);
-  const pool = (poolKey && SUBCATEGORY_IMAGE_POOLS[poolKey]) || [];
-  if (pool.length > 0) {
-    const url = toUnsplashUrl(pool[simpleHash(name + (product.brand || '')) % pool.length]);
-    return [{ url, alt: name, order: 0 }];
+
+  // 2. Try to find an unused image in the preferred pool
+  if (poolKey && SUBCATEGORY_IMAGE_POOLS[poolKey]) {
+    const pool = SUBCATEGORY_IMAGE_POOLS[poolKey];
+    for (let offset = 0; offset < pool.length; offset++) {
+      const imgId = pool[(hash + offset) % pool.length];
+      const url = toUnsplashUrl(imgId);
+      if (!usedUrls.has(url)) {
+        usedUrls.add(url);
+        return [{ url, alt: name, order: 0 }];
+      }
+    }
   }
 
-  return [{ url: toUnsplashUrl(FALLBACK_PHOTO), alt: name, order: 0 }];
+  // 3. Try to find an unused image in related pools
+  const normCat = (product.categorySlug || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const related = RELATED_POOLS[normCat] || [];
+  for (const relKey of related) {
+    if (relKey === poolKey) continue;
+    const pool = SUBCATEGORY_IMAGE_POOLS[relKey] || [];
+    for (let offset = 0; offset < pool.length; offset++) {
+      const imgId = pool[(hash + offset) % pool.length];
+      const url = toUnsplashUrl(imgId);
+      if (!usedUrls.has(url)) {
+        usedUrls.add(url);
+        return [{ url, alt: name, order: 0 }];
+      }
+    }
+  }
+
+  // 4. Try to find an unused image in ANY pool
+  for (const [key, pool] of Object.entries(SUBCATEGORY_IMAGE_POOLS)) {
+    for (const imgId of pool) {
+      const url = toUnsplashUrl(imgId);
+      if (!usedUrls.has(url)) {
+        usedUrls.add(url);
+        return [{ url, alt: name, order: 0 }];
+      }
+    }
+  }
+
+  // 5. Hard fallback (if all 240 unique images are used, which is impossible for 100 products)
+  const pool = (poolKey && SUBCATEGORY_IMAGE_POOLS[poolKey]) || SUBCATEGORY_IMAGE_POOLS['smartphones'];
+  const url = toUnsplashUrl(pool[hash % pool.length]);
+  return [{ url, alt: name, order: 0 }];
 }
 
 /** Category image derived from its own subcategory pool. */
