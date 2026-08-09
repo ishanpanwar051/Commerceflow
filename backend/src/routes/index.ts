@@ -47,14 +47,59 @@ adminRouter.get('/dashboard', async (_req: AuthRequest, res: Response, next: Nex
       prisma.product.count({ where: { deletedAt: null, isActive: true } }),
       prisma.user.count({ where: { isActive: true, deletedAt: null, role: 'CUSTOMER' } }),
       prisma.order.findMany({
-        where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 5,
-        include: { user: { select: { id: true, email: true, firstName: true, lastName: true } }, items: { take: 1 } },
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          user: { select: { id: true, email: true, firstName: true, lastName: true } },
+          items: { take: 1 },
+        },
       }),
     ]);
+
     const revenueResult = await prisma.order.aggregate({
-      where: { deletedAt: null, status: 'DELIVERED' }, _sum: { grandTotal: true },
+      where: {
+        deletedAt: null,
+        status: { in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+      },
+      _sum: { grandTotal: true },
     });
-    sendSuccess(res, { revenue: revenueResult._sum.grandTotal || 0, totalOrders, totalProducts, totalCustomers, recentOrders }, 'Dashboard stats fetched');
+
+    const topOrderItems = await prisma.orderItem.groupBy({
+      by: ['productId'],
+      where: {
+        order: {
+          deletedAt: null,
+          status: { in: ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+        },
+      },
+      _sum: { quantity: true, total: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+      take: 5,
+    });
+
+    const topProductIds = topOrderItems.map(item => item.productId);
+    const productsInfo = await prisma.product.findMany({
+      where: { id: { in: topProductIds } },
+      select: { id: true, name: true },
+    });
+    const productMap = new Map(productsInfo.map(p => [p.id, p.name]));
+
+    const topProducts = topOrderItems.map(item => ({
+      id: item.productId,
+      name: productMap.get(item.productId) || 'Product',
+      sales: item._sum?.quantity ?? 0,
+      revenue: item._sum?.total ?? 0,
+    }));
+
+    sendSuccess(res, {
+      revenue: revenueResult._sum.grandTotal || 0,
+      totalOrders,
+      totalProducts,
+      totalCustomers,
+      recentOrders,
+      topProducts,
+    }, 'Dashboard stats fetched');
   } catch (error) { next(error); }
 });
 

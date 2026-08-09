@@ -60,6 +60,7 @@ function pickUniqueImages(
   productIndex: number,
   count = 4,
 ): string[] {
+    if (!pool || pool.length === 0) return [];
   const hash = simpleHash(identity);
   const seen = new Set<string>();
   const result: string[] = [];
@@ -915,7 +916,9 @@ const PHOTO_POOLS: Record<string, string[]> = {
 
   // Automotive
   helmet: ['photo-1558981806-ec527fa84c39', 'photo-1542282088-fe8426682b8f'],
-  car: ['photo-1492144534655-ae79c964c9d7', 'photo-1503376780353-7e6692767b70'],
+       car: ['photo-1492144534655-ae79c964c9d7', 'photo-1503376780353-7e6692767b70'],
+
+  // Watches (canonical verified Unsplash watch gallery)
 
   // Office
   office: ['photo-1544716278-ca5e3f4abd8c', 'photo-1517842645767-c639042777db'],
@@ -1418,8 +1421,16 @@ export function getProductImages(product: ProductInfo, productIndex: number = 0)
     fallbackPool.push('https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80');
   } else if (catKey.includes('kids') || catKey.includes('toy')) {
     fallbackPool.push('https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80');
-  } else if (catKey.includes('auto') || catKey.includes('automotive')) {
+      } else if (catKey.includes('auto') || catKey.includes('automotive')) {
     fallbackPool.push('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('beauty') || catKey.includes('cosmetic')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('book')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('pet') || catKey.includes('animal')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80');
+  } else if (catKey.includes('kitchen') || catKey.includes('cook')) {
+    fallbackPool.push('https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80');
   } else {
     fallbackPool.push('https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=800&q=80');
   }
