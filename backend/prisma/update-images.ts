@@ -72,7 +72,12 @@ async function main() {
     let newImages;
     try {
       newImages = getProductImages(
-        { name: p.name, brand: p.brand || 'CommerceFlow', categorySlug },
+        { 
+          name: p.name, 
+          brand: p.brand || 'CommerceFlow', 
+          categorySlug,
+          subcategory: parent ? category?.name : undefined
+        },
         i
       );
     } catch (err) {
