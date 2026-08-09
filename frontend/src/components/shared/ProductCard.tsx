@@ -23,7 +23,6 @@ function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWish
 
   const images = product.images || [];
   const mainImage = imgError ? '/placeholder.svg' : (images[0]?.url || '/placeholder.svg');
-  const hoverImage = !imgError && images.length > 1 ? images[1]?.url : mainImage;
   const availableStock = product.inventory
     ? (product.inventory.stock ?? 0) - (product.inventory.reservedStock ?? 0)
     : undefined;
@@ -41,7 +40,7 @@ function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWish
         <div className="relative aspect-square overflow-hidden rounded-t-xl bg-muted">
           {!imageLoaded && <Skeleton className="absolute inset-0 w-full h-full" />}
           <img
-            src={isHovered ? hoverImage : mainImage}
+            src={mainImage}
             alt={product.name}
             loading="lazy"
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
