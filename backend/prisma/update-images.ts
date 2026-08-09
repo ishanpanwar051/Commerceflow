@@ -59,7 +59,7 @@ async function main() {
     orderBy: { createdAt: 'asc' },
   });
 
-  const catById = new Map(categories.map((c) => [c.id, c]));
+  const catById = new Map<string, any>(categories.map((c: any) => [c.id, c]));
 
   const imageRows: {
     productId: string;
@@ -73,7 +73,7 @@ async function main() {
     const p = products[i];
     const category = p.category;
     const parent = category?.parentId ? catById.get(category.parentId) : undefined;
-    const categorySlug = parent?.slug || category?.slug || 'general';
+    const categorySlug = (parent as any)?.slug || category?.slug || 'general';
 
     let newImages;
     try {
@@ -112,7 +112,7 @@ async function main() {
   }
 
   await prisma.productImage.deleteMany({
-    where: { productId: { in: products.map((p) => p.id) } },
+    where: { productId: { in: products.map((p: any) => p.id) } },
   });
 
   const BATCH = 500;

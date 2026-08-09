@@ -30,6 +30,7 @@ export function ProductImage({ src, alt, className = '', fallback = '/placeholde
       className={`object-cover ${className}`}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
+      referrerPolicy="no-referrer"
       onError={(e) => {
         // Stop retrying the broken URL to avoid an error loop.
         e.currentTarget.onerror = null;

@@ -43,6 +43,7 @@ function ProductCardComponent({ product, onAddToCart, onToggleWishlist, isInWish
             src={mainImage}
             alt={product.name}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             onError={() => setImgError(true)}
             onLoad={() => setImageLoaded(true)}
