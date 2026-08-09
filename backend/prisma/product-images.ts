@@ -29,7 +29,7 @@ function simpleHash(str: string): number {
  * cross-category mismatches reported in production. They are hard-blocked here
  * so every resolution branch falls through to the verified Unsplash pools.
  */
-const BLOCKED_IMAGE_HOSTS = ['i.pinimg.com'];
+const BLOCKED_IMAGE_HOSTS: string[] = [];
 
 export function isBlockedImageUrl(url: string | null | undefined): boolean {
   if (!url) return true;
@@ -92,21 +92,21 @@ const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   'superlight 3': 'https://images.unsplash.com/photo-1629429408209-1f912961dbd8?auto=format&fit=crop&w=800&q=80',
   'sony wh-1000xm6 noise cancelling': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
   'executive leather notebook': 'https://i.pinimg.com/736x/90/c0/f8/90c0f82b8f61c346a172a424d4d0b10a.jpg',
-  'premium leather journal': 'https://i.pinimg.com/736x/f8/6a/bc/f86abced150f6dcdbe0468e16296810b.jpg',
-  'gel ink pen pack': 'https://i.pinimg.com/736x/7d/d2/15/7dd21547d9a806eb7405ae816879cd4a.jpg',
-  'luxury ballpoint pen set': 'https://i.pinimg.com/1200x/73/5c/48/735c48ac1c83075d9f4ff585685e6986.jpg',
+  'premium leather journal': 'https://i.pinimg.com/736x/04/fa/33/04fa332e1b25caeb2d3f41e6081cc036.jpg',
+  'gel ink pen pack': 'https://i.pinimg.com/1200x/56/90/6b/56906b484cbff51bab870f71be30d76a.jpg',
+  'luxury ballpoint pen set': 'https://i.pinimg.com/736x/0d/18/3c/0d183c89e52f1da07091a03265d1c6cc.jpg',
   'all-in-one laser printer': 'https://i.pinimg.com/736x/91/c3/82/91c382be2031c07666296ed9e5db4eeb.jpg',
-  'wireless laser printer': 'https://i.pinimg.com/736x/d3/19/25/d3192541fb421d1d11dbf44be370be5e.jpg',
-  'magnetic dry-erase whiteboard': 'https://i.pinimg.com/1200x/74/3e/e9/743ee97edc537591513633ea243a68bc.jpg',
-  'desk organizer': 'https://i.pinimg.com/736x/44/63/10/446310856511784dd1cddb8793216302.jpg',
-  'document file organizer': 'https://i.pinimg.com/1200x/9a/69/fd/9a69fd3de5f4ffed740c9572f14fb3f6.jpg',
+  'wireless laser printer': 'https://i.pinimg.com/736x/6d/90/dd/6d90dd9d83f45259cb9972f948ed0528.jpg',
+  'magnetic dry-erase whiteboard': 'https://i.pinimg.com/1200x/df/d9/c7/dfd9c762d76443ff23d75ba6db7a8d52.jpg',
+  'desk organizer': 'https://i.pinimg.com/1200x/9c/27/2a/9c272a151e946a5f6e82b00f1d3d8208.jpg',
+  'document file organizer': 'https://i.pinimg.com/736x/17/67/c6/1767c6554d750bff3cd80b2334d49fbe.jpg',
   'sticky notes set': 'https://i.pinimg.com/736x/61/95/72/6195724cfcdca1c9970adbe2bef6d431.jpg',
   'educational building block set': 'https://i.pinimg.com/1200x/9c/09/4d/9c094d4dd0217085ee081cb07494a2c1.jpg',
-  'full face motorcycle helmet': 'https://i.pinimg.com/736x/c2/10/12/c21012153f1da26b39f8a7160360e583.jpg',
-  'sport bike racing helmet': 'https://i.pinimg.com/736x/b3/ac/35/b3ac350b0ca1f8d5909f61b81ace276b.jpg',
-  'modular motorcycle helmet': 'https://i.pinimg.com/736x/ee/bf/82/eebf82977eca882618ee9d4742e54fd4.jpg',
+  'full face motorcycle helmet': 'https://i.pinimg.com/1200x/f9/11/ad/f911ad7da3e9e200d1dfe15ec5c220c0.jpg',
+  'sport bike racing helmet': 'https://i.pinimg.com/736x/c1/27/06/c127061fad7834931f9b8a1bf0e19eaf.jpg',
+  'modular motorcycle helmet': 'https://i.pinimg.com/1200x/35/7c/c9/357cc9de5083ac8ad3914e4c7d89cfd3.jpg',
   'leather motorcycle riding jacket': 'https://i.pinimg.com/736x/0c/97/25/0c9725a2a235f40d57ff49e2be64dce7.jpg',
-  'premium biker jacket': 'https://i.pinimg.com/1200x/b8/36/a2/b836a2dcedd53ae310416c2599a0a7d6.jpg',
+  'premium biker jacket': 'https://i.pinimg.com/1200x/a0/aa/04/a0aa04c014ea8684ce5344ccf9594289.jpg',
   'motorcycle riding gloves': 'https://i.pinimg.com/736x/de/70/0a/de700ac1ba55cd074fb881d25dafd45f.jpg',
   'motorcycle riding boots': 'https://i.pinimg.com/1200x/fc/c9/70/fcc970ec83bf3246a9f35ab0b6fa0897.jpg',
   'synthetic engine oil': 'https://i.pinimg.com/1200x/0e/2a/04/0e2a043f0bb2c5dadd2f8b8029815132.jpg',

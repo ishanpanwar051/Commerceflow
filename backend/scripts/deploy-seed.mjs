@@ -29,8 +29,8 @@ async function main() {
   try {
     const productCount = await prisma.product.count();
     
-    if (productCount === 0) {
-      console.log('⚠️  WARNING: Database is empty! Please run seed manually:');
+    if (productCount !== 112) {
+      console.log(`⚠️  WARNING: Database has ${productCount} products instead of the expected 112! Please run seed manually if needed:`);
       console.log('   Render Shell → cd backend → npx tsx prisma/seed.ts');
     } else {
       const featured = await prisma.product.count({ where: { isFeatured: true } });

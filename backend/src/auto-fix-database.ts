@@ -33,8 +33,13 @@ async function main() {
     // Check if database needs fixing
     const productCount = await prisma.product.count();
     
-    if (productCount === 0) {
-      console.log('📦 No products found, running seed...');
+    // We expect exactly 112 products (16 products per category * 7 categories)
+    if (productCount !== 112) {
+      console.log(`📦 Expected 112 products, but found ${productCount}. Running seed...`);
+      
+      // Delete existing products first to avoid foreign key violations on categories
+      console.log('🧹 Cleaning up existing products...');
+      await prisma.product.deleteMany({});
       
       // Clear existing categories first (to avoid unique constraint)
       console.log('🧹 Cleaning up existing categories...');
