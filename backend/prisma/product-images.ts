@@ -65,8 +65,16 @@ const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   'cushion': 'photo-1584100936595-c0654b55a2e2',
   'curtain': 'photo-1616486338812-3dadae4b4ace',
   'rug': 'photo-1600166898405-da9535204843',
-  'desk lamp': 'photo-1507473885765-e6ed057f782c',
-  'lamp': 'photo-1507473885765-e6ed057f782c',
+  'running shoe': 'photo-1542291026-7eec264c27ff',
+  'sneaker': 'photo-1495555961986-6d4c1ecb7be3',
+  'canvas shoe': 'photo-1525966222134-fcfa99b8ae77',
+  'oxford': 'photo-1614252369475-531eba835eb1',
+  'derby': 'photo-1449247709967-d4461a6a6103',
+  'chelsea': 'photo-1638247025967-b4e38f787b76',
+  'boot': 'photo-1638247025967-b4e38f787b76',
+  'sandal': 'photo-1603487742131-4160ec999306',
+  'slipper': 'photo-1543163521-1bf539c55dd2',
+  'flip flop': 'photo-1603487742131-4160ec999306',
 };
 
 // Granular Unsplash pools per product type / model keyword
