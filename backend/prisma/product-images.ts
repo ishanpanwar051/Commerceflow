@@ -81,6 +81,8 @@ function pickUniqueImages(
 
 // User-provided explicit product image overrides
 const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
+  'xiaomi pad 7 pro': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+  'lenovo tab p14': 'https://images.unsplash.com/photo-1561154464-82e9adf32764?auto=format&fit=crop&w=800&q=80',
   'deathadder v3 pro': 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80',
   'viper v3 pro': 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=80',
   'g502 x plus': 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=80',
@@ -619,7 +621,6 @@ const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   'samsung galaxy tab s10+': 'https://i.pinimg.com/736x/66/dc/cb/66dccbcb14233313ae85263642248f4c.jpg',
   'google pixel tablet': 'https://i.pinimg.com/1200x/9c/e1/49/9ce149a9d46bb6b67a2f92ec9d095149.jpg',
   'oneplus pad 2': 'https://i.pinimg.com/736x/6c/8b/b1/6c8bb190e39a3d8ddf4754f64136e954.jpg',
-  'xiaomi pad 7 pro': 'https://i.pinimg.com/736x/60/bf/b2/60bfb2479e972ea9ee982946a436eacf.jpg',
   'lenovo tab extreme': 'https://i.pinimg.com/736x/9d/be/ac/9dbeaca8f7ad3e3f6e5176852188448f.jpg',
   'microsoft surface pro': 'https://i.pinimg.com/736x/7a/85/ba/7a85bab7a52d5ff8c383d278aed905ae.jpg',
   'redmi pad pro': 'https://i.pinimg.com/736x/c2/10/12/c21012153f1da26b39f8a7160360e583.jpg',
@@ -919,11 +920,8 @@ const PHOTO_POOLS: Record<string, string[]> = {
        car: ['photo-1492144534655-ae79c964c9d7', 'photo-1503376780353-7e6692767b70'],
 
     // Watches (canonical verified gallery)
-  watch: ['photo-1523275335684-37898b6baf30', 'photo-1508685096489-7aacd43bd3b1', 'photo-1579586337278-3befd40fd17a', 'photo-1524805444758-089113d48a6d', 'photo-1434493789847-2f02dc6ca35d'],
 
   // Accessories (verified)
-  sunglasses: ['photo-1511499767150-a48a237f0083', 'photo-1572635196237-14b3f281503f', 'photo-1508296695146-257a814070b4'],
-     wallet: ['photo-1627123424574-724758594e93', 'photo-1553062407-98eeb64c6a62'],
   belt: ['photo-1624222247344-550fb60583dc'],
   socks: ['photo-1586350977771-b3b0abd50c82'],
   cap: ['photo-1588850561407-ed78c282e89b'],
@@ -957,7 +955,6 @@ const PHOTO_POOLS: Record<string, string[]> = {
   beauty: ['photo-1586495777744-4413f21062fa', 'photo-1620916566398-39f1143ab7be', 'photo-1556229010-6c3f2c9ca5f8', 'photo-1541643600914-78b084683601'],
 
   // Sports & fitness (verified)
-  sports: ['photo-1579952363873-27f3bade9f55', 'photo-1531415074968-036ba1b575da', 'photo-1574629810360-7efbbe195018'],
   fitness: ['photo-1517836357463-d25dfeac3438', 'photo-1583454110551-21f2fa2afe61', 'photo-1593095948071-474c5cc2989d', 'photo-1601925260368-ae2f83cf8b7f'],
 
   // Toys (verified)
@@ -979,9 +976,7 @@ const PHOTO_POOLS: Record<string, string[]> = {
   appliance: ['photo-1593359677879-a4bb92f829d1', 'photo-1522869635100-9f4c5e86aa37', 'photo-1584568694244-14fbdf83bd30', 'photo-1571175443880-49e1d25b2bc5', 'photo-1626806787461-102c1bfaaea1', 'photo-1546039907-7fa05f864c02'],
 
   // Groceries sub-types
-  groceries: ['photo-1542838132-92c53300491e', 'photo-1550583724-b2692b85b150', 'photo-1586201375761-83865001e31c', 'photo-1560806887-1e4cd0b6cbd6'],
   dairy: ['photo-1550583724-b2692b85b150', 'photo-1563636619-e9143da7973b', 'photo-1508852953112-4b7d25d69a8e'],
-  grains: ['photo-1586201375761-83865001e31c', 'photo-1536304929831-ee1ca9d44906', 'photo-1518977676601-b53f82aba655'],
   fruits: ['photo-1560806887-1e4cd0b6cbd6', 'photo-1571771894821-ce9b6c11b08e', 'photo-1547514701-42782101795e'],
   vegetables: ['photo-1518977676601-b53f82aba655', 'photo-1618512496248-a07fe83aa8cf', 'photo-1592924357228-91a4daadcfea', 'photo-1597362925123-77861d3fbac7'],
   spices: ['photo-1596040033229-a9821ebd058d', 'photo-1556911220-bff31c812dba'],
@@ -1136,8 +1131,6 @@ const KEYWORD_ALIASES: Record<string, string> = {
   'salwar': 'ethnic',
   'kurtas': 'ethnic',
     'tie': 'suit',
-  'belt': 'belt',
-  'cap': 'cap',
 
   // --- Home, furniture, decor, cookware ---
   'sectional': 'furniture',
