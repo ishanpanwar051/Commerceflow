@@ -64,23 +64,76 @@ function simpleHash(str: string): number {
 }
 
 /** Resolve the 16-image pool key for a product/subcategory. */
-function resolvePoolKey(categorySlug: string, subcategory?: string): string | null {
-  const slug = (categorySlug || '').toLowerCase();
-  if (POOL_KEY_BY_SLUG[slug]) return POOL_KEY_BY_SLUG[slug];
+/** Resolve the 16-image pool key for a product/subcategory/name. */
+function resolvePoolKey(categorySlug: string, subcategory?: string, productName?: string): string | null {
+  const cat = (categorySlug || '').toLowerCase();
+  const sub = (subcategory || '').toLowerCase();
+  const name = (productName || '').toLowerCase();
 
-  const sub = (subcategory || '')
-    .toLowerCase()
+  // 1. Specific product name keyword overrides (highest priority)
+  if (name.includes('phone') || name.includes('mobile') || name.includes('iphone') || name.includes('samsung galaxy s') || name.includes('pixel')) return 'smartphones';
+  if (name.includes('laptop') || name.includes('notebook') || name.includes('macbook') || name.includes('thinkpad') || name.includes('zenbook') || name.includes('surface laptop') || name.includes('book4')) return 'laptops';
+  if (name.includes('headphone') || name.includes('earphone') || name.includes('buds') || name.includes('audio') || name.includes('headset') || name.includes('speaker') || name.includes('soundbar') || name.includes('earbuds') || name.includes('airpods') || name.includes('soundcore') || name.includes('momentum') || name.includes('quietcomfort')) return 'headphones';
+  if (name.includes('watch') || name.includes('smartwatch') || name.includes('fitbit') || name.includes('garmin') || name.includes('boat storm') || name.includes('colorfit')) return 'smartwatches';
+  
+  if (name.includes('shoe') || name.includes('sneaker') || name.includes('sandal') || name.includes('slippers') || name.includes('boots') || name.includes('flops') || name.includes('footwear') || name.includes('pegasus') || name.includes('ultraboost') || name.includes('clifton')) return 'running-shoes';
+  
+  if (name.includes('sofa') || name.includes('bed') || name.includes('chair') || name.includes('couch') || name.includes('table') || name.includes('recliner') || name.includes('mattress') || name.includes('wardrobe') || name.includes('sectional') || name.includes('loveseat') || name.includes('sleeper')) return 'sofas-beds';
+  if (name.includes('lamp') || name.includes('light') || name.includes('bulb') || name.includes('chandelier') || name.includes('sconce') || name.includes('led') || name.includes('neon') || name.includes('edison')) return 'lighting-lamps';
+  if (name.includes('pan') || name.includes('pot') || name.includes('cooker') || name.includes('cookware') || name.includes('knife') || name.includes('kadhai') || name.includes('wok') || name.includes('kettle') || name.includes('frying') || name.includes('skillet')) return 'cookware';
+  if (name.includes('decor') || name.includes('vase') || name.includes('clock') || name.includes('rug') || name.includes('mirror') || name.includes('candle') || name.includes('curtain') || name.includes('pillow') || name.includes('cushion') || name.includes('art') || name.includes('frame') || name.includes('canvas') || name.includes('bonsai')) return 'home-decor';
+  
+  if (name.includes('beauty') || name.includes('skincare') || name.includes('serum') || name.includes('lipstick') || name.includes('shampoo') || name.includes('sunscreen') || name.includes('perfume') || name.includes('toner') || name.includes('lotion') || name.includes('cream') || name.includes('facewash') || name.includes('eyeliner') || name.includes('makeup') || name.includes('conditioner') || name.includes('shea butter')) return 'beauty-skincare';
+  if (name.includes('fitness') || name.includes('gym') || name.includes('dumbbells') || name.includes('yoga') || name.includes('protein') || name.includes('cricket') || name.includes('football') || name.includes('shaker') || name.includes('kettlebell') || name.includes('bench') || name.includes('roller') || name.includes('bench') || name.includes('bat') || name.includes('mat')) return 'fitness-gym';
+  if (name.includes('toy') || name.includes('game') || name.includes('puzzle') || name.includes('drone') || name.includes('chess') || name.includes('monopoly') || name.includes('lego') || name.includes('blocks') || name.includes('car') || name.includes('motorcycle') || name.includes('helmet') || name.includes('washer') || name.includes('oil') || name.includes('jigsaw') || name.includes('playstation') || name.includes('xbox') || name.includes('nintendo') || name.includes('deck') || name.includes('teddy') || name.includes('blaster') || name.includes('doll') || name.includes('rubik') || name.includes('harness') || name.includes('carrier')) return 'toys-games';
+  if (name.includes('pet') || name.includes('dog') || name.includes('cat') || name.includes('leash') || name.includes('litter') || name.includes('grooming') || name.includes('bird') || name.includes('fish') || name.includes('food') || name.includes('chew') || name.includes('collar') || name.includes('carrier') || name.includes('harness') || name.includes('shampoo')) return 'pet-supplies';
+
+  // 2. Exact match using default maps
+  if (POOL_KEY_BY_SLUG[cat]) return POOL_KEY_BY_SLUG[cat];
+
+  const subSlug = sub
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-  if (POOL_KEY_BY_SLUG[sub]) return POOL_KEY_BY_SLUG[sub];
+  if (POOL_KEY_BY_SLUG[subSlug]) return POOL_KEY_BY_SLUG[subSlug];
 
-  const poolSub = findSubcategoryBySlug(subcategory || '') || findSubcategoryBySlug(sub);
+  const poolSub = findSubcategoryBySlug(subcategory || '') || findSubcategoryBySlug(subSlug);
   if (poolSub && POOL_KEY_BY_SLUG[poolSub.slug]) return POOL_KEY_BY_SLUG[poolSub.slug];
 
-  for (const [key, pool] of Object.entries(SUBCATEGORY_IMAGE_POOLS)) {
-    if (sub.includes(key) || key.includes(sub)) return key;
+  // 3. Category/Subcategory keyword matching
+  if (cat.includes('phone') || sub.includes('phone')) return 'smartphones';
+  if (cat.includes('laptop') || sub.includes('laptop')) return 'laptops';
+  if (cat.includes('headphone') || sub.includes('headphone')) return 'headphones';
+  if (cat.includes('watch') || sub.includes('watch')) return 'smartwatches';
+  
+  if (cat.includes('shoe') || sub.includes('shoe') || cat.includes('footwear') || sub.includes('footwear')) return 'running-shoes';
+  
+  if (cat.includes('women') || sub.includes('women')) return 'women-collection';
+  if (cat.includes('men') || sub.includes('men')) return 'men-apparel';
+  
+  if (cat.includes('decor') || sub.includes('decor')) return 'home-decor';
+  if (cat.includes('cookware') || sub.includes('cookware') || cat.includes('kitchen') || sub.includes('kitchen')) return 'cookware';
+  if (cat.includes('sofa') || sub.includes('sofa') || cat.includes('furniture') || sub.includes('furniture')) return 'sofas-beds';
+  if (cat.includes('lighting') || sub.includes('lighting')) return 'lighting-lamps';
+  
+  if (cat.includes('beauty') || sub.includes('beauty') || cat.includes('skincare') || sub.includes('skincare')) return 'beauty-skincare';
+  if (cat.includes('fitness') || sub.includes('fitness') || cat.includes('gym') || sub.includes('gym') || cat.includes('sports') || sub.includes('sports')) return 'fitness-gym';
+  if (cat.includes('toy') || sub.includes('toy') || cat.includes('game') || sub.includes('game') || cat.includes('automotive') || sub.includes('automotive')) return 'toys-games';
+  if (cat.includes('pet') || sub.includes('pet')) return 'pet-supplies';
+
+  // 4. Fallback based on parent category slug
+  if (cat === 'electronics') return 'laptops';
+  if (cat.includes('fashion-men')) return 'men-apparel';
+  if (cat.includes('fashion-women')) return 'women-collection';
+  if (cat.includes('home-kitchen-furniture') || cat.includes('home') || cat.includes('kitchen') || cat.includes('furniture')) return 'home-decor';
+  if (cat.includes('office-toys-groceries-automotive') || cat.includes('automotive') || cat.includes('toys') || cat.includes('office')) return 'toys-games';
+  if (cat.includes('shoes-footwear')) return 'running-shoes';
+  if (cat.includes('sports-fitness-beauty') || cat.includes('sports') || cat.includes('fitness')) return 'fitness-gym';
+
+  // Loop through entries as a final resort
+  for (const [key] of Object.entries(SUBCATEGORY_IMAGE_POOLS)) {
+    if (subSlug.includes(key) || key.includes(subSlug)) return key;
   }
   return null;
 }
@@ -93,7 +146,7 @@ export function getProductImages(product: ProductInfo, _productIndex: number = 0
     return [{ url: exact.product.image, alt: name, order: 0 }];
   }
 
-  const poolKey = resolvePoolKey(product.categorySlug, product.subcategory);
+  const poolKey = resolvePoolKey(product.categorySlug, product.subcategory, name);
   const pool = (poolKey && SUBCATEGORY_IMAGE_POOLS[poolKey]) || [];
   if (pool.length > 0) {
     const url = toUnsplashUrl(pool[simpleHash(name + (product.brand || '')) % pool.length]);
