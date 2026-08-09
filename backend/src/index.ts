@@ -28,10 +28,12 @@ const server = app.listen(port, async (err) => {
     const prisma = getPrisma();
     
     const productCount = await prisma.product.count();
-    logger.info(`📊 Found ${productCount} products in database`);
+    const sampleCategory = await prisma.category.findFirst({ where: { deletedAt: null } });
+    const isOldImage = sampleCategory?.image?.includes('loremflickr');
+    logger.info(`📊 Found ${productCount} products in database (legacy Flickr check: ${isOldImage})`);
     
-    if (productCount !== 168) {
-      logger.info('📦 Database out of sync, running seed to populate all categories...');
+    if (productCount !== 168 || isOldImage) {
+      logger.info('📦 Database out of sync or legacy Flickr images detected, running seed...');
       
       // Clear existing categories to avoid unique constraint
       await prisma.category.deleteMany({});
