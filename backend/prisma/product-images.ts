@@ -40,7 +40,18 @@ const USER_CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   'riding jacket': 'photo-1551028719-00167b16eac5',
   'engine oil': 'photo-1625047509248-ec889cbff17f',
   'pressure washer': 'photo-1607860108855-64acf2078ed9',
-  'wh-1000xm6': 'photo-1505740420928-5e560c06d30e',
+  'cricket': 'photo-1531415074968-036ba1b575da',
+  'football': 'photo-1579952363873-27f3bade9f55',
+  'yoga mat': 'photo-1601925260368-ae2f83cf8b7f',
+  'yoga': 'photo-1601925260368-ae2f83cf8b7f',
+  'dumbbell': 'photo-1583454110551-21f2fa2afe61',
+  'weight': 'photo-1583454110551-21f2fa2afe61',
+  'protein': 'photo-1593095948071-474c5cc2989d',
+  'lipstick': 'photo-1586495777744-4413f21062fa',
+  'serum': 'photo-1620916566398-39f1143ab7be',
+  'shampoo': 'photo-1556229010-6c3f2c9ca5f8',
+  'parfum': 'photo-1541643600914-78b084683601',
+  'perfume': 'photo-1541643600914-78b084683601',
 };
 
 // Granular Unsplash pools per product type / model keyword
