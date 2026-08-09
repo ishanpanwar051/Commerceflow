@@ -28,12 +28,12 @@ const server = app.listen(port, async (err) => {
     const prisma = getPrisma();
     
     const productCount = await prisma.product.count();
-    const sampleCategory = await prisma.category.findFirst({ where: { deletedAt: null } });
-    const isOldImage = sampleCategory?.image?.includes('loremflickr');
-    logger.info(`📊 Found ${productCount} products in database (legacy Flickr check: ${isOldImage})`);
+    const sampleProduct = await prisma.product.findFirst({ where: { name: { contains: 'DualSense' } }, include: { images: true } });
+    const isOldImage = !sampleProduct?.images[0]?.url?.includes('1607604276583');
+    logger.info(`📊 Found ${productCount} products in database (legacy image check: ${isOldImage})`);
     
     if (productCount !== 168 || isOldImage) {
-      logger.info('📦 Database out of sync or legacy Flickr images detected, running seed...');
+      logger.info('📦 Legacy or mismatched product images detected, running seed to populate exact images...');
       
       // Clear existing categories to avoid unique constraint
       await prisma.category.deleteMany({});
