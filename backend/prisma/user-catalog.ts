@@ -1,6 +1,7 @@
 // Catalog: 4 parent groups -> 15 subcategories, 16 products each.
-// Every product image comes from its subcategory's verified 16-image Unsplash
-// pool (index-aligned) so all 240 images are unique across the catalog.
+// Every product image is a deterministic placeholder from its subcategory's
+// verified 16-image pool (index-aligned) so all images are unique across the
+// catalog and never depend on a single external service.
 
 import { SUBCATEGORY_IMAGE_POOLS } from './subcategory-image-pools';
 
@@ -24,7 +25,7 @@ export interface UserCatalogCategory {
 }
 
 const img = (poolKey: string, index: number): string =>
-  `https://images.unsplash.com/${SUBCATEGORY_IMAGE_POOLS[poolKey][index]}?auto=format&fit=crop&w=800&q=80`;
+  `https://picsum.photos/seed/${SUBCATEGORY_IMAGE_POOLS[poolKey][index]}/600/600`;
 
 function sub(name: string, slug: string, description: string, names: string[]): UserCatalogSubcategory {
   const pool = SUBCATEGORY_IMAGE_POOLS[slug];

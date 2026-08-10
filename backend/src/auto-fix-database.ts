@@ -25,7 +25,10 @@ async function main() {
     return;
   }
 
-  const pool = new Pool({ connectionString: databaseUrl });
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
+  });
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter } as any);
 
@@ -33,17 +36,11 @@ async function main() {
     // Check if database needs fixing
     const productCount = await prisma.product.count();
     
-    // We expect exactly 112 products (16 products per category * 7 categories)
-    if (productCount !== 112) {
-      console.log(`📦 Expected 112 products, but found ${productCount}. Running seed...`);
-      
-      // Delete existing products first to avoid foreign key violations on categories
-      console.log('🧹 Cleaning up existing products...');
-      await prisma.product.deleteMany({});
-      
-      // Clear existing categories first (to avoid unique constraint)
-      console.log('🧹 Cleaning up existing categories...');
-      await prisma.category.deleteMany({});
+    // Only re-seed when the database is completely empty. Never wipe an
+    // existing catalog based on a fixed product-count expectation, since the
+    // production catalog can legitimately differ from the seed catalog.
+    if (productCount === 0) {
+      console.log(`📦 Database is empty. Running seed...`);
       
       // Import and run seed
       const { default: runSeed } = await import('../prisma/seed.js');
@@ -51,7 +48,7 @@ async function main() {
       
       console.log('✅ Database seeded successfully');
     } else {
-      console.log(`📊 Database has ${productCount} products`);
+      console.log(`📊 Database has ${productCount} products (skipping re-seed)`);
       
       // Check for overlapping flags (old bug)
       const featured = await prisma.product.count({ where: { isFeatured: true } });

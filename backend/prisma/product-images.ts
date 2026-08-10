@@ -10,6 +10,28 @@ type ProductInfo = {
 
 const FALLBACK_PHOTO = 'photo-1498049860654-af1a5c566876';
 
+// Custom images supplied by the site owner (keyed by lowercase product name).
+// These take priority over every placeholder source so they never get reset.
+const CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
+  'macbook pro 16': 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
+  'moto edge 60': 'https://i.pinimg.com/736x/2a/f4/3b/2af43baa9704d567dd1aafecc447c58d.jpg',
+  'oppo find n5': 'https://i.pinimg.com/1200x/20/d3/ce/20d3cebe1bb19b1b94800fdf5d650a90.jpg',
+  'vivo x200 pro': 'https://i.pinimg.com/736x/05/43/e0/0543e09d6fa1150b7b243004d28c989e.jpg',
+  'realme gt 7': 'https://i.pinimg.com/736x/e2/37/b8/e237b8517b14861cb6936998c2b420bc.jpg',
+  'nothing phone 3': 'https://i.pinimg.com/1200x/7d/46/2a/7d462a22e3622e2e2a63e933e62d526f.jpg',
+  'pixel 10 pro': 'https://i.pinimg.com/1200x/f2/cf/35/f2cf35e863abad46bea5d3e1eb483404.jpg',
+  'xiaomi 16 pro': 'https://i.pinimg.com/1200x/aa/d9/dd/aad9dd76c7484539aaf6abc4d7d1b6e0.jpg',
+  'oneplus 13': 'https://i.pinimg.com/1200x/ab/03/1d/ab031db73e8ee1bf1c566f4b58fa0fcf.jpg',
+};
+
+function findCustomImage(name: string): string | null {
+  const lower = (name || '').toLowerCase();
+  for (const [key, url] of Object.entries(CUSTOM_PRODUCT_IMAGES)) {
+    if (lower.includes(key)) return url;
+  }
+  return null;
+}
+
 const POOL_KEY_BY_SLUG: Record<string, string> = {
   smartphones: 'smartphones',
   laptops: 'laptops',
@@ -41,13 +63,14 @@ function toUnsplashUrl(photoId: string): string {
   if (trimmed.startsWith('http')) return trimmed;
   const cleanId = trimmed.replace(/[^\w-]/g, '');
   if (!cleanId) return '';
-  return `https://images.unsplash.com/${cleanId}?auto=format&fit=crop&w=800&q=80`;
+  return `https://picsum.photos/seed/${cleanId}/600/600`;
 }
 
 export function isBlockedImageUrl(url: string | null | undefined): boolean {
   if (!url) return true;
   try {
-    return new URL(url).hostname !== 'images.unsplash.com';
+    const hostname = new URL(url).hostname;
+    return !['images.unsplash.com', 'i.pinimg.com', 'picsum.photos'].includes(hostname);
   } catch {
     return true;
   }
@@ -168,6 +191,12 @@ const RELATED_POOLS: Record<string, string[]> = {
 export function getProductImages(product: ProductInfo, _productIndex: number = 0): { url: string; alt: string; order: number }[] {
   const name = product.name || '';
   
+  // 0. Site-owner supplied image (never overwritten by pool placeholders)
+  const custom = findCustomImage(name);
+  if (custom) {
+    return [{ url: custom, alt: name, order: 0 }];
+  }
+
   // 1. Exact catalog product match (has unique images in catalog by default)
   const exact = findCatalogProduct(name);
   if (exact) {

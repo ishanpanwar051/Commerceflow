@@ -14,7 +14,10 @@ function getPrismaInstance() {
     if (!databaseUrl) {
       throw new Error('DATABASE_URL environment variable is required to run the image sync');
     }
-    const syncPool = new Pool({ connectionString: databaseUrl });
+    const syncPool = new Pool({
+      connectionString: databaseUrl,
+      ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
+    });
     const syncAdapter = new PrismaPg(syncPool);
     prisma = new PrismaClient({ adapter: syncAdapter } as any);
   }
