@@ -12,7 +12,7 @@ const FALLBACK_PHOTO = 'photo-1498049860654-af1a5c566876';
 
 // Custom images supplied by the site owner (keyed by lowercase product name).
 // These take priority over every placeholder source so they never get reset.
-const CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
+export const CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   // Trial Section: 16 Smartphones mapped to Pinterest image URLs
   'iphone 17 pro max': 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
   'iphone 17 pro': 'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
@@ -66,9 +66,9 @@ const PARENT_FIRST_SUBCATEGORY: Record<string, string> = {
   essentials: 'beauty-skincare',
 };
 
-function toUnsplashUrl(photoId: string): string {
-  if (!photoId) return '/placeholder.svg';
-  const trimmed = photoId.trim();
+function resolveImageUrl(value: string): string {
+  if (!value) return '/placeholder.svg';
+  const trimmed = value.trim();
   if (trimmed.startsWith('http')) return trimmed;
   return '/placeholder.svg';
 }
@@ -218,7 +218,7 @@ export function getProductImages(product: ProductInfo, _productIndex: number = 0
     const pool = SUBCATEGORY_IMAGE_POOLS[poolKey];
     for (let offset = 0; offset < pool.length; offset++) {
       const imgId = pool[(hash + offset) % pool.length];
-      const url = toUnsplashUrl(imgId);
+      const url = resolveImageUrl(imgId);
       if (!usedUrls.has(url)) {
         usedUrls.add(url);
         return [{ url, alt: name, order: 0 }];
@@ -237,7 +237,7 @@ export function getProductImages(product: ProductInfo, _productIndex: number = 0
     const pool = SUBCATEGORY_IMAGE_POOLS[relKey] || [];
     for (let offset = 0; offset < pool.length; offset++) {
       const imgId = pool[(hash + offset) % pool.length];
-      const url = toUnsplashUrl(imgId);
+      const url = resolveImageUrl(imgId);
       if (!usedUrls.has(url)) {
         usedUrls.add(url);
         return [{ url, alt: name, order: 0 }];
@@ -248,7 +248,7 @@ export function getProductImages(product: ProductInfo, _productIndex: number = 0
   // 4. Try to find an unused image in ANY pool
   for (const [key, pool] of Object.entries(SUBCATEGORY_IMAGE_POOLS)) {
     for (const imgId of pool) {
-      const url = toUnsplashUrl(imgId);
+      const url = resolveImageUrl(imgId);
       if (!usedUrls.has(url)) {
         usedUrls.add(url);
         return [{ url, alt: name, order: 0 }];
@@ -258,7 +258,7 @@ export function getProductImages(product: ProductInfo, _productIndex: number = 0
 
   // 5. Hard fallback (if all 240 unique images are used, which is impossible for 100 products)
   const pool = (poolKey && SUBCATEGORY_IMAGE_POOLS[poolKey]) || SUBCATEGORY_IMAGE_POOLS['smartphones'];
-  const url = toUnsplashUrl(pool[hash % pool.length]);
+  const url = resolveImageUrl(pool[hash % pool.length]);
   return [{ url, alt: name, order: 0 }];
 }
 
@@ -267,8 +267,8 @@ export function getCategoryImage(categorySlug: string): string {
   const slug = (categorySlug || '').toLowerCase();
   const poolKey = POOL_KEY_BY_SLUG[slug] || PARENT_FIRST_SUBCATEGORY[slug];
   const pool = (poolKey && SUBCATEGORY_IMAGE_POOLS[poolKey]) || [];
-  if (pool.length > 0) return toUnsplashUrl(pool[0]);
-  return toUnsplashUrl(FALLBACK_PHOTO);
+  if (pool.length > 0) return resolveImageUrl(pool[0]);
+  return resolveImageUrl(FALLBACK_PHOTO);
 }
 
 export { USER_CATALOG, SUBCATEGORY_IMAGE_POOLS };
