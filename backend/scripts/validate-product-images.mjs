@@ -79,8 +79,10 @@ async function main() {
       continue;
     }
     if (IPHONE_URLS.some((u) => url.includes(u) || url === u)) {
-      iphoneMisuse++;
-      console.log(`  [IPHONE-MISUSE] ${p.name} (${p.category?.name || '?'}) - ${url.slice(0, 80)}`);
+      if (!p.name.toLowerCase().startsWith('iphone')) {
+        iphoneMisuse++;
+        console.log(`  [IPHONE-MISUSE] ${p.name} (${p.category?.name || '?'}) - ${url.slice(0, 80)}`);
+      }
     }
     valid++;
     if (!urlToProducts.has(url)) urlToProducts.set(url, []);

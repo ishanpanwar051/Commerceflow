@@ -1,10 +1,7 @@
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl && envUrl.startsWith('http')) return envUrl;
-  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
-    return 'https://commerceflow-api-1s7i.onrender.com/api/v1';
-  }
-  return envUrl || '/api/v1';
+  return 'https://commerceflow-api-1s7i.onrender.com/api/v1';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
