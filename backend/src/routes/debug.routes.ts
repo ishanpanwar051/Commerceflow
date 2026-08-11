@@ -75,7 +75,7 @@ router.get('/db-status', async (req, res) => {
         createdAt: p.createdAt,
       })),
       recommendation: productCount === 0 
-        ? 'Database is empty - auto-fix should seed on next deployment'
+        ? 'Database is empty - trigger /api/v1/debug/seed to seed catalog'
         : hasOverlap
         ? 'Products have overlapping flags - auto-fix should correct on next deployment'
         : 'Database looks good!'
@@ -85,6 +85,35 @@ router.get('/db-status', async (req, res) => {
       status: 'error',
       message: error.message,
     });
+  }
+});
+
+/**
+ * DEBUG ENDPOINT - Trigger Database Seed
+ * Allows explicit on-demand seeding of the database
+ */
+router.all('/seed', async (req, res) => {
+  try {
+    const { spawn } = await import('node:child_process');
+    const { fileURLToPath } = await import('node:url');
+    const seedPath = fileURLToPath(new URL('../../seed.mjs', import.meta.url));
+    
+    console.log(`[debug/seed] Triggering seed script from ${seedPath}`);
+    const child = spawn(process.execPath, [seedPath], { stdio: 'inherit' });
+    
+    child.on('exit', (code) => {
+      if (code === 0) {
+        res.json({ status: 'success', message: 'Database seeded successfully with 240 verified images' });
+      } else {
+        res.status(500).json({ status: 'error', message: `Seed exited with code ${code}` });
+      }
+    });
+
+    child.on('error', (err) => {
+      res.status(500).json({ status: 'error', message: err.message });
+    });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
