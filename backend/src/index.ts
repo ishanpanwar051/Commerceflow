@@ -30,9 +30,25 @@ const server = app.listen(port, async (err) => {
     const productCount = await prisma.product.count();
     logger.info(`📊 Database has ${productCount} products`);
 
-    // NOTE: server startup is intentionally read-only with respect to product
-    // data. Seeding and product-image maintenance are manual, explicit steps
-    // only — they must never run automatically on boot or restart.
+    if (productCount === 0) {
+      logger.info('🌱 Database is empty (0 products). Auto-seeding catalog...');
+      try {
+        const { spawn } = await import('node:child_process');
+        const { fileURLToPath } = await import('node:url');
+        const seedPath = fileURLToPath(new URL('./seed.mjs', import.meta.url));
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn(process.execPath, [seedPath], { stdio: 'inherit' });
+          child.on('exit', (code) => {
+            if (code === 0) resolve();
+            else reject(new Error(`Seed process exited with code ${code}`));
+          });
+          child.on('error', reject);
+        });
+        logger.info('✅ Auto-seed completed successfully!');
+      } catch (seedErr) {
+        logger.error({ error: seedErr }, '⚠️ Auto-seed failed or skipped, server will continue startup');
+      }
+    }
     
     logger.info('🎉 Database check complete!');
   } catch (error) {
