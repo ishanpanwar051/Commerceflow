@@ -3,7 +3,7 @@ import { Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, Truck, Shield, HeadphonesIcon, Zap, Award, ChevronLeft, 
-  ChevronRight, TrendingUp, Flame, Tag, Clock, CheckCircle2, Sparkles, ShoppingBag, Percent
+  ChevronRight, TrendingUp, Flame, Tag, Clock, CheckCircle2, Sparkles, ShoppingBag, Percent, Lock, RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -118,8 +118,8 @@ const quadSpotlights = [
 const budgetStores = [
   { label: 'Under ₹499', href: '/products?maxPrice=499', badge: 'Everyday Essentials' },
   { label: 'Under ₹999', href: '/products?maxPrice=999', badge: 'Budget Fashion' },
-  { label: 'Under ₹2,499', href: '/products?maxPrice=2499', badge: 'Popular Tech' },
-  { label: 'Under ₹4,999', href: '/products?maxPrice=4999', badge: 'Home Upgrades' },
+  { label: 'Under ₹1,499', href: '/products?maxPrice=1499', badge: 'Popular Tech' },
+  { label: 'Under ₹2,499', href: '/products?maxPrice=2499', badge: 'Home Upgrades' },
 ];
 
 // Top Brand Logos
@@ -127,9 +127,9 @@ const topBrands = [
   { name: 'Apple', logo: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=200&q=80' },
   { name: 'Samsung', logo: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=200&q=80' },
   { name: 'Nike', logo: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=200&q=80' },
-  { name: 'Sony', logo: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80' },
   { name: 'Adidas', logo: 'https://images.unsplash.com/photo-1518002171953-a080ee817e1f?auto=format&fit=crop&w=200&q=80' },
-  { name: 'ASUS', logo: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=200&q=80' },
+  { name: 'Sony', logo: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=200&q=80' },
+  { name: 'HP', logo: 'https://images.unsplash.com/photo-1589561084283-930aa7b1ce50?auto=format&fit=crop&w=200&q=80' },
 ];
 
 export default function HomePage() {
@@ -450,44 +450,53 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 10. Flipkart & Amazon Value Props & Trust Badges */}
+      {/* 10. Trust & Service Strip */}
       <section className="py-10 border-t bg-white dark:bg-card">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="flex items-center gap-4 p-4 rounded-xl border bg-muted/10">
-              <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
-                <Truck className="h-6 w-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="flex items-center gap-3 p-4 rounded-xl border bg-muted/10">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
+                <Truck className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm">Free & Fast Delivery</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">On all orders over ₹499</p>
+                <h4 className="font-bold text-xs">Free & Fast Delivery</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">On orders over ₹499</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-xl border bg-muted/10">
-              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0">
-                <Shield className="h-6 w-6" />
+            <div className="flex items-center gap-3 p-4 rounded-xl border bg-muted/10">
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 shrink-0">
+                <Lock className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm">100% Original Products</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">Directly from verified brands</p>
+                <h4 className="font-bold text-xs">Secure Payments</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">256-bit SSL encrypted</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-xl border bg-muted/10">
-              <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500 shrink-0">
-                <Percent className="h-6 w-6" />
+            <div className="flex items-center gap-3 p-4 rounded-xl border bg-muted/10">
+              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-500 shrink-0">
+                <RotateCcw className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm">15-Day Easy Returns</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">Hassle-free return policy</p>
+                <h4 className="font-bold text-xs">15-Day Easy Returns</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Hassle-free replacement</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-xl border bg-muted/10">
-              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500 shrink-0">
-                <HeadphonesIcon className="h-6 w-6" />
+            <div className="flex items-center gap-3 p-4 rounded-xl border bg-muted/10">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm">24/7 Support</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">Dedicated customer team</p>
+                <h4 className="font-bold text-xs">100% Genuine Products</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Directly from brands</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 rounded-xl border bg-muted/10">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 shrink-0">
+                <HeadphonesIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-xs">24/7 Customer Support</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Dedicated assistance</p>
               </div>
             </div>
           </div>
