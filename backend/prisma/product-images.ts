@@ -13,15 +13,24 @@ const FALLBACK_PHOTO = 'photo-1498049860654-af1a5c566876';
 // Custom images supplied by the site owner (keyed by lowercase product name).
 // These take priority over every placeholder source so they never get reset.
 const CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
-  'macbook pro 16': 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
-  'moto edge 60': 'https://i.pinimg.com/736x/2a/f4/3b/2af43baa9704d567dd1aafecc447c58d.jpg',
-  'oppo find n5': 'https://i.pinimg.com/1200x/20/d3/ce/20d3cebe1bb19b1b94800fdf5d650a90.jpg',
-  'vivo x200 pro': 'https://i.pinimg.com/736x/05/43/e0/0543e09d6fa1150b7b243004d28c989e.jpg',
-  'realme gt 7': 'https://i.pinimg.com/736x/e2/37/b8/e237b8517b14861cb6936998c2b420bc.jpg',
-  'nothing phone 3': 'https://i.pinimg.com/1200x/7d/46/2a/7d462a22e3622e2e2a63e933e62d526f.jpg',
-  'pixel 10 pro': 'https://i.pinimg.com/1200x/f2/cf/35/f2cf35e863abad46bea5d3e1eb483404.jpg',
-  'xiaomi 16 pro': 'https://i.pinimg.com/1200x/aa/d9/dd/aad9dd76c7484539aaf6abc4d7d1b6e0.jpg',
+  // Trial Section: 16 Smartphones mapped to Pinterest image URLs
+  'iphone 17 pro max': 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+  'iphone 17 pro': 'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
+  'iphone 16e': 'https://i.pinimg.com/736x/90/c0/f8/90c0f82b8f61c346a172a424d4d0b10a.jpg',
+  'samsung galaxy s26 ultra': 'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg',
+  'samsung galaxy s26+': 'https://i.pinimg.com/736x/d5/64/26/d56426cc8ad6a77dbb03e7e9ed5ffda3.jpg',
+  'samsung galaxy z fold 7': 'https://i.pinimg.com/736x/f8/6a/bc/f86abced150f6dcdbe0468e16296810b.jpg',
+  'google pixel 10 pro xl': 'https://i.pinimg.com/736x/24/85/69/248569e562fc906baf54dbf9a9251112.jpg',
+  'google pixel 10 pro': 'https://i.pinimg.com/1200x/f2/cf/35/f2cf35e863abad46bea5d3e1eb483404.jpg',
   'oneplus 13': 'https://i.pinimg.com/1200x/ab/03/1d/ab031db73e8ee1bf1c566f4b58fa0fcf.jpg',
+  'xiaomi 16 pro': 'https://i.pinimg.com/1200x/24/9c/14/249c14f8278394ba6b7070b66892fc51.jpg',
+  'nothing phone 3': 'https://i.pinimg.com/736x/01/8f/8a/018f8adb63275f1ed917e7082373978e.jpg',
+  'realme gt 7 pro': 'https://i.pinimg.com/736x/56/75/81/5675819358843349723552ca.jpg',
+  'vivo x200 pro': 'https://i.pinimg.com/736x/05/43/e0/0543e09d6fa1150b7b243004d28c989e.jpg',
+  'oppo find n5': 'https://i.pinimg.com/1200x/20/d3/ce/20d3cebe1bb19b1b94800fdf5d650a90.jpg',
+  'motorola edge 60 pro': 'https://i.pinimg.com/736x/2a/f4/3b/2af43baa9704d567dd1aafecc447c58d.jpg',
+  'honor magic 7 pro': 'https://i.pinimg.com/736x/7d/d2/15/7dd21547d9a806eb7405ae816879cd4a.jpg',
+  'macbook pro 16': 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
 };
 
 function findCustomImage(name: string): string | null {
