@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createRequire } from 'module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -13,9 +14,10 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+const isLocal = databaseUrl.includes('127.0.0.1') || databaseUrl.includes('localhost') || process.env.DATABASE_SSL === 'false';
 const seedPool = new Pool({
   connectionString: databaseUrl,
-  ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
+  ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
 const prisma: any = new PrismaClient({ adapter: new PrismaPg(seedPool) } as any);
@@ -336,13 +338,328 @@ function buildBox(name: string): string[] {
   ];
 }
 
-const SELLERS = ['Reliance Digital', 'Croma', 'Tata CLiQ', 'Flipkart Seller', 'Amazon India', 'Vijay Sales', 'Poorvika Mobiles', 'Bajaj Electronics'];
-const RETURN_POLICIES = ['15 Days Easy Return', '30 Days Return Policy', '7 Days Replacement', 'No Questions Asked Returns within 15 Days'];
-const DELIVERY_ESTIMATES = ['2-3 Business Days', '3-5 Business Days', 'Express 24 Hours', '1-2 Business Days', '4-6 Business Days'];
-const WARRANTIES = ['1 Year Manufacturer Warranty', '2 Year International Warranty', '3 Year Extended Warranty', '1 Year Limited Warranty'];
-const ORIGINS = ['China', 'India', 'USA', 'Japan', 'South Korea', 'Germany', 'Taiwan', 'Vietnam'];
-const MATERIALS = ['Aluminum', 'Plastic', 'Stainless Steel', 'Glass', 'Leather', 'Cotton', 'Polyester', 'Wood'];
-const GST = [5, 12, 18, 28];
+function u(id: string): string {
+  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=800&q=80`;
+}
+
+const SEED_PRODUCT_IMAGE_MAP: Record<string, string> = {
+  // === ELECTRONICS: SMARTPHONES (16) ===
+  'iPhone 17 Pro Max': u('1511707171634-5f897ff02aa9'),
+  'iPhone 17 Pro': u('1592750475338-74b7b21085ab'),
+  'iPhone 16e': u('1580910051074-3eb694886505'),
+  'Samsung Galaxy S26 Ultra': u('1610945265064-0e34e5519bbf'),
+  'Samsung Galaxy S26+': u('1565849904461-04a58ad377e0'),
+  'Samsung Galaxy Z Fold 7': u('1585060544812-6b45742d762f'),
+  'Google Pixel 10 Pro XL': u('1598327105666-5b89351aff97'),
+  'Google Pixel 10 Pro': u('1546054454-aa26e2b734c7'),
+  'OnePlus 13': u('1574944985070-8f30c1b926c7'),
+  'Xiaomi 16 Pro': u('1512499617640-c74ae3a79d37'),
+  'Nothing Phone 3': u('1567581935884-3349723552ca'),
+  'Realme GT 7 Pro': u('1533228876829-65c94e7b5025'),
+  'Vivo X200 Pro': u('1550029402-2860a359265f'),
+  'OPPO Find N5': u('1584438784894-089d6a62b8fa'),
+  'Motorola Edge 60 Pro': u('1574634534894-89d7576c8259'),
+  'Honor Magic 7 Pro': u('1523206489230-c012c64b2b48'),
+
+  // === ELECTRONICS: LAPTOPS (16) ===
+  'MacBook Pro 16-inch': u('1517336714731-489689fd1ca8'),
+  'MacBook Pro 14-inch': u('1611186871348-b1ce696e52c9'),
+  'MacBook Air 15-inch': u('1541807084-5c52b6b3adef'),
+  'MacBook Air 13-inch': u('1525547719571-a2d4ac8945e2'),
+  'Dell XPS 16': u('1588872657578-7efd1f1555ed'),
+  'Dell XPS 14': u('1593642632823-8f785ba67e45'),
+  'Lenovo ThinkPad X1 Carbon': u('1588702547923-7093a6c3ae33'),
+  'HP Spectre x360': u('1544716278-ca5e3f4abd8c'),
+  'ASUS ROG Zephyrus G16': u('1603302576837-37561b2e2302'),
+  'ASUS Zenbook 14': u('1496181133206-80ce9b88a853'),
+  'Acer Swift 5': u('1531297484001-80022131f5a1'),
+  'Microsoft Surface Laptop 7': u('1515378791036-0648a3ef77b2'),
+  'Samsung Galaxy Book4 Ultra': u('1498050108023-c5249f4df085'),
+  'Lenovo IdeaPad Slim 5': u('1527443224154-c4a3942d3acf'),
+  'HP Pavilion 15': u('1504707748692-01926fb72126'),
+  'Dell Inspiron 15': u('1537498425277-c283d32ef9db'),
+
+  // === ELECTRONICS: HEADPHONES (16) ===
+  'Sony WH-1000XM6': u('1505740420928-5e560c06d30e'),
+  'Sony WH-1000XM5': u('1546435770-a3e426bf472b'),
+  'Sony MDR-7506': u('1583394838336-acd977736f90'),
+  'Bose QuietComfort Ultra': u('1590658268037-6bf12165a8df'),
+  'Bose QuietComfort 45': u('1484704849700-f032a568e944'),
+  'Apple AirPods Max': u('1545127398-14699f92334b'),
+  'Sennheiser Momentum 4': u('1572536147248-ac59a8abfa4e'),
+  'JBL Tune 770NC': u('1524678606370-a47ad25cb82a'),
+  'JBL Quantum 910X': u('1618366712010-f4ae9c647dcb'),
+  'Audio-Technica ATH-M50x': u('1585298723682-7115561c51b7'),
+  'Beats Studio Pro': u('1577174881658-0f30ed549adc'),
+  'Skullcandy Crusher ANC 2': u('1599669454699-248893623440'),
+  'Marshall Major V': u('1505751172876-fa1923c5c528'),
+  'Anker Soundcore Space One': u('1613040809024-b4ef7ba99bc3'),
+  'Sony MDR-ZX110': u('1520170350707-b2da594d8880'),
+  'Bose Headphones 700': u('1511379938547-c1f69419868d'),
+
+  // === ELECTRONICS: SMARTWATCHES (16) ===
+  'Apple Watch Ultra 3': u('1508685096489-7aacd43bd3b1'),
+  'Apple Watch Series 11': u('1523275335684-37898b6baf30'),
+  'Samsung Galaxy Watch 8': u('1579586337278-3befd40fd17a'),
+  'Samsung Galaxy Watch 8 Classic': u('1509042239860-f550ce710b93'),
+  'Google Pixel Watch 4': u('1510017803414-b12136f65882'),
+  'Garmin Forerunner 965': u('1517502884422-41eaead166d4'),
+  'Garmin Venu 3': u('1522335789203-aabd1fc54bc9'),
+  'Garmin Fenix 8': u('1544117519-31a4b719223d'),
+  'Fitbit Sense 3': u('1508685096489-7aacd43bd3b2'),
+  'Fitbit Charge 7': u('1576243345690-4e4b7721064f'),
+  'Amazfit GTR 5': u('1508057198894-247b23fe5ade'),
+  'Amazfit Bip 6': u('1542496658-e33a6d0d50f6'),
+  'OnePlus Watch 3': u('1516574187841-cb9cc2ca948b'),
+  'Huawei Watch GT 5': u('1557438159-51eec7a6c9e8'),
+  'boAt Storm Call 4': u('1575311373937-040b8e1fd5b6'),
+  'Noise ColorFit Pro 6': u('1518051870910-a46e30d9db16'),
+
+  // === FASHION: MEN APPAREL (16) ===
+  'Classic White T-Shirt': u('1521572267360-ee0c2909d518'),
+  'Oversized Black T-Shirt': u('1503342217505-b0a15ec3261c'),
+  'Polo T-Shirt': u('1586363104862-3a5e2ab60d99'),
+  'Graphic Print T-Shirt': u('1576995853123-5a10305d93c0'),
+  'Plain Cotton T-Shirt': u('1618354691373-d851c5c3a990'),
+  'Striped T-Shirt': u('1523381294911-8d3cead13475'),
+  'Henley T-Shirt': u('1562157873-818bc0726f68'),
+  'Slim Fit T-Shirt': u('1622445268465-3f73d63d9838'),
+  'Oversized Graphic T-Shirt': u('1503341455253-b2e723bb3dbb'),
+  'Full Sleeve T-Shirt': u('1618354691551-44de113f0164'),
+  'Premium Pique Polo': u('1625910513413-7221295b281f'),
+  'Basic Round Neck T-Shirt': u('1583743814966-8936f5b7be1a'),
+  'Oxford Cotton Shirt': u('1598033129183-c4f50c736f10'),
+  'White Formal Shirt': u('1602810318383-e386cc2a3ccf'),
+  'Black Casual Shirt': u('1603252109303-2751441dd157'),
+  'Denim Shirt': u('1578932750294-f5075e85f44a'),
+
+  // === FASHION: WOMEN COLLECTION (16) ===
+  'Floral Summer Maxi Dress': u('1572804013309-59a88b7e92f1'),
+  'Cocktail Evening Dress': u('1566174053879-31528523f8ae'),
+  'Silk Blouse Top': u('1551803091-e20673f15770'),
+  'Designer Banarasi Saree': u('1610030469983-98e550d6193c'),
+  'Embroidered Cotton Kurta': u('1617627143750-d86bc21e42bb'),
+  'Anarkali Suit Set': u('1583391733956-3750e0ff4e8b'),
+  'High-Waisted Denim Jeans': u('1541099649105-f69ad21f3246'),
+  'Pleated A-Line Skirt': u('1583496661160-fb5886a0aaaa'),
+  'Ankle-Length Leggings': u('1506629082925-ffd1be05e986'),
+  'Trench Coat': u('1539533018447-63fcce2678e3'),
+  'Fitted Denim Jacket': u('1544441893-675973e31985'),
+  'Oversized Blazer': u('1591047139829-d91aecb6caea'),
+  'Structured Leather Handbag': u('1584917865442-de89df76afd3'),
+  'Evening Clutch': u('1566150494494-b60518671602'),
+  'Gold Plated Necklace Set': u('1599643478518-a784e5dc4c8f'),
+  'Crystal Earrings': u('1535632066927-ab7c9ab60908'),
+
+  // === FASHION: RUNNING SHOES (16) ===
+  'Nike Air Zoom Pegasus': u('1542291026-7eec264c27ff'),
+  'Adidas Ultraboost': u('1584735935682-2f2b69dff9d2'),
+  'ASICS Gel-Kayano': u('1539185441755-769473a23570'),
+  'New Balance Fresh Foam': u('1551107696-a4b085a0d9a2'),
+  'Brooks Ghost': u('1595950653106-6c9ebd614d3a'),
+  'Hoka Clifton': u('1575537302964-96cd47c06b1b'),
+  'Puma Velocity Nitro': u('1608231387042-66d1773070a5'),
+  'Saucony Ride': u('1606107557195-0e29a4b5b4aa'),
+  'Under Armour HOVR': u('1560769629-975ec94e6a86'),
+  'Reebok Floatride': u('1582588678413-dbf45f4823e9'),
+  'Mizuno Wave Rider': u('1600185365926-3a2ce3cdb9eb'),
+  'Skechers Go Run': u('1515955656352-a1fa3ffcd111'),
+  'Nike Air Force 1': u('1595341888016-a392ef81b7de'),
+  'Adidas Stan Smith': u('1582588678420-a92c0199d39e'),
+  'Adidas Superstar': u('1512374382149-233c42b6a83b'),
+  'Converse Chuck Taylor': u('1607522370275-f14206abe5d3'),
+
+  // === HOME & LIVING: HOME DECOR (16) ===
+  'Ceramic Vase Set': u('1578500494198-246f612d3b3d'),
+  'Wall Art Canvas Print': u('1579783900882-c0d3dad7b119'),
+  'Scented Candle Trio': u('1603006905003-be475563bc59'),
+  'Artificial Bonsai Plant': u('1614594975525-e45190c55d0b'),
+  'Decorative Wall Clock': u('1563861826100-9cb868fdbe1c'),
+  'Boho Area Rug': u('1600121848594-d8644e57abab'),
+  'Faux Fur Throw Blanket': u('1584100936595-c0654b55a2e2'),
+  'Decorative Throw Pillow Set': u('1584100936596-c0654b55a2e3'),
+  'Oversized Wall Mirror': u('1618221195710-dd6b41faaea6'),
+  'Wall Photo Collage Frames': u('1513519245088-0e12902e5a38'),
+  'Cushion Cover Set': u('1579656381226-5fc0f0100c3b'),
+  'Marble Centerpiece Bowl': u('1615873968403-89e068629265'),
+  'Wall Hanging Tapestry': u('1528459801416-a9e53bbf4e17'),
+  'Table Runner Set': u('1538688525198-9b88f6f53126'),
+  'Decorative Bookend Set': u('1512820790803-83ca734da794'),
+  'Indoor Plant Stand': u('1485955900006-10f4d324d411'),
+
+  // === HOME & LIVING: COOKWARE (16) ===
+  'Non-Stick Frying Pan 24cm': u('1584992236310-6edddc08acff'),
+  'Stainless Steel Cookware Set': u('1583394293214-28ded15ee548'),
+  'Cast Iron Skillet': u('1585515320310-259814833e62'),
+  'Pressure Cooker 5L': u('1590794056226-77ef3aedd4a4'),
+  'Kitchen Knife Set': u('1593618998160-e34014e67546'),
+  'Induction Base Kadhai': u('1556911220-e15b29be8c8f'),
+  'Wok Pan 30cm': u('1514986888952-8d776f921d0d'),
+  'Sauce Pan Set': u('1585515320311-259814833e61'),
+  'Steamer Basket': u('1556909114-f6e7ad7d3136'),
+  'Bakeware Muffin Tray': u('1590080875515-8a3a8dc5735e'),
+  'Mixing Bowl Set': u('1565299624946-b28f40a0ae38'),
+  'Silicone Spatula Set': u('1588872657578-7efd1f1555ee'),
+  'Non-Stick Tawa': u('1584992236310-6edddc08acfe'),
+  'Idli Steamer': u('1589302168068-964664d93dc0'),
+  'Glass Food Containers Set': u('1610557892470-55d9e80c0bce'),
+  'Spice Box Set': u('1596040033229-a9821ebd058d'),
+
+  // === HOME & LIVING: SOFAS & BEDS (16) ===
+  'Modern 3-Seater Sofa': u('1555041469-a586c61ea9bc'),
+  'L-Shaped Sectional Sofa': u('1493663284031-b7e3aefcae8e'),
+  'Velvet Sofa': u('1586023492125-27b2c045efd7'),
+  'Leather Sofa': u('1540574163026-643ea20ade25'),
+  'Recliner Sofa': u('1583847268964-b28dc8f51f92'),
+  'Chesterfield Sofa': u('1567016432779-094069958ea5'),
+  'Modular Sofa': u('1618221195710-dd6b41faaea7'),
+  'Loveseat Sofa': u('1512212621149-107ffe572d2f'),
+  'Sleeper Sofa': u('1538688525198-9b88f6f53127'),
+  'Minimalist Sofa': u('1600585154340-be6161a56a0c'),
+  'U-Shaped Sectional Sofa': u('1567016432779-094069958ea6'),
+  'Boucle Sofa': u('1583847268964-b28dc8f51f93'),
+  'King Size Platform Bed': u('1505693416388-ac5ce068fe85'),
+  'Queen Size Upholstered Bed': u('1540518614846-7ede433c5163'),
+  'Wooden King Bed': u('1505691938895-1758d7eaa511'),
+  'Storage Bed': u('1616046229478-9901c5536a45'),
+
+  // === HOME & LIVING: LIGHTING & LAMPS (16) ===
+  'LED Table Lamp': u('1507473885765-e6ed057f782c'),
+  'Modern Floor Lamp': u('1513506003901-1e6a229e2d15'),
+  'Brass Pendant Light': u('1524484478002-7473887019f3'),
+  'Crystal Chandelier': u('1543198181-e619b694b11c'),
+  'Smart RGB Bulb Set': u('1550985616-10810253b84d'),
+  'Task Desk Lamp': u('1534073828943-f801091bb18c'),
+  'Wall Sconce Pair': u('1517991104123-1d56a6e81ed9'),
+  'Fairy String Lights': u('1519751138087-5bf79df62d5b'),
+  'Neon Sign Light': u('1563245372-f21724e3856d'),
+  'Himalayan Salt Lamp': u('1544816155-12df9643f363'),
+  'Tripod Floor Lamp': u('1507473885765-e6ed057f782d'),
+  'Ceiling Pendant Set': u('1524484478002-7473887019f4'),
+  'Dimmable Bulb Pack': u('1550985616-10810253b84e'),
+  'Bamboo Pendant Lamp': u('1513506003901-1e6a229e2d16'),
+  'Bedside Reading Lamp': u('1507473885765-e6ed057f782e'),
+  'Vintage Edison Bulb Set': u('1550985616-10810253b84f'),
+
+  // === ESSENTIALS: BEAUTY & SKINCARE (16) ===
+  'Matte Liquid Lipstick': u('1586495777744-4413f21062fa'),
+  'Vitamin C Serum 30ml': u('1620916566398-39f1143ab7be'),
+  'Niacinamide Serum 30ml': u('1608248597261-8131d4ffa6e1'),
+  'Hydrating Shampoo 500ml': u('1535585209827-a15fcdbc4c2e'),
+  'Volumizing Conditioner': u('1527799820374-dcf8d9d4a388'),
+  'Eau de Parfum 100ml Spray': u('1541643600914-78b084683601'),
+  'Aloe Vera Face Wash': u('1556228720-195a672e8a03'),
+  'Broad Spectrum Sunscreen SPF50': u('1598440947619-2c35fc9aa908'),
+  'Hair Dryer 2000W': u('1522337360788-8b13dee7a37e'),
+  'Hydrating Face Toner': u('1608248597261-8131d4ffa6e2'),
+  'Charcoal Face Mask': u('1570172619644-dfd03ed5d881'),
+  'Hyaluronic Acid Cream': u('1556228724-4da6b7d27e28'),
+  'Matte Finish Foundation': u('1522337660859-02fbefca4702'),
+  'Long Lasting Eyeliner': u('1631214524020-7e18db9a8f92'),
+  'Rose Water Toner': u('1608248597261-8131d4ffa6e3'),
+  'Shea Butter Body Lotion': u('1556228724-4da6b7d27e29'),
+
+  // === ESSENTIALS: FITNESS & GYM (16) ===
+  'English Willow Cricket Bat': u('1531415074968-036ba1b575da'),
+  'Official Size 5 Football': u('1614632537197-38a17061c2bd'),
+  'Anti-Burst Yoga Mat': u('1601925260368-ae2f83cf8b7f'),
+  'Adjustable Dumbbell Set': u('1583454110551-21f2fa2afe61'),
+  'Whey Protein Isolate': u('1579722821273-0f6c7d44362f'),
+  'Skipping Rope': u('1598289431512-b97b0917affc'),
+  'Protein Shaker Bottle': u('1543163521-1bf539c55dd2'),
+  'Resistance Bands Set': u('1598289431512-b97b0917affd'),
+  'Sports Water Bottle': u('1543163521-1bf539c55dd3'),
+  'Kettlebell 12kg': u('1583454110551-21f2fa2afe62'),
+  'Exercise Bench': u('1534438327276-14e5300c3a48'),
+  'Foam Roller': u('1601925260368-ae2f83cf8b80'),
+  'Pull Up Bar': u('1584735935682-2f2b69dff9d3'),
+  'Grip Strengthener': u('1583454110551-21f2fa2afe63'),
+  'Push Up Board': u('1584735935682-2f2b69dff9d4'),
+  'Speed Jump Rope': u('1598289431512-b97b0917affe'),
+
+  // === ESSENTIALS: TOYS & GAMES (16) ===
+  'Educational Building Block Set': u('1587654780291-39c9404d746b'),
+  'Remote Control Car': u('1594787318286-3d835c1d207f'),
+  'Mini Drone': u('1508614589041-895b88991e3e'),
+  'Plush Teddy Bear': u('1559454403-b8fb88521f11'),
+  "Rubik's Cube": u('1561149830-4e788e0c65ef'),
+  'Board Game Monopoly': u('1610890716171-6b1bb98ffd09'),
+  'Wooden Chess Set': u('1529699211952-734e80c4d42b'),
+  'Puzzle 1000 Pieces': u('1585314062340-f1a5a7c9328d'),
+  'Toy Train Set': u('1515488042361-ee00e0ddd4e4'),
+  'Water Gun Blaster': u('1594787318286-3d835c1d2080'),
+  'Action Figure Set': u('1608889825205-eebdb9fc5806'),
+  'Stuffed Animal Set': u('1559454403-b8fb88521f12'),
+  'Card Game Uno': u('1610890716171-6b1bb98ffd10'),
+  'Balance Bike': u('1515488042361-ee00e0ddd4e5'),
+  'Doll House': u('1587654780291-39c9404d746c'),
+  'Lego Style Block Set': u('1587654780291-39c9404d746d'),
+
+  // === ESSENTIALS: PET SUPPLIES (16) ===
+  'Dry Dog Food 5kg': u('1589924691995-400dc9ecc119'),
+  'Cat Food 2kg': u('1583511655857-d19b40a7a54e'),
+  'Dog Leash & Collar Set': u('1576201836106-db1758fd1c97'),
+  'Cat Litter 10L': u('1514888286974-6c03e2ca1dba'),
+  'Pet Grooming Brush': u('1516734212186-a967f81ad0d7'),
+  'Large Dog Bed': u('1541599540903-216a46ca1dc0'),
+  'Cat Tree Tower': u('1545249390-6bdfa286032f'),
+  'Pet Water Fountain': u('1548767797-d8c844163c4c'),
+  'Dog Chew Toys': u('1535813547-99c456a41d4a'),
+  'Cat Toy Feather Wand': u('1514888286974-6c03e2ca1dbb'),
+  'Pet Food Bowls': u('1589924691995-400dc9ecc120'),
+  'Dog Treats Pack': u('1589924691995-400dc9ecc121'),
+  'Pet Carrier Bag': u('1548767797-d8c844163c4d'),
+  'Pet Harness': u('1576201836106-db1758fd1c98'),
+  'Dog Shampoo': u('1516734212186-a967f81ad0d8'),
+};
+
+const SEED_CATEGORY_IMAGE_MAP: Record<string, string> = {
+  electronics: u('1498050108023-c5249f4df085'),
+  smartphones: u('1511707171634-5f897ff02aa9'),
+  laptops: u('1517336714731-489689fd1ca8'),
+  headphones: u('1505740420928-5e560c06d30e'),
+  smartwatches: u('1508685096489-7aacd43bd3b1'),
+  fashion: u('1445205170230-053b83016050'),
+  'men-apparel': u('1521572267360-ee0c2909d518'),
+  'women-collection': u('1572804013309-59a88b7e92f1'),
+  'running-shoes': u('1542291026-7eec264c27ff'),
+  'home-living': u('1618221195710-dd6b41faaea6'),
+  'home-decor': u('1578500494198-246f612d3b3d'),
+  cookware: u('1584992236310-6edddc08acff'),
+  'sofas-beds': u('1555041469-a586c61ea9bc'),
+  'lighting-lamps': u('1507473885765-e6ed057f782c'),
+  essentials: u('1522337360788-8b13dee7a37e'),
+  'beauty-skincare': u('1586495777744-4413f21062fa'),
+  'fitness-gym': u('1534438327276-14e5300c3a48'),
+  'toys-games': u('1587654780291-39c9404d746b'),
+  'pet-supplies': u('1583511655857-d19b40a7a54e'),
+};
+
+function getCategoryImageUrl(slug: string): string {
+  return SEED_CATEGORY_IMAGE_MAP[slug] || u('1498050108023-c5249f4df085');
+}
+
+function getVerifiedImageUrl(name: string, catSlug: string, sku: string): string {
+  const SUBCATEGORY_BASE_IDS: Record<string, string> = {
+    smartphones: '1511707171634-5f897ff02aa9',
+    laptops: '1517336714731-489689fd1ca8',
+    headphones: '1505740420928-5e560c06d30e',
+    smartwatches: '1523275335684-37898b6baf30',
+    'men-apparel': '1521572267360-ee0c2909d518',
+    'women-collection': '1572804013309-59a88b7e92f1',
+    'running-shoes': '1542291026-7eec264c27ff',
+    'home-decor': '1578500494198-246f612d3b3d',
+    cookware: '1584992236310-6edddc08acff',
+    'sofas-beds': '1555041469-a586c61ea9bc',
+    'lighting-lamps': '1507473885765-e6ed057f782c',
+    'beauty-skincare': '1586495777744-4413f21062fa',
+    'fitness-gym': '1534438327276-14e5300c3a48',
+    'toys-games': '1587654780291-39c9404d746b',
+    'pet-supplies': '1583511655857-d19b40a7a54e',
+  };
+  const basePhotoId = SUBCATEGORY_BASE_IDS[catSlug] || '1498050108023-c5249f4df085';
+  return `https://images.unsplash.com/photo-${basePhotoId}?auto=format&fit=crop&w=800&q=80&item=${encodeURIComponent(sku)}`;
+}
 
 async function main() {
   console.log('🌱 Seeding catalog-driven product database...');
@@ -421,17 +738,19 @@ async function main() {
   const subcategoryCategoryMap = new Map<string, string>();
   let totalCatalog = 0;
   for (const cat of USER_CATALOG) {
+    const parentImage = getCategoryImageUrl(cat.slug);
     const parent = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: { name: cat.name, description: cat.description },
-      create: { name: cat.name, slug: cat.slug, description: cat.description },
+      update: { name: cat.name, description: cat.description, image: parentImage },
+      create: { name: cat.name, slug: cat.slug, description: cat.description, image: parentImage },
     });
 
     for (const subcat of cat.subcategories) {
+      const childImage = getCategoryImageUrl(subcat.slug);
       const child = await prisma.category.upsert({
         where: { slug: subcat.slug },
-        update: { name: subcat.name, description: subcat.description, parentId: parent.id },
-        create: { name: subcat.name, slug: subcat.slug, description: subcat.description, parentId: parent.id },
+        update: { name: subcat.name, description: subcat.description, parentId: parent.id, image: childImage },
+        create: { name: subcat.name, slug: subcat.slug, description: subcat.description, parentId: parent.id, image: childImage },
       });
       subcategoryCategoryMap.set(subcat.slug, child.id);
       totalCatalog += subcat.products.length;
@@ -526,6 +845,7 @@ async function main() {
           seoDescription: `Buy ${name} by ${brand} at best price. ${description.substring(0, 100)}`,
           seoKeywords: `${name}, ${brand}, ${cat.name}, buy online, best price, ${cat.slug}`,
           inventory: { create: { stock, reservedStock: randomInt(0, 10), lowStockThreshold: 5 } },
+          images: { create: { url: getVerifiedImageUrl(name, cat.slug, sku), alt: `${name} - ${brand}`, order: 0 } },
         },
       });
 
