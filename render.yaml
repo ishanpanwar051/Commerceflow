@@ -45,7 +45,7 @@ services:
     # NOTE: preDeployCommand is not available on the free tier, so DB setup runs in buildCommand.
     # IMPORTANT: The build/startup flow must NEVER mutate product data (seeding, image rewrites,
     # auto-fix migrations). Product image maintenance is a manual, explicit one-time step only.
-    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push && npx tsx backend/scripts/fix-product-images.ts
+    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push && node backend/dist/fix-product-images.mjs
     startCommand: node --enable-source-maps ./backend/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
