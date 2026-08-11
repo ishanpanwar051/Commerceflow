@@ -2,7 +2,6 @@ import { createRequire } from 'module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
-import { getProductImages, getCategoryImage } from './product-images';
 import { USER_CATALOG } from './user-catalog';
 
 const _require = createRequire(import.meta.url);
@@ -39,16 +38,6 @@ function pickMany<T>(arr: T[], count: number): T[] {
 
 const FIRST_NAMES = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan', 'Ananya', 'Diya', 'Myra', 'Sara', 'Aadhya', 'Riya', 'Priya', 'Kavya', 'Neha', 'Tanvi', 'Shruti', 'Pooja', 'Anjali', 'Nandini', 'Meera', 'Lakshmi'];
 const LAST_NAMES = ['Sharma', 'Verma', 'Patel', 'Singh', 'Kumar', 'Gupta', 'Reddy', 'Nair', 'Menon', 'Joshi', 'Deshmukh', 'Pillai', 'Rao', 'Chopra', 'Malhotra', 'Saxena', 'Mehta', 'Agarwal', 'Mishra', 'Kapoor', 'Khanna', 'Bhatt', 'Trivedi', 'Srinivasan', 'Iyer', 'Das'];
-
-const REVIEWER_AVATARS = [
-  'https://i.pravatar.cc/150?u=1', 'https://i.pravatar.cc/150?u=2', 'https://i.pravatar.cc/150?u=3',
-  'https://i.pravatar.cc/150?u=4', 'https://i.pravatar.cc/150?u=5', 'https://i.pravatar.cc/150?u=6',
-  'https://i.pravatar.cc/150?u=7', 'https://i.pravatar.cc/150?u=8', 'https://i.pravatar.cc/150?u=9',
-  'https://i.pravatar.cc/150?u=10', 'https://i.pravatar.cc/150?u=11', 'https://i.pravatar.cc/150?u=12',
-  'https://i.pravatar.cc/150?u=13', 'https://i.pravatar.cc/150?u=14', 'https://i.pravatar.cc/150?u=15',
-  'https://i.pravatar.cc/150?u=16', 'https://i.pravatar.cc/150?u=17', 'https://i.pravatar.cc/150?u=18',
-  'https://i.pravatar.cc/150?u=19', 'https://i.pravatar.cc/150?u=20',
-];
 
 const REVIEW_TITLES = [
   'Absolutely love it!', 'Best purchase ever', 'Great quality', 'Excellent product', 'Very satisfied',
@@ -379,25 +368,25 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { email: 'admin@commerceflow.dev' },
     update: { password: hashedPassword, isActive: true, deletedAt: null },
-    create: { email: 'admin@commerceflow.dev', password: hashedPassword, firstName: 'Admin', lastName: 'User', role: 'ADMIN', isEmailVerified: true, avatar: REVIEWER_AVATARS[0] },
+    create: { email: 'admin@commerceflow.dev', password: hashedPassword, firstName: 'Admin', lastName: 'User', role: 'ADMIN', isEmailVerified: true },
   });
 
   const customer = await prisma.user.upsert({
     where: { email: 'customer@example.com' },
     update: { password: hashedPassword, isActive: true, deletedAt: null },
-    create: { email: 'customer@example.com', password: hashedPassword, firstName: 'John', lastName: 'Doe', role: 'CUSTOMER', isEmailVerified: true, avatar: REVIEWER_AVATARS[1] },
+    create: { email: 'customer@example.com', password: hashedPassword, firstName: 'John', lastName: 'Doe', role: 'CUSTOMER', isEmailVerified: true },
   });
 
   const seller = await prisma.user.upsert({
     where: { email: 'seller@example.com' },
     update: { password: hashedPassword, isActive: true, deletedAt: null },
-    create: { email: 'seller@example.com', password: hashedPassword, firstName: 'Jane', lastName: 'Baker', role: 'SELLER', isEmailVerified: true, avatar: REVIEWER_AVATARS[2] },
+    create: { email: 'seller@example.com', password: hashedPassword, firstName: 'Jane', lastName: 'Baker', role: 'SELLER', isEmailVerified: true },
   });
 
   const deliveryBoy = await prisma.user.upsert({
     where: { email: 'delivery@example.com' },
     update: { password: hashedPassword, isActive: true, deletedAt: null },
-    create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: 'DELIVERY_BOY', isEmailVerified: true, avatar: REVIEWER_AVATARS[3] },
+    create: { email: 'delivery@example.com', password: hashedPassword, firstName: 'Mike', lastName: 'Rider', role: 'DELIVERY_BOY', isEmailVerified: true },
   });
 
   // Create reviewer users
@@ -409,7 +398,7 @@ async function main() {
         create: {
           email: `reviewer${i}@example.com`, password: hashedPassword,
           firstName: first, lastName: LAST_NAMES[i], role: 'CUSTOMER',
-          isEmailVerified: true, avatar: REVIEWER_AVATARS[i],
+          isEmailVerified: true,
         },
       })
     )
@@ -434,15 +423,15 @@ async function main() {
   for (const cat of USER_CATALOG) {
     const parent = await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: { name: cat.name, description: cat.description, image: getCategoryImage(cat.slug) },
-      create: { name: cat.name, slug: cat.slug, description: cat.description, image: getCategoryImage(cat.slug) },
+      update: { name: cat.name, description: cat.description },
+      create: { name: cat.name, slug: cat.slug, description: cat.description },
     });
 
     for (const subcat of cat.subcategories) {
       const child = await prisma.category.upsert({
         where: { slug: subcat.slug },
-        update: { name: subcat.name, description: subcat.description, image: getCategoryImage(subcat.slug), parentId: parent.id },
-        create: { name: subcat.name, slug: subcat.slug, description: subcat.description, image: getCategoryImage(subcat.slug), parentId: parent.id },
+        update: { name: subcat.name, description: subcat.description, parentId: parent.id },
+        create: { name: subcat.name, slug: subcat.slug, description: subcat.description, parentId: parent.id },
       });
       subcategoryCategoryMap.set(subcat.slug, child.id);
       totalCatalog += subcat.products.length;
@@ -492,15 +481,7 @@ async function main() {
         isTopRated = avgRating > 4.5;
       }
 
-      const images = getProductImages({
-        name,
-        brand,
-        categorySlug: cat.slug,
-        subcategory: cat.name,
-      });
-
-      const product = await prisma.product.create({
-        data: {
+      const product = await prisma.product.create({        data: {
           name,
           slug,
           description,
@@ -544,7 +525,6 @@ async function main() {
           seoMetaTitle: `${name} - ${brand} ${cat.name} | CommerceFlow`,
           seoDescription: `Buy ${name} by ${brand} at best price. ${description.substring(0, 100)}`,
           seoKeywords: `${name}, ${brand}, ${cat.name}, buy online, best price, ${cat.slug}`,
-          images: { create: images },
           inventory: { create: { stock, reservedStock: randomInt(0, 10), lowStockThreshold: 5 } },
         },
       });

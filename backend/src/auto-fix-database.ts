@@ -7,8 +7,8 @@
  * To run it manually (one-time, explicit):
  *   DATABASE_URL=... node ./backend/dist/auto-fix-database.mjs
  * 
- * It only touches records that still hold picsum/Unsplash placeholder URLs or
- * have no images at all. Correct Pinterest URLs are never overwritten.
+ * It only seeds when the database is completely empty. It never rewrites
+ * existing product data.
  */
 
 import { createRequire } from 'module';
@@ -19,12 +19,6 @@ const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
 
 import runSeed from '../prisma/seed';
-import { getProductImages } from '../prisma/product-images';
-
-function isPlaceholderUrl(url: string | null | undefined): boolean {
-  if (!url) return false;
-  return url.includes('unsplash.com') || url.includes('picsum.photos');
-}
 
 async function main() {
   console.log('🔧 Auto-Fix Database Starting...');
@@ -43,7 +37,7 @@ async function main() {
   const prisma = new PrismaClient({ adapter } as any);
 
   try {
-    // Check if database needs fixing
+    // Check if database needs seeding
     const productCount = await prisma.product.count();
     
     // Only re-seed when the database is completely empty. Never wipe an
@@ -54,35 +48,7 @@ async function main() {
       await runSeed();
       console.log('✅ Database seeded successfully');
     } else {
-      console.log(`📊 Database has ${productCount} products. Fixing any remaining picsum/Unsplash image records...`);
-      const products = await prisma.product.findMany({
-        include: { category: true, images: true }
-      });
-      let updatedCount = 0;
-      for (const p of products) {
-        const hasPlaceholder = p.images.some(img => isPlaceholderUrl(img.url));
-        if (hasPlaceholder || p.images.length === 0) {
-          const newImages = getProductImages({
-            name: p.name,
-            brand: p.brand || 'CommerceFlow',
-            categorySlug: p.category?.slug || 'general',
-            subcategory: p.category?.name || ''
-          });
-          if (newImages && newImages.length > 0) {
-            await prisma.productImage.deleteMany({ where: { productId: p.id } });
-            await prisma.productImage.createMany({
-              data: newImages.map((img, idx) => ({
-                productId: p.id,
-                url: img.url,
-                alt: img.alt,
-                order: idx,
-              }))
-            });
-            updatedCount++;
-          }
-        }
-      }
-      console.log(`✅ Updated ${updatedCount} product image records to verified Pinterest assets.`);
+      console.log(`📊 Database has ${productCount} products. Nothing to do.`);
     }
     
     console.log('🎉 Auto-fix complete!');

@@ -10,6 +10,13 @@ export const createProductSchema = z.object({
   isFeatured: z.boolean().optional(),
   stock: z.number().int().nonnegative().optional().default(0),
   lowStockThreshold: z.number().int().nonnegative().optional().default(5),
+  imageUrls: z.array(z.string().url('Invalid image URL').max(2048)).max(10).optional(),
+});
+
+export const addImageSchema = z.object({
+  url: z.string().url('Invalid image URL').max(2048),
+  alt: z.string().max(500).optional(),
+  order: z.number().int().nonnegative().optional().default(0),
 });
 
 export const updateProductSchema = z.object({

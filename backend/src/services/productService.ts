@@ -3,6 +3,7 @@ import { NotFoundError, BadRequestError } from '../utils/errors';
 import { slugify, dollarsToCents } from '../utils/helpers';
 import { invalidateCache } from '../middleware/cache';
 import { getPrisma } from '../config/database';
+import { logger } from '../config/logger';
 import { Prisma } from '@prisma/client';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -187,6 +188,7 @@ export class ProductService {
     isFeatured?: boolean;
     stock?: number;
     lowStockThreshold?: number;
+    imageUrls?: string[];
   }) {
     const category = await this.categoryRepo.findById(data.categoryId);
     if (!category) throw new BadRequestError('Category not found');
@@ -205,6 +207,11 @@ export class ProductService {
       barcode: data.barcode,
       isFeatured: data.isFeatured || false,
       category: { connect: { id: data.categoryId } },
+      ...(data.imageUrls?.length && {
+        images: {
+          create: data.imageUrls.map((url, index) => ({ url, alt: data.name, order: index })),
+        },
+      }),
       inventory: {
         create: {
           stock: data.stock || 0,
@@ -306,7 +313,16 @@ export class ProductService {
   }
 
   async deleteImage(imageId: string) {
+    const image = await this.productRepo.findImage(imageId);
+    if (!image) throw new NotFoundError('ProductImage');
+
     await this.productRepo.deleteImage(imageId);
+
+    const { deleteFromCloudinary } = await import('../utils/cloudinary');
+    deleteFromCloudinary(image.url).catch((err) =>
+      logger.warn({ err }, 'Failed to delete image from Cloudinary'),
+    );
+
     await invalidateCache('/api/v1/products*');
   }
 }

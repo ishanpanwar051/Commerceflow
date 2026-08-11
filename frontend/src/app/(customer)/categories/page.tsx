@@ -11,34 +11,6 @@ import { productService } from '@/services/product.service';
 import { Button } from '@/components/ui/button';
 import { ProductImage } from '@/components/shared/ProductImage';
 
-const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  electronics: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
-  fashion: 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg',
-  'home-living': 'https://i.pinimg.com/736x/55/94/1a/55941a94efbe3aa64eef9fb5ffb892bc.jpg',
-  essentials: 'https://i.pinimg.com/736x/ed/e5/22/ede522c0dbf11e74f3957297e64a1ce7.jpg',
-  smartphones: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
-  laptops: 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
-  headphones: 'https://i.pinimg.com/736x/1a/f6/88/1af688e1bc1284d720b0805c6d3fa8fa.jpg',
-  smartwatches: 'https://i.pinimg.com/736x/2a/8c/fb/2a8cfb463273e9ae8b1b22e171329a17.jpg',
-  'men-apparel': 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg',
-  'women-collection': 'https://i.pinimg.com/736x/b2/bf/45/b2bf456df60ca654e8ffb99c75066a50.jpg',
-  'running-shoes': 'https://i.pinimg.com/736x/9a/c0/61/9ac061f09bbba9aa2e70399ed65d0645.jpg',
-  'home-decor': 'https://i.pinimg.com/736x/55/94/1a/55941a94efbe3aa64eef9fb5ffb892bc.jpg',
-  cookware: 'https://i.pinimg.com/736x/67/64/00/676400bf1b3052dc9ce3c9cb5a507851.jpg',
-  'sofas-beds': 'https://i.pinimg.com/736x/e6/7f/77/e67f77f0a996c561b3fa122240974edc.jpg',
-  'lighting-lamps': 'https://i.pinimg.com/736x/8d/3a/4b/8d3a4b6c3e981290372fa82d1c9e8312.jpg',
-  'beauty-skincare': 'https://i.pinimg.com/736x/ed/e5/22/ede522c0dbf11e74f3957297e64a1ce7.jpg',
-  'fitness-gym': 'https://i.pinimg.com/736x/01/be/f4/01bef48ecceeb23edef57778aa13ee51.jpg',
-  'toys-games': 'https://i.pinimg.com/736x/bf/e7/76/bfe776caeddf8263eb2b069d3ee97022.jpg',
-  'pet-supplies': 'https://i.pinimg.com/736x/67/64/00/676400bf1b3052dc9ce3c9cb5a507851.jpg',
-};
-
-function getCategoryBannerImage(category: { image?: string | null; slug?: string }): string {
-  if (category.image && category.image.length > 5) return category.image;
-  const slug = (category.slug || '').toLowerCase();
-  return CATEGORY_FALLBACK_IMAGES[slug] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
-}
-
 function CategoriesContent() {
   const router = useRouter();
 
@@ -72,7 +44,6 @@ function CategoriesContent() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {parentCategories.map((category, index) => {
           const children = childCategories.filter((c) => c.parentId === category.id);
-          const bannerImg = getCategoryBannerImage(category);
           return (
             <motion.div
               key={category.id}
@@ -86,7 +57,7 @@ function CategoriesContent() {
               >
                 <div className="relative aspect-[16/7] overflow-hidden rounded-t-xl bg-muted">
                   <ProductImage
-                    src={bannerImg}
+                    src={category.image}
                     alt={`${category.name} collection`}
                     className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105"
                   />

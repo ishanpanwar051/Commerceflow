@@ -50,6 +50,15 @@ export const productService = {
     await apiClient.delete(`/products/${id}`);
   },
 
+  async uploadImage(file: File) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const { data } = await apiClient.post<ApiResponse<{ url: string; publicId: string }>>('/products/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.data!;
+  },
+
   async addImage(productId: string, url: string, alt?: string, order?: number) {
     const { data } = await apiClient.post(`/products/${productId}/images`, { url, alt, order });
     return data.data;

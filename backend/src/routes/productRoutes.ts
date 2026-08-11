@@ -1,12 +1,14 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { ProductController } from '../controllers/productController';
 import { authenticate, authorize } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { createProductSchema, updateProductSchema, productQuerySchema } from '../validators/product';
+import { createProductSchema, updateProductSchema, productQuerySchema, addImageSchema } from '../validators/product';
 import { cache } from '../middleware/cache';
 
 const router = Router();
 const controller = new ProductController();
+const productImageUpload = multer({ dest: 'uploads/products/', limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.get('/', validate(productQuerySchema, 'query'), cache(30), controller.getProducts.bind(controller));
 router.get('/search', cache(30), controller.searchProducts.bind(controller));
@@ -16,7 +18,8 @@ router.post('/', authenticate, authorize('ADMIN', 'SELLER'), validate(createProd
 router.patch('/:id', authenticate, authorize('ADMIN', 'SELLER'), validate(updateProductSchema), controller.updateProduct.bind(controller));
 router.delete('/:id', authenticate, authorize('ADMIN', 'SELLER'), controller.deleteProduct.bind(controller));
 
-router.post('/:id/images', authenticate, authorize('ADMIN', 'SELLER'), controller.addImage.bind(controller));
+router.post('/upload-image', authenticate, authorize('ADMIN', 'SELLER'), productImageUpload.single('image'), controller.uploadImage.bind(controller));
+router.post('/:id/images', authenticate, authorize('ADMIN', 'SELLER'), validate(addImageSchema), controller.addImage.bind(controller));
 router.delete('/:id/images/:imageId', authenticate, authorize('ADMIN', 'SELLER'), controller.deleteImage.bind(controller));
 
 export default router;

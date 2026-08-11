@@ -3,7 +3,7 @@ import { useState } from 'react';
 // next/image removed;
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, Loader2, Search, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, X, Upload, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { productService } from '@/services/product.service';
 import { formatPrice } from '@/lib/utils';
 import { ProductImage } from '@/components/shared/ProductImage';
+import type { ProductImage as ProductImageType } from '@/types/api';
 import { toast } from 'sonner';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,7 +32,15 @@ const productSchema = z.object({
 
 type ProductForm = z.infer<typeof productSchema>;
 type EditableProduct = {
-  id: string; name: string; description?: string; basePrice: number; sku: string; barcode?: string; categoryId: string; isActive: boolean; isFeatured: boolean; inventory?: { stock: number; lowStockThreshold: number };
+  id: string; name: string; description?: string; basePrice: number; sku: string; barcode?: string; categoryId: string; isActive: boolean; isFeatured: boolean; inventory?: { stock: number; lowStockThreshold: number }; images: ProductImageType[];
+};
+
+type ImageItem = {
+  key: string;
+  url?: string;
+  imageId?: string;
+  file?: File;
+  uploading?: boolean;
 };
 
 
@@ -41,6 +50,8 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [editingProduct, setEditingProduct] = useState<EditableProduct | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [uploadingCount, setUploadingCount] = useState(0);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -72,12 +83,14 @@ export default function AdminProductsPage() {
 
   const openCreate = () => {
     setEditingProduct(null);
+    setImages([]);
     reset({ name: '', description: '', basePrice: 0, sku: '', barcode: '', categoryId: '', isActive: true, isFeatured: false, stock: 0, lowStockThreshold: 5 });
     setShowForm(true);
   };
 
-  const openEdit = (product: EditableProduct) => {
+  const openEdit = async (product: EditableProduct) => {
     setEditingProduct(product);
+    setImages([]);
     reset({
       name: product.name,
       description: product.description || '',
@@ -91,10 +104,46 @@ export default function AdminProductsPage() {
       lowStockThreshold: product.inventory?.lowStockThreshold || 5,
     });
     setShowForm(true);
+    try {
+      const full = await productService.getProduct(product.id);
+      setImages((full.images || []).map((img) => ({ key: img.id, url: img.url, imageId: img.id })));
+    } catch {
+      toast.error('Failed to load product images');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const validFiles = files.filter((f) => f.type.startsWith('image/'));
+    if (validFiles.length !== files.length) {
+      toast.error('Only image files are allowed');
+    }
+    validFiles.forEach((file) => {
+      const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      setImages((prev) => [...prev, { key, file, uploading: true }]);
+      setUploadingCount((c) => c + 1);
+      productService.uploadImage(file)
+        .then((res) => {
+          setImages((prev) => prev.map((img) => img.key === key ? { ...img, url: res.url, uploading: false, file: undefined } : img));
+          toast.success('Image uploaded');
+        })
+        .catch((err: unknown) => {
+          const axiosErr = err as { response?: { data?: { message?: string } } };
+          setImages((prev) => prev.filter((img) => img.key !== key));
+          toast.error(axiosErr.response?.data?.message || 'Failed to upload image');
+        })
+        .finally(() => setUploadingCount((c) => c - 1));
+    });
+    e.target.value = '';
+  };
+
+  const removeImage = (key: string) => {
+    setImages((prev) => prev.filter((img) => img.key !== key));
   };
 
   const createMutation = useMutation({
-    mutationFn: (formData: ProductForm) => productService.createProduct({
+    mutationFn: (formData: ProductForm & { imageUrls?: string[] }) => productService.createProduct({
       name: formData.name,
       description: formData.description,
       basePrice: formData.basePrice,
@@ -105,8 +154,9 @@ export default function AdminProductsPage() {
       isFeatured: formData.isFeatured,
       stock: formData.stock,
       lowStockThreshold: formData.lowStockThreshold,
+      imageUrls: formData.imageUrls,
     }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin', 'products'] }); setShowForm(false); setEditingProduct(null); toast.success('Product created'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin', 'products'] }); setShowForm(false); setEditingProduct(null); setImages([]); toast.success('Product created'); },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } } };
       toast.error(axiosErr.response?.data?.message || 'Failed to create product');
@@ -124,6 +174,14 @@ export default function AdminProductsPage() {
   });
 
   const onSubmit = async (formData: ProductForm) => {
+    const hasUploading = images.some((img) => img.uploading);
+    if (hasUploading) {
+      toast.error('Please wait for image uploads to finish');
+      return;
+    }
+
+    const uploadedUrls = images.filter((img) => img.url).map((img) => img.url as string);
+
     if (editingProduct) {
       updateMutation.mutate({
         id: editingProduct.id,
@@ -140,8 +198,28 @@ export default function AdminProductsPage() {
           lowStockThreshold: formData.lowStockThreshold,
         },
       });
+
+      const keptExisting = images.filter((img) => img.imageId).map((img) => img.imageId as string);
+      const removed = (editingProduct.images || []).filter((img) => !keptExisting.includes(img.id));
+      removed.forEach((img) => {
+        productService.deleteImage(editingProduct.id, img.id).catch((err: unknown) => {
+          const axiosErr = err as { response?: { data?: { message?: string } } };
+          toast.error(axiosErr.response?.data?.message || 'Failed to remove image');
+        });
+      });
+
+      const newOnes = images.filter((img) => !img.imageId && img.url);
+      newOnes.forEach((img, index) => {
+        productService.addImage(editingProduct.id, img.url as string, formData.name, index).catch((err: unknown) => {
+          const axiosErr = err as { response?: { data?: { message?: string } } };
+          toast.error(axiosErr.response?.data?.message || 'Failed to add image');
+        });
+      });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({
+        ...formData,
+        imageUrls: uploadedUrls,
+      });
     }
   };
 
@@ -208,6 +286,34 @@ export default function AdminProductsPage() {
               <div className="space-y-2 col-span-2">
                 <label className="text-sm font-medium">Description</label>
                 <textarea {...register('description')} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]" placeholder="Product description..." />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <label className="text-sm font-medium">Product Images</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {images.map((img) => (
+                    <div key={img.key} className="relative aspect-square rounded-lg bg-muted overflow-hidden border">
+                      <ProductImage src={img.url} alt="Product image" className="w-full h-full object-cover" />
+                      {img.uploading && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-white" />
+                        </div>
+                      )}
+                      <Button type="button" size="icon" variant="destructive" className="absolute top-1 right-1 h-6 w-6" onClick={() => removeImage(img.key)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <label className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary hover:bg-muted/50 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
+                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Upload</span>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                  </label>
+                </div>
+                {uploadingCount > 0 && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Uploading {uploadingCount} image{uploadingCount > 1 ? 's' : ''}...
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-6 col-span-2">
                 <label className="flex items-center gap-2 text-sm">

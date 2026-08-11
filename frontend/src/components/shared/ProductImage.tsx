@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
+import { Package } from 'lucide-react';
 
 interface ProductImageProps {
   src?: string | null;
@@ -86,16 +87,12 @@ export function ProductImage({
     [],
   );
 
-  // No URL at all → straight to the neutral placeholder (no error machinery).
+  // No URL at all → clean neutral icon instead of a gray box (no error machinery).
   if (!cleanSrc) {
     return (
-      <img
-        src={fallback}
-        alt={alt}
-        className={`object-cover ${className}`}
-        loading={eager ? 'eager' : 'lazy'}
-        decoding="async"
-      />
+      <div className={`flex items-center justify-center bg-muted ${className}`}>
+        <Package className="w-1/3 h-1/3 text-muted-foreground/40" />
+      </div>
     );
   }
 

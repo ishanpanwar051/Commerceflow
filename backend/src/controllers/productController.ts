@@ -1,10 +1,37 @@
 import { Request, Response, NextFunction } from 'express';
 import { ProductService } from '../services/productService';
 import { sendSuccess, calculatePaginationMeta } from '../utils/helpers';
+import { BadRequestError } from '../utils/errors';
+import { logger } from '../config/logger';
 
 const productService = new ProductService();
 
 export class ProductController {
+  async uploadImage(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        throw new BadRequestError('No file uploaded');
+      }
+
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        throw new BadRequestError('Invalid file type. Allowed: JPEG, PNG, WebP, AVIF');
+      }
+
+      if (req.file.size > 5 * 1024 * 1024) {
+        throw new BadRequestError('File too large. Maximum size is 5MB');
+      }
+
+      const { uploadToCloudinary } = await import('../utils/cloudinary');
+      const result = await uploadToCloudinary(req.file.path, 'products');
+
+      const fs = await import('fs/promises');
+      fs.unlink(req.file.path).catch(() => {});
+
+      sendSuccess(res, { url: result.secure_url, publicId: result.public_id }, 'Image uploaded successfully', 201);
+    } catch (error) { next(error); }
+  }
+
   async getProducts(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query as Record<string, unknown>;

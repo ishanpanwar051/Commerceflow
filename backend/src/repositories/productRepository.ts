@@ -199,6 +199,10 @@ export class ProductRepository {
     return this.prisma.productImage.create({ data });
   }
 
+  async findImage(id: string) {
+    return this.prisma.productImage.findUnique({ where: { id } });
+  }
+
   async deleteImage(id: string) {
     return this.prisma.productImage.delete({ where: { id } });
   }

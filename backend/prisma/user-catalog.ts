@@ -1,13 +1,8 @@
 // Catalog: 4 parent groups -> 15 subcategories, 16 products each.
-// Every product image is a deterministic placeholder from its subcategory's
-// verified 16-image pool (index-aligned) so all images are unique across the
-// catalog and never depend on a single external service.
-
-import { SUBCATEGORY_IMAGE_POOLS } from './subcategory-image-pools';
+// Products are seeded without images so new assets can be added later.
 
 export interface UserCatalogProduct {
   name: string;
-  image: string;
 }
 
 export interface UserCatalogSubcategory {
@@ -24,17 +19,9 @@ export interface UserCatalogCategory {
   subcategories: UserCatalogSubcategory[];
 }
 
-const img = (poolKey: string, index: number): string => {
-  const pool = SUBCATEGORY_IMAGE_POOLS[poolKey];
-  if (!pool || pool.length === 0) return 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500';
-  return pool[index % pool.length];
-};
-
 function sub(name: string, slug: string, description: string, names: string[]): UserCatalogSubcategory {
-  const pool = SUBCATEGORY_IMAGE_POOLS[slug];
-  if (!pool) throw new Error(`No image pool for subcategory "${slug}"`);
   if (names.length !== 16) throw new Error(`Subcategory "${slug}" must have 16 products (got ${names.length})`);
-  return { name, slug, description, products: names.map((productName, i) => ({ name: productName, image: img(slug, i) })) };
+  return { name, slug, description, products: names.map((productName) => ({ name: productName })) };
 }
 
 const S = (
