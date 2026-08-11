@@ -22,17 +22,18 @@ const server = app.listen(port, async (err) => {
   try {
     await connectDatabase();
     
-    // Auto-fix database on startup (for free tier without shell access)
+    // Database startup check
     logger.info('🔧 Checking database status...');
     const { getPrisma } = await import('./config/database.js');
     const prisma = getPrisma();
     
     const productCount = await prisma.product.count();
-    const hasOldEditionProducts = await prisma.product.findFirst({ where: { name: { contains: 'Edition 1' } } });
-    logger.info(`📊 Found ${productCount} products in database (hasOldEditionProducts: ${Boolean(hasOldEditionProducts)})`);
+    logger.info(`📊 Database has ${productCount} products`);
     
-    if (productCount === 0 || productCount < 100 || hasOldEditionProducts) {
-      logger.info('📦 Re-seeding database with curated catalog and clean titles...');
+    // ONLY seed when database is completely empty (0 products).
+    // Never wipe, re-seed, update images, or reset flags on server startup.
+    if (productCount === 0) {
+      logger.info('📦 Database is empty. Seeding initial catalog...');
       try {
         let runSeed: any;
         try {
@@ -49,71 +50,10 @@ const server = app.listen(port, async (err) => {
           await runSeed();
           logger.info('✅ Database seeded successfully!');
         }
-
-        try {
-          // @ts-ignore
-          const updateImgModule = await import('./update-images.mjs');
-          const runUpdateImg = updateImgModule.default;
-          if (typeof runUpdateImg === 'function') {
-            await runUpdateImg();
-            logger.info('✅ Database images updated successfully!');
-          }
-        } catch (imgErr) {
-          logger.error({ err: imgErr }, 'Update images warning');
-        }
       } catch (seedErr) {
         logger.error({ err: seedErr }, 'Auto-seed warning (server will continue running)');
       }
-    } else {
-      try {
-        // @ts-ignore
-        const updateImgModule = await import('./update-images.mjs');
-        const runUpdateImg = updateImgModule.default;
-        if (typeof runUpdateImg === 'function') {
-          await runUpdateImg();
-          logger.info('✅ Database images updated successfully!');
-        }
-      } catch (err) {
-        logger.error({ err }, 'Update images warning');
-      }
     }
-
-    // Check for overlapping flags
-      const featured = await prisma.product.count({ where: { isFeatured: true } });
-      const bestsellers = await prisma.product.count({ where: { isBestSeller: true } });
-      const newArrivals = await prisma.product.count({ where: { isNewArrival: true } });
-      
-      logger.info(`   Flags: Featured=${featured}, Bestsellers=${bestsellers}, New=${newArrivals}`);
-      
-      if (featured > 25 || newArrivals > 25) {
-        logger.info('⚠️  Overlap detected, fixing flags...');
-        
-        // Reset all
-        await prisma.product.updateMany({
-          data: { isFeatured: false, isBestSeller: false, isNewArrival: false, isTopRated: false }
-        });
-        
-        // Get products
-        const products = await prisma.product.findMany({
-          orderBy: { createdAt: 'asc' },
-          select: { id: true, soldCount: true, averageRating: true }
-        });
-        
-        // Assign mutually exclusive
-        for (let i = 0; i < products.length; i++) {
-          const p = products[i];
-          if (i < 20) {
-            await prisma.product.update({ where: { id: p.id }, data: { isFeatured: true } });
-          } else if (i >= 20 && i < 40 && p.soldCount > 5000) {
-            await prisma.product.update({ where: { id: p.id }, data: { isBestSeller: true } });
-          } else if (i >= 40 && i < 60) {
-            await prisma.product.update({ where: { id: p.id }, data: { isNewArrival: true } });
-          } else if (i >= 60 && i < 80 && p.averageRating > 4.5) {
-            await prisma.product.update({ where: { id: p.id }, data: { isTopRated: true } });
-          }
-        }
-        
-      }
     
     logger.info('🎉 Database check complete!');
   } catch (error) {

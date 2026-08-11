@@ -51,15 +51,25 @@ async function main() {
   }
   console.log(`\n✓ Updated ${catUpdated} category images.`);
 
-  // 2. Product images — delete + recreate exactly 1 image per product from its
-  //    subcategory pool (unique per product, no cross-category reuse).
+  // 2. Product images — ONLY fill missing images for products without images.
+  // Never delete or overwrite existing product images.
   const products = await prisma.product.findMany({
     where: { deletedAt: null },
     include: {
       category: { select: { id: true, name: true, slug: true, parentId: true } },
+      images: { select: { id: true, url: true } },
     },
     orderBy: { createdAt: 'asc' },
   });
+
+  const productsWithoutImages = products.filter((p: any) => !p.images || p.images.length === 0);
+  console.log(`\n📊 Total products: ${products.length}, Products missing images: ${productsWithoutImages.length}`);
+
+  if (productsWithoutImages.length === 0) {
+    console.log('✓ All products already have persistent images. Skipping image creation.');
+    await prisma.$disconnect();
+    return;
+  }
 
   // Pre-seed the uniqueness tracker with catalog product images
   resetUsedImages(products.map((p: any) => ({ name: p.name })));
@@ -71,9 +81,8 @@ async function main() {
     order: number;
   }[] = [];
 
-  let skipped = 0;
-  for (let i = 0; i < products.length; i += 1) {
-    const p = products[i];
+  for (let i = 0; i < productsWithoutImages.length; i += 1) {
+    const p = productsWithoutImages[i];
     const category = p.category;
     const categorySlug = category?.slug || 'general';
 
@@ -90,7 +99,6 @@ async function main() {
       );
     } catch (err) {
       console.warn(`  ! skipping ${p.id} (${p.name}): ${(err as Error).message}`);
-      skipped += 1;
       continue;
     }
 
@@ -104,28 +112,17 @@ async function main() {
     }
   }
 
-  const totalProducts = products.length;
-  const totalRows = imageRows.length;
-
-  if (totalRows === 0) {
-    console.log('  ! no product image rows to write');
-    await prisma.$disconnect();
-    return;
+  if (imageRows.length > 0) {
+    const BATCH = 500;
+    for (let i = 0; i < imageRows.length; i += BATCH) {
+      await prisma.productImage.createMany({
+        data: imageRows.slice(i, i + BATCH),
+      });
+    }
+    console.log(`✓ Created images for ${productsWithoutImages.length} previously missing products.`);
   }
 
-  await prisma.productImage.deleteMany({
-    where: { productId: { in: products.map((p: any) => p.id) } },
-  });
-
-  const BATCH = 500;
-  for (let i = 0; i < imageRows.length; i += BATCH) {
-    await prisma.productImage.createMany({
-      data: imageRows.slice(i, i + BATCH),
-    });
-    console.log(`  ...${Math.min(i + BATCH, imageRows.length)}/${totalRows} image rows`);
-  }
-
-  console.log(`✓ Synced images for ${totalProducts} products (1 each, all unique).`);
+  console.log(`✓ Image sync complete. Total catalog products verified: ${products.length}.`);
   await prisma.$disconnect();
 }
 

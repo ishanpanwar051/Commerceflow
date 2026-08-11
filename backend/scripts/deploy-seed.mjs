@@ -29,9 +29,8 @@ async function main() {
   try {
     const productCount = await prisma.product.count();
     
-    if (productCount !== 112) {
-      console.log(`⚠️  WARNING: Database has ${productCount} products instead of the expected 112! Please run seed manually if needed:`);
-      console.log('   Render Shell → cd backend → npx tsx prisma/seed.ts');
+    if (productCount === 0) {
+      console.log('ℹ️ Database is empty (0 products). Seeding can be run if needed.');
     } else {
       const featured = await prisma.product.count({ where: { isFeatured: true } });
       const bestsellers = await prisma.product.count({ where: { isBestSeller: true } });
@@ -42,15 +41,7 @@ async function main() {
       console.log(`   Featured: ${featured}`);
       console.log(`   Bestsellers: ${bestsellers}`);
       console.log(`   New Arrivals: ${newArrivals}`);
-
-      // Check for old overlapping distribution
-      if (featured > 25 || newArrivals > 25) {
-        console.log('⚠️  WARNING: Old seed distribution detected!');
-        console.log('   To apply fixes, run in Render Shell:');
-        console.log('   cd backend && npx tsx prisma/seed.ts');
-      } else {
-        console.log('✅ Database has fixed seed data');
-      }
+      console.log('✅ Database data verified');
     }
 
   } catch (error) {

@@ -63,14 +63,14 @@ function toUnsplashUrl(photoId: string): string {
   if (trimmed.startsWith('http')) return trimmed;
   const cleanId = trimmed.replace(/[^\w-]/g, '');
   if (!cleanId) return '';
-  return `https://picsum.photos/seed/${cleanId}/600/600`;
+  return `https://images.unsplash.com/${cleanId}?auto=format&fit=crop&w=800&q=80`;
 }
 
 export function isBlockedImageUrl(url: string | null | undefined): boolean {
   if (!url) return true;
   try {
     const hostname = new URL(url).hostname;
-    return !['images.unsplash.com', 'i.pinimg.com', 'picsum.photos'].includes(hostname);
+    return !['images.unsplash.com', 'i.pinimg.com'].includes(hostname);
   } catch {
     return true;
   }
