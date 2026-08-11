@@ -24,6 +24,12 @@ try {
     await pool.end().catch(() => {});
     process.exit(0);
   }
+  const { rows: pRows } = await pool.query('SELECT count(*)::int AS c FROM products');
+  if (pRows[0].c > 0) {
+    console.log('[maybe-seed] database already has products, skipping seed');
+    await pool.end().catch(() => {});
+    process.exit(0);
+  }
 } catch (err) {
   console.error('[maybe-seed] could not check users table:', err && err.message ? err.message : String(err));
   await pool.end().catch(() => {});

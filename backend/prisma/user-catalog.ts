@@ -24,8 +24,11 @@ export interface UserCatalogCategory {
   subcategories: UserCatalogSubcategory[];
 }
 
-const img = (poolKey: string, index: number): string =>
-  `https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg`;
+const img = (poolKey: string, index: number): string => {
+  const pool = SUBCATEGORY_IMAGE_POOLS[poolKey];
+  if (!pool || pool.length === 0) return 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500';
+  return pool[index % pool.length];
+};
 
 function sub(name: string, slug: string, description: string, names: string[]): UserCatalogSubcategory {
   const pool = SUBCATEGORY_IMAGE_POOLS[slug];

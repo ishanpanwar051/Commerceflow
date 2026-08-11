@@ -43,10 +43,10 @@ services:
     rootDir: .
     # Install + build from the monorepo root, then generate Prisma client and push schema.
     # NOTE: preDeployCommand is not available on the free tier, so DB setup runs in buildCommand.
-    # Plain filter (no `...`) matches the proven Dockerfile build: the lib packages are
-    # bundled from source by esbuild/Vite, so they don't need their own build step.
-    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push && cd backend && npx esbuild src/auto-fix-database.ts --bundle --platform=node --outfile=dist/auto-fix-database.mjs --format=esm --external:@prisma/client --external:@prisma/adapter-pg --external:pg
-    startCommand: node ./backend/dist/auto-fix-database.mjs && node --enable-source-maps ./backend/dist/index.mjs
+    # IMPORTANT: The build/startup flow must NEVER mutate product data (seeding, image rewrites,
+    # auto-fix migrations). Product image maintenance is a manual, explicit one-time step only.
+    buildCommand: pnpm install --frozen-lockfile --ignore-scripts && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/api-server exec prisma generate && pnpm --filter @workspace/api-server exec prisma db push
+    startCommand: node --enable-source-maps ./backend/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION

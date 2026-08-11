@@ -30,7 +30,7 @@ function getPrismaInstance() {
  * Idempotent: on every run it guarantees
  *  - every category has a category-appropriate image,
  *  - every product has exactly 1 image sourced from its subcategory's verified
- *    16-image Unsplash pool, so product images are unique across the catalog.
+ *    16-image Pinterest pool, so product images are unique across the catalog.
  *
  * Batched (not per-row awaits) so it completes well within Render's startup
  * grace period even with a large catalog.
@@ -50,6 +50,13 @@ async function main() {
     catUpdated++;
   }
   console.log(`\n✓ Updated ${catUpdated} category images.`);
+
+  // 1.5 Clean stale duplicate image rows
+  await prisma.productImage.deleteMany({
+    where: {
+      url: { contains: '90952e9d35a04edbd67eb8eed0f72635' }
+    }
+  });
 
   // 2. Product images — ONLY fill missing images for products without images.
   // Never delete or overwrite existing product images.

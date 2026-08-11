@@ -12,11 +12,11 @@ import { Button } from '@/components/ui/button';
 import { ProductImage } from '@/components/shared/ProductImage';
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  electronics: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+  electronics: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
   fashion: 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg',
   'home-living': 'https://i.pinimg.com/736x/55/94/1a/55941a94efbe3aa64eef9fb5ffb892bc.jpg',
   essentials: 'https://i.pinimg.com/736x/ed/e5/22/ede522c0dbf11e74f3957297e64a1ce7.jpg',
-  smartphones: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+  smartphones: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
   laptops: 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
   headphones: 'https://i.pinimg.com/736x/1a/f6/88/1af688e1bc1284d720b0805c6d3fa8fa.jpg',
   smartwatches: 'https://i.pinimg.com/736x/2a/8c/fb/2a8cfb463273e9ae8b1b22e171329a17.jpg',
@@ -36,7 +36,7 @@ const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
 function getCategoryBannerImage(category: { image?: string | null; slug?: string }): string {
   if (category.image && category.image.length > 5) return category.image;
   const slug = (category.slug || '').toLowerCase();
-  return CATEGORY_FALLBACK_IMAGES[slug] || 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg';
+  return CATEGORY_FALLBACK_IMAGES[slug] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
 }
 
 function CategoriesContent() {

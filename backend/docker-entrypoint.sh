@@ -12,7 +12,10 @@ node ./scripts/wait-for-redis.mjs || echo "[entrypoint] Redis not reachable — 
 echo "[entrypoint] Applying database migrations (prisma migrate deploy)..."
 ./node_modules/.bin/prisma migrate deploy
 
-if [ "${SEED_DB:-true}" = "true" ]; then
+# Seeding is OFF by default. It must be explicitly enabled (SEED_DB=true) for a
+# fresh database. The seed script WIPES ALL EXISTING DATA, so it must never run
+# automatically against a live database.
+if [ "${SEED_DB:-false}" = "true" ]; then
   echo "[entrypoint] Checking whether the database needs seeding..."
   node ./scripts/maybe-seed.mjs
 fi

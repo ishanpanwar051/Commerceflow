@@ -1,9 +1,9 @@
 // Verified Pinterest Image Pools for 15 Subcategories x 16 products = 240 products.
-// Eliminates all Unsplash URLs across the database.
+// These URLs are the single source of truth for product/category images.
 
 export const SUBCATEGORY_IMAGE_POOLS: Record<string, string[]> = {
   'smartphones': [
-    'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
     'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
     'https://i.pinimg.com/736x/90/c0/f8/90c0f82b8f61c346a172a424d4d0b10a.jpg',
     'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg',
@@ -22,7 +22,7 @@ export const SUBCATEGORY_IMAGE_POOLS: Record<string, string[]> = {
   ],
   'laptops': [
     'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
-    'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
     'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
     'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg',
     'https://i.pinimg.com/736x/d5/64/26/d56426cc8ad6a77dbb03e7e9ed5ffda3.jpg',
@@ -40,7 +40,7 @@ export const SUBCATEGORY_IMAGE_POOLS: Record<string, string[]> = {
   ],
   'headphones': [
     'https://i.pinimg.com/736x/1a/f6/88/1af688e1bc1284d720b0805c6d3fa8fa.jpg',
-    'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
     'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
     'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg',
     'https://i.pinimg.com/736x/d5/64/26/d56426cc8ad6a77dbb03e7e9ed5ffda3.jpg',
@@ -58,7 +58,7 @@ export const SUBCATEGORY_IMAGE_POOLS: Record<string, string[]> = {
   ],
   'smartwatches': [
     'https://i.pinimg.com/736x/2a/8c/fb/2a8cfb463273e9ae8b1b22e171329a17.jpg',
-    'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
     'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
     'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg',
     'https://i.pinimg.com/736x/d5/64/26/d56426cc8ad6a77dbb03e7e9ed5ffda3.jpg',

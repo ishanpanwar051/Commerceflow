@@ -14,7 +14,7 @@ const FALLBACK_PHOTO = 'photo-1498049860654-af1a5c566876';
 // These take priority over every placeholder source so they never get reset.
 export const CUSTOM_PRODUCT_IMAGES: Record<string, string> = {
   // Trial Section: 16 Smartphones mapped to Pinterest image URLs
-  'iphone 17 pro max': 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+  'iphone 17 pro max': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
   'iphone 17 pro': 'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
   'iphone 16e': 'https://i.pinimg.com/736x/90/c0/f8/90c0f82b8f61c346a172a424d4d0b10a.jpg',
   'samsung galaxy s26 ultra': 'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg',

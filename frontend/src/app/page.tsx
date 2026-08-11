@@ -20,16 +20,16 @@ import { toast } from 'sonner';
 
 // Featured Category Circles Data
 const categoryCircles = [
-  { name: 'Electronics', slug: 'electronics', image: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg', badge: 'Up to 60% Off' },
-  { name: 'Men Apparel', slug: 'men-apparel', image: 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg', badge: 'Min 50% Off' },
-  { name: 'Women Collection', slug: 'women-collection', image: 'https://i.pinimg.com/736x/b2/bf/45/b2bf456df60ca654e8ffb99c75066a50.jpg', badge: 'Trending' },
-  { name: 'Home Decor', slug: 'home-decor', image: 'https://i.pinimg.com/736x/55/94/1a/55941a94efbe3aa64eef9fb5ffb892bc.jpg', badge: 'Special Price' },
-  { name: 'Beauty & Skincare', slug: 'beauty-skincare', image: 'https://i.pinimg.com/736x/ed/e5/22/ede522c0dbf11e74f3957297e64a1ce7.jpg', badge: 'Top Rated' },
-  { name: 'Running Shoes', slug: 'running-shoes', image: 'https://i.pinimg.com/736x/9a/c0/61/9ac061f09bbba9aa2e70399ed65d0645.jpg', badge: 'From ₹499' },
-  { name: 'Fitness & Gym', slug: 'fitness-gym', image: 'https://i.pinimg.com/736x/01/be/f4/01bef48ecceeb23edef57778aa13ee51.jpg', badge: 'Best Selling' },
-  { name: 'Toys & Games', slug: 'toys-games', image: 'https://i.pinimg.com/736x/bf/e7/76/bfe776caeddf8263eb2b069d3ee97022.jpg', badge: 'New Styles' },
-  { name: 'Cookware', slug: 'cookware', image: 'https://i.pinimg.com/736x/67/64/00/676400bf1b3052dc9ce3c9cb5a507851.jpg', badge: 'Extra 10% Off' },
-  { name: 'Sofas & Beds', slug: 'sofas-beds', image: 'https://i.pinimg.com/736x/e6/7f/77/e67f77f0a996c561b3fa122240974edc.jpg', badge: 'Mega Savings' },
+  { name: 'Electronics', slug: 'electronics', image: 'https://i.pinimg.com/736x/49/00/bf/4900bf9f52cc4028460dd668965e3760.jpg', badge: 'Up to 60% Off' },
+  { name: 'Men Apparel', slug: 'men-apparel', image: 'https://i.pinimg.com/1200x/ca/5f/9a/ca5f9a99d891b97105329bd2b51f365f.jpg', badge: 'Min 50% Off' },
+  { name: 'Women Collection', slug: 'women-collection', image: 'https://i.pinimg.com/736x/70/25/d3/7025d32eb041dcf39acfe72879257da6.jpg', badge: 'Trending' },
+  { name: 'Home Decor', slug: 'home-decor', image: 'https://i.pinimg.com/1200x/6e/f9/e9/6ef9e9c5f36fc0fa6591a0ebf6e2fc9d.jpg', badge: 'Special Price' },
+  { name: 'Beauty & Skincare', slug: 'beauty-skincare', image: 'https://i.pinimg.com/1200x/72/ce/f6/72cef6821b8ff19188d20d7595669b39.jpg', badge: 'Top Rated' },
+  { name: 'Running Shoes', slug: 'running-shoes', image: 'https://i.pinimg.com/736x/74/fa/7b/74fa7bd1f20f012610d7f9e08dac3297.jpg', badge: 'From ₹499' },
+  { name: 'Fitness & Gym', slug: 'fitness-gym', image: 'https://i.pinimg.com/736x/a5/54/24/a55424d42aaadfff1aa245fcc95cd191.jpg', badge: 'Best Selling' },
+  { name: 'Toys & Games', slug: 'toys-games', image: 'https://i.pinimg.com/1200x/b8/01/ec/b801ec420edae1904bcd6f60b6151445.jpg', badge: 'New Styles' },
+  { name: 'Cookware', slug: 'cookware', image: 'https://i.pinimg.com/736x/7b/1e/ca/7b1eca81497bc26431a8cc38caa5d314.jpg', badge: 'Extra 10% Off' },
+  { name: 'Sofas & Beds', slug: 'sofas-beds', image: 'https://i.pinimg.com/736x/33/90/6a/33906a8fb31f7cedaf743956b8e968ed.jpg', badge: 'Mega Savings' },
 ];
 
 // Main Hero Banners Data
@@ -42,7 +42,7 @@ const heroSlides = [
     cta: 'Shop Tech Offers',
     ctaLink: '/categories/electronics',
     badge: 'Limited Time Deal',
-    image: 'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg',
+    image: 'https://i.pinimg.com/1200x/4b/dd/d5/4bddd5133527509b0370a266932c12f5.jpg',
   },
   {
     title: 'Fashion & Apparel Carnival',
@@ -52,7 +52,7 @@ const heroSlides = [
     cta: 'Explore Fashion',
     ctaLink: '/categories/fashion',
     badge: 'Style Fest',
-    image: 'https://i.pinimg.com/736x/b2/bf/45/b2bf456df60ca654e8ffb99c75066a50.jpg',
+    image: 'https://i.pinimg.com/1200x/cc/99/73/cc9973b9183688b983c16e1891dcceb0.jpg',
   },
   {
     title: 'Home & Kitchen Upgrades',
@@ -62,7 +62,7 @@ const heroSlides = [
     cta: 'Shop Home & Living',
     ctaLink: '/categories/home-living',
     badge: 'Home Special',
-    image: 'https://i.pinimg.com/736x/e6/7f/77/e67f77f0a996c561b3fa122240974edc.jpg',
+    image: 'https://i.pinimg.com/1200x/4b/dd/d5/4bddd5133527509b0370a266932c12f5.jpg',
   },
 ];
 
@@ -73,7 +73,7 @@ const quadSpotlights = [
     linkText: 'See all tech offers',
     linkHref: '/categories/electronics',
     items: [
-      { name: 'Smartphones', image: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg', href: '/products?search=phone' },
+      { name: 'Smartphones', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500', href: '/products?search=phone' },
       { name: 'Laptops', image: 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg', href: '/products?search=laptop' },
       { name: 'Headphones', image: 'https://i.pinimg.com/736x/1a/f6/88/1af688e1bc1284d720b0805c6d3fa8fa.jpg', href: '/products?search=headphone' },
       { name: 'Smartwatches', image: 'https://i.pinimg.com/736x/2a/8c/fb/2a8cfb463273e9ae8b1b22e171329a17.jpg', href: '/products?search=watch' },
@@ -124,7 +124,7 @@ const budgetStores = [
 
 // Top Brand Logos
 const topBrands = [
-  { name: 'Apple', logo: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg' },
+  { name: 'Apple', logo: 'https://i.pinimg.com/1200x/ba/d5/77/bad5770f437f1d95a70de20175464bda.jpg' },
   { name: 'Samsung', logo: 'https://i.pinimg.com/736x/97/14/fb/9714fbfc0fe4761842a16bbf3622f88c.jpg' },
   { name: 'Nike', logo: 'https://i.pinimg.com/736x/9a/c0/61/9ac061f09bbba9aa2e70399ed65d0645.jpg' },
   { name: 'Adidas', logo: 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg' },

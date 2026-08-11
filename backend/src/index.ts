@@ -29,31 +29,10 @@ const server = app.listen(port, async (err) => {
     
     const productCount = await prisma.product.count();
     logger.info(`📊 Database has ${productCount} products`);
-    
-    // ONLY seed when database is completely empty (0 products).
-    // Never wipe, re-seed, update images, or reset flags on server startup.
-    if (productCount === 0) {
-      logger.info('📦 Database is empty. Seeding initial catalog...');
-      try {
-        let runSeed: any;
-        try {
-          // @ts-ignore
-          const seedModule = await import('./seed.mjs');
-          runSeed = seedModule.default;
-        } catch {
-          // @ts-ignore
-          const seedModule = await import('../prisma/seed.js');
-          runSeed = seedModule.default;
-        }
-        
-        if (typeof runSeed === 'function') {
-          await runSeed();
-          logger.info('✅ Database seeded successfully!');
-        }
-      } catch (seedErr) {
-        logger.error({ err: seedErr }, 'Auto-seed warning (server will continue running)');
-      }
-    }
+
+    // NOTE: server startup is intentionally read-only with respect to product
+    // data. Seeding and product-image maintenance are manual, explicit steps
+    // only — they must never run automatically on boot or restart.
     
     logger.info('🎉 Database check complete!');
   } catch (error) {
