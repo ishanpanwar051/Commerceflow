@@ -17,6 +17,7 @@ const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
 
 import runSeed from '../prisma/seed';
+import { getProductImages } from '../prisma/product-images';
 
 async function main() {
   console.log('🔧 Auto-Fix Database Starting...');
@@ -47,7 +48,6 @@ async function main() {
       console.log('✅ Database seeded successfully');
     } else {
       console.log(`📊 Database has ${productCount} products. Migrating any remaining Unsplash image records...`);
-      const { getProductImages } = await import('../prisma/product-images');
       const products = await prisma.product.findMany({
         include: { category: true, images: true }
       });
