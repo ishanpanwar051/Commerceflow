@@ -12,31 +12,31 @@ import { Button } from '@/components/ui/button';
 import { ProductImage } from '@/components/shared/ProductImage';
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  electronics: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
-  fashion: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80',
-  'home-living': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80',
-  essentials: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80',
-  smartphones: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
-  laptops: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80',
-  headphones: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
-  smartwatches: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
-  'men-apparel': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80',
-  'women-collection': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80',
-  'running-shoes': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
-  'home-decor': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80',
-  cookware: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
-  'sofas-beds': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80',
-  'lighting-lamps': 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80',
-  'beauty-skincare': 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80',
-  'fitness-gym': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80',
-  'toys-games': 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
-  'pet-supplies': 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=600&q=80',
+  electronics: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+  fashion: 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg',
+  'home-living': 'https://i.pinimg.com/736x/55/94/1a/55941a94efbe3aa64eef9fb5ffb892bc.jpg',
+  essentials: 'https://i.pinimg.com/736x/ed/e5/22/ede522c0dbf11e74f3957297e64a1ce7.jpg',
+  smartphones: 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg',
+  laptops: 'https://i.pinimg.com/736x/4f/17/de/4f17de878b3d044bcfd41b12e3de6257.jpg',
+  headphones: 'https://i.pinimg.com/736x/1a/f6/88/1af688e1bc1284d720b0805c6d3fa8fa.jpg',
+  smartwatches: 'https://i.pinimg.com/736x/2a/8c/fb/2a8cfb463273e9ae8b1b22e171329a17.jpg',
+  'men-apparel': 'https://i.pinimg.com/736x/51/bf/d7/51bfd722bfebbe3f79026d36e2fef1ec.jpg',
+  'women-collection': 'https://i.pinimg.com/736x/b2/bf/45/b2bf456df60ca654e8ffb99c75066a50.jpg',
+  'running-shoes': 'https://i.pinimg.com/736x/9a/c0/61/9ac061f09bbba9aa2e70399ed65d0645.jpg',
+  'home-decor': 'https://i.pinimg.com/736x/55/94/1a/55941a94efbe3aa64eef9fb5ffb892bc.jpg',
+  cookware: 'https://i.pinimg.com/736x/67/64/00/676400bf1b3052dc9ce3c9cb5a507851.jpg',
+  'sofas-beds': 'https://i.pinimg.com/736x/e6/7f/77/e67f77f0a996c561b3fa122240974edc.jpg',
+  'lighting-lamps': 'https://i.pinimg.com/736x/8d/3a/4b/8d3a4b6c3e981290372fa82d1c9e8312.jpg',
+  'beauty-skincare': 'https://i.pinimg.com/736x/ed/e5/22/ede522c0dbf11e74f3957297e64a1ce7.jpg',
+  'fitness-gym': 'https://i.pinimg.com/736x/01/be/f4/01bef48ecceeb23edef57778aa13ee51.jpg',
+  'toys-games': 'https://i.pinimg.com/736x/bf/e7/76/bfe776caeddf8263eb2b069d3ee97022.jpg',
+  'pet-supplies': 'https://i.pinimg.com/736x/67/64/00/676400bf1b3052dc9ce3c9cb5a507851.jpg',
 };
 
 function getCategoryBannerImage(category: { image?: string | null; slug?: string }): string {
   if (category.image && category.image.length > 5) return category.image;
   const slug = (category.slug || '').toLowerCase();
-  return CATEGORY_FALLBACK_IMAGES[slug] || 'https://images.unsplash.com/photo-1498049860654-af1a5c566876?auto=format&fit=crop&w=600&q=80';
+  return CATEGORY_FALLBACK_IMAGES[slug] || 'https://i.pinimg.com/736x/90/95/2e/90952e9d35a04edbd67eb8eed0f72635.jpg';
 }
 
 function CategoriesContent() {

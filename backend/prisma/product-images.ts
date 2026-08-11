@@ -67,19 +67,17 @@ const PARENT_FIRST_SUBCATEGORY: Record<string, string> = {
 };
 
 function toUnsplashUrl(photoId: string): string {
-  if (!photoId) return '';
+  if (!photoId) return '/placeholder.svg';
   const trimmed = photoId.trim();
   if (trimmed.startsWith('http')) return trimmed;
-  const cleanId = trimmed.replace(/[^\w-]/g, '');
-  if (!cleanId) return '';
-  return `https://images.unsplash.com/${cleanId}?auto=format&fit=crop&w=800&q=80`;
+  return '/placeholder.svg';
 }
 
 export function isBlockedImageUrl(url: string | null | undefined): boolean {
   if (!url) return true;
   try {
     const hostname = new URL(url).hostname;
-    return !['images.unsplash.com', 'i.pinimg.com'].includes(hostname);
+    return hostname.includes('picsum.photos');
   } catch {
     return true;
   }
