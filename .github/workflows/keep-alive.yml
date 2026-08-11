@@ -14,10 +14,21 @@ jobs:
     steps:
       - name: Ping backend health check
         run: |
-          code=$(curl -sS -o /dev/null -w "%{http_code}" \
-            --max-time 60 \
-            https://commerceflow-api-1s7i.onrender.com/api/healthz)
-          echo "Backend healthz status: $code"
+          echo "Pinging backend health check endpoint..."
+          code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 120 https://commerceflow-api-1s7i.onrender.com/api/healthz || echo "000")
+          echo "Initial healthz status: $code"
+          
           if [ "$code" != "200" ]; then
-            echo "Backend did not return 200 (status: $code)"
+            echo "Cold-start or delay detected. Waiting 10s before retry..."
+            sleep 10
+            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 120 https://commerceflow-api-1s7i.onrender.com/api/healthz || echo "000")
+            echo "Retry healthz status: $code"
+          fi
+
+          if [ "$code" = "200" ]; then
+            echo "✅ Backend is warm and responsive (status: 200)"
+          else
+            echo "⚠️ Backend ping returned status: $code"
+            # Exit 0 so GitHub Actions scheduler does not send failure email alerts for transient free-tier cold starts
+            exit 0
           fi
