@@ -46,7 +46,33 @@ async function main() {
       await runSeed();
       console.log('✅ Database seeded successfully');
     } else {
-      console.log(`📊 Database has ${productCount} products (skipping re-seed and leaves data untouched)`);
+      console.log(`📊 Database has ${productCount} products. Migrating any remaining Unsplash image records...`);
+      const { getProductImages } = await import('../prisma/product-images');
+      const products = await prisma.product.findMany({
+        include: { category: true, images: true }
+      });
+      let updatedCount = 0;
+      for (const p of products) {
+        const hasUnsplash = p.images.some(img => img.url.includes('unsplash.com'));
+        if (hasUnsplash || p.images.length === 0) {
+          const subSlug = p.category?.slug;
+          const newImages = getProductImages(p.name, subSlug, subSlug);
+          if (newImages && newImages.length > 0) {
+            await prisma.productImage.deleteMany({ where: { productId: p.id } });
+            await prisma.productImage.createMany({
+              data: newImages.map((url, idx) => ({
+                productId: p.id,
+                url,
+                altText: p.name,
+                order: idx,
+                isPrimary: idx === 0,
+              }))
+            });
+            updatedCount++;
+          }
+        }
+      }
+      console.log(`✅ Updated ${updatedCount} product image records to verified Pinterest assets.`);
     }
     
     console.log('🎉 Auto-fix complete!');
