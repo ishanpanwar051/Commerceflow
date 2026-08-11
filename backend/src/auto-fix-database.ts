@@ -16,6 +16,8 @@ import { Pool } from 'pg';
 const _require = createRequire(import.meta.url);
 const { PrismaClient } = _require('@prisma/client') as typeof import('@prisma/client');
 
+import runSeed from '../prisma/seed';
+
 async function main() {
   console.log('🔧 Auto-Fix Database Starting...');
   
@@ -41,11 +43,7 @@ async function main() {
     // production catalog can legitimately differ from the seed catalog.
     if (productCount === 0) {
       console.log(`📦 Database is empty. Running seed...`);
-      
-      // Import and run seed
-      const { default: runSeed } = await import('../prisma/seed.js');
       await runSeed();
-      
       console.log('✅ Database seeded successfully');
     } else {
       console.log(`📊 Database has ${productCount} products (skipping re-seed and leaves data untouched)`);
