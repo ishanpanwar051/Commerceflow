@@ -41,6 +41,14 @@ function pickMany<T>(arr: T[], count: number): T[] {
 const FIRST_NAMES = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan', 'Ananya', 'Diya', 'Myra', 'Sara', 'Aadhya', 'Riya', 'Priya', 'Kavya', 'Neha', 'Tanvi', 'Shruti', 'Pooja', 'Anjali', 'Nandini', 'Meera', 'Lakshmi'];
 const LAST_NAMES = ['Sharma', 'Verma', 'Patel', 'Singh', 'Kumar', 'Gupta', 'Reddy', 'Nair', 'Menon', 'Joshi', 'Deshmukh', 'Pillai', 'Rao', 'Chopra', 'Malhotra', 'Saxena', 'Mehta', 'Agarwal', 'Mishra', 'Kapoor', 'Khanna', 'Bhatt', 'Trivedi', 'Srinivasan', 'Iyer', 'Das'];
 
+const MATERIALS = ['Aluminium', 'Plastic', 'Stainless Steel', 'Carbon Fiber', 'Cotton', 'Leather', 'Wood', 'Glass', 'Ceramic', 'Silicone'];
+const WARRANTIES = ['1 Year Manufacturer Warranty', '2 Year Comprehensive Warranty', '6 Months Limited Warranty', '3 Year Brand Warranty'];
+const ORIGINS = ['India', 'United States', 'Germany', 'Japan', 'South Korea', 'Vietnam', 'Taiwan'];
+const SELLERS = ['CommerceFlow Official', 'CloudTail India', 'RetailNet', 'OmniTech Logistics', 'Prime Retailers'];
+const RETURN_POLICIES = ['7-Day Replacement Guarantee', '10-Day Return Policy', '30-Day Hassle-Free Returns', '14-Day Return Window'];
+const DELIVERY_ESTIMATES = ['Same Day', '1-2 Business Days', '2-4 Days', 'Express 24hr'];
+const GST = [5, 12, 18, 28];
+
 const REVIEW_TITLES = [
   'Absolutely love it!', 'Best purchase ever', 'Great quality', 'Excellent product', 'Very satisfied',
   'Good value for money', 'Exceeded expectations', 'Highly recommended', 'Perfect!', 'Worth every penny',
@@ -664,20 +672,24 @@ function getVerifiedImageUrl(name: string, catSlug: string, sku: string): string
 async function main() {
   console.log('🌱 Seeding catalog-driven product database...');
 
-  console.log('🧹 Wiping existing database records...');
-  await prisma.reviewImage.deleteMany();
-  await prisma.review.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.coupon.deleteMany();
-  await prisma.wishlistItem.deleteMany();
-  await prisma.cartItem.deleteMany();
-  await prisma.cart.deleteMany();
-  await prisma.inventory.deleteMany();
-  await prisma.productImage.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
+  console.log('🧹 Wiping existing database records safely...');
+  const wipe = async (fn: () => Promise<any>) => {
+    try { await fn(); } catch (e) { /* ignore */ }
+  };
+  await wipe(() => prisma.reviewImage.deleteMany());
+  await wipe(() => prisma.review.deleteMany());
+  await wipe(() => prisma.payment.deleteMany());
+  await wipe(() => prisma.orderItem.deleteMany());
+  await wipe(() => prisma.order.deleteMany());
+  await wipe(() => prisma.idempotencyRecord.deleteMany());
+  await wipe(() => prisma.coupon.deleteMany());
+  await wipe(() => prisma.wishlistItem.deleteMany());
+  await wipe(() => prisma.cartItem.deleteMany());
+  await wipe(() => prisma.cart.deleteMany());
+  await wipe(() => prisma.inventory.deleteMany());
+  await wipe(() => prisma.productImage.deleteMany());
+  await wipe(() => prisma.product.deleteMany());
+  await wipe(() => prisma.category.deleteMany());
 
   const hashedPassword = await bcrypt.hash('Admin@123', 12);
 
@@ -720,19 +732,6 @@ async function main() {
       })
     )
   );
-
-  // Remove any stale catalog rows so old duplicate images never survive a seed.
-  // Ordered to satisfy FK constraints (dependent rows first).
-  await prisma.productImage.deleteMany();
-  await prisma.cartItem.deleteMany();
-  await prisma.wishlistItem.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.idempotencyRecord.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.review.deleteMany();
-  await prisma.inventory.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
 
   // Create category hierarchy: 4 parent groups -> 15 subcategories
   const subcategoryCategoryMap = new Map<string, string>();
