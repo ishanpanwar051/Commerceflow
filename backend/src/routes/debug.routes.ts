@@ -99,18 +99,21 @@ router.all('/seed', async (req, res) => {
     const seedPath = fileURLToPath(new URL('./seed.mjs', import.meta.url));
     
     console.log(`[debug/seed] Triggering seed script from ${seedPath}`);
-    const child = spawn(process.execPath, [seedPath], { stdio: 'inherit' });
+    const child = spawn(process.execPath, [seedPath], { stdio: ['ignore', 'pipe', 'pipe'] });
+    let logs = '';
+    child.stdout?.on('data', (d) => { logs += d.toString(); });
+    child.stderr?.on('data', (d) => { logs += d.toString(); });
     
     child.on('exit', (code) => {
       if (code === 0) {
-        res.json({ status: 'success', message: 'Database seeded successfully with 240 verified images' });
+        res.json({ status: 'success', message: 'Database seeded successfully with 240 verified images', logs });
       } else {
-        res.status(500).json({ status: 'error', message: `Seed exited with code ${code}` });
+        res.status(500).json({ status: 'error', message: `Seed exited with code ${code}`, logs });
       }
     });
 
     child.on('error', (err) => {
-      res.status(500).json({ status: 'error', message: err.message });
+      res.status(500).json({ status: 'error', message: err.message, logs });
     });
   } catch (err: any) {
     res.status(500).json({ status: 'error', message: err.message });
