@@ -96,7 +96,7 @@ router.all('/seed', async (req, res) => {
   try {
     const { spawn } = await import('node:child_process');
     const { fileURLToPath } = await import('node:url');
-    const seedPath = fileURLToPath(new URL('../../seed.mjs', import.meta.url));
+    const seedPath = fileURLToPath(new URL('./seed.mjs', import.meta.url));
     
     console.log(`[debug/seed] Triggering seed script from ${seedPath}`);
     const child = spawn(process.execPath, [seedPath], { stdio: 'inherit' });
