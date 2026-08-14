@@ -62,6 +62,7 @@ export function ProductImage({
   const [attempt, setAttempt] = useState(0);
   const [gaveUp, setGaveUp] = useState(false);
   const [waitingRetry, setWaitingRetry] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   // RESET state whenever the intended source changes. Without this, a
@@ -74,6 +75,7 @@ export function ProductImage({
     setAttempt(0);
     setGaveUp(false);
     setWaitingRetry(false);
+    setLoaded(false);
     return () => {
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
@@ -129,6 +131,7 @@ export function ProductImage({
     timerRef.current = null;
     setWaitingRetry(false);
     setGaveUp(false);
+    setLoaded(true);
   };
 
   // Resolved URL for the current render.
@@ -145,16 +148,27 @@ export function ProductImage({
   }
 
   return (
-    <img
-      key={displaySrc}
-      src={displaySrc}
-      alt={alt}
-      className={`object-cover ${className}`}
-      loading={eager ? 'eager' : 'lazy'}
-      decoding="async"
-      referrerPolicy="no-referrer"
-      onLoad={handleLoad}
-      onError={handleError}
-    />
+    <div className={`relative overflow-hidden bg-muted ${className}`}>
+      {/* Shimmer skeleton while the real image is still loading. */}
+      {!loaded && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/10 to-transparent animate-shimmer"
+          style={{ backgroundSize: '200% 100%' }}
+        />
+      )}
+      <img
+        key={displaySrc}
+        src={displaySrc}
+        alt={alt}
+        className={`object-cover w-full h-full ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        style={{ transition: 'opacity 0.3s ease' }}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onLoad={handleLoad}
+        onError={handleError}
+      />
+    </div>
   );
 }

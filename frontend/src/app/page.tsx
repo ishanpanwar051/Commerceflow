@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProductGrid } from '@/components/shared/ProductGrid';
+import { ProductImage } from '@/components/shared/ProductImage';
 import { useAppDispatch } from '@/store/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { productService } from '@/services/product.service';
@@ -17,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { toast } from 'sonner';
+import type { Category, Product } from '@/types/api';
 
 // Featured Category Circles Data
 const categoryCircles = [
@@ -43,6 +45,7 @@ const heroSlides = [
     ctaLink: '/categories/electronics',
     badge: 'Limited Time Deal',
     icon: Smartphone,
+    categorySlug: 'smartphones',
   },
   {
     title: 'Fashion & Apparel Carnival',
@@ -53,6 +56,7 @@ const heroSlides = [
     ctaLink: '/categories/fashion',
     badge: 'Style Fest',
     icon: Shirt,
+    categorySlug: 'men-apparel',
   },
   {
     title: 'Home & Kitchen Upgrades',
@@ -63,8 +67,23 @@ const heroSlides = [
     ctaLink: '/categories/home-living',
     badge: 'Home Special',
     icon: Home,
+    categorySlug: 'home-decor',
   },
 ];
+
+function HeroVisual({ slide, featured }: { slide: { icon: any; categorySlug?: string }; featured: Product[] }) {
+  const product = featured.find((p) => p.category?.slug === slide.categorySlug) || featured[0];
+  const imageUrl = product?.images?.[0]?.url;
+  if (!imageUrl) return <slide.icon className="w-40 h-40 text-white/90" />;
+  return (
+    <ProductImage
+      src={imageUrl}
+      alt={product?.name || 'Featured product'}
+      eager
+      className="absolute inset-0 w-full h-full"
+    />
+  );
+}
 
 // Amazon-style 4-in-1 Quad Spotlight Cards Data
 const quadSpotlights = [
@@ -174,6 +193,24 @@ export default function HomePage() {
     queryFn: () => productService.getProducts({ limit: 12 }),
   });
 
+  const { data: liveCategories } = useQuery({
+    queryKey: ['categories', 'home'],
+    queryFn: () => productService.getCategories(),
+  });
+
+  const categoryImageMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (liveCategories || []).forEach((c: Category) => {
+      if (c.image && c.slug) map.set(c.slug, c.image);
+    });
+    return map;
+  }, [liveCategories]);
+
+  const displayCategories = categoryCircles.map((cat) => ({
+    ...cat,
+    image: categoryImageMap.get(cat.slug),
+  }));
+
   const featuredProducts = (featuredData?.products && featuredData.products.length > 0)
     ? featuredData.products.slice(0, 4)
     : (fallbackData?.products?.slice(0, 4) || []);
@@ -230,10 +267,14 @@ export default function HomePage() {
       <section className="bg-white/90 dark:bg-card/90 backdrop-blur-md border-b py-4 shadow-sm sticky top-14 lg:top-16 z-30 transition-all duration-300">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-6 overflow-x-auto scrollbar-none py-1">
-            {categoryCircles.map((cat) => (
+            {displayCategories.map((cat) => (
               <Link key={cat.slug} href={`/categories/${cat.slug}`} className="group flex flex-col items-center shrink-0 min-w-[80px] transition-transform hover:-translate-y-1 duration-300">
-                <div className="relative w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-700/30 group-hover:bg-primary/10 group-hover:border-primary/40 group-hover:scale-108 shadow-xs group-hover:shadow-md transition-all duration-300 flex items-center justify-center">
-                  <cat.icon className="w-6 h-6 text-slate-700 dark:text-zinc-300 group-hover:text-primary group-hover:rotate-6 transition-all duration-300" />
+                <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-700/30 group-hover:border-primary/40 group-hover:scale-108 shadow-xs group-hover:shadow-md transition-all duration-300 flex items-center justify-center">
+                  {cat.image ? (
+                    <ProductImage src={cat.image} alt={cat.name} eager className="absolute inset-0 w-full h-full" />
+                  ) : (
+                    <cat.icon className="w-6 h-6 text-slate-700 dark:text-zinc-300 group-hover:text-primary group-hover:rotate-6 transition-all duration-300" />
+                  )}
                 </div>
                 <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-2 group-hover:text-primary transition-colors text-center line-clamp-1">
                   {cat.name}
@@ -287,7 +328,7 @@ export default function HomePage() {
               </div>
               <div className="hidden md:flex justify-center relative">
                 <div className="relative w-72 h-72 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 rotate-2 hover:rotate-0 transition-transform duration-500 bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                  <slide.icon className="w-40 h-40 text-white/90" />
+                  <HeroVisual slide={slide} featured={featuredProducts} />
                 </div>
               </div>
             </div>
