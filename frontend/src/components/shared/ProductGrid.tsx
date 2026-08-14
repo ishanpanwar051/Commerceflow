@@ -28,13 +28,15 @@ export function ProductGrid({
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 w-full">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="rounded-xl border p-3 space-y-3">
-            <Skeleton className="aspect-square w-full rounded-lg" />
-            <Skeleton className="h-3 w-1/3" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-8 w-full rounded-md" />
+          <div key={i} className="rounded-2xl border p-4 space-y-3 flex flex-col justify-between h-full bg-card shadow-xs">
+            <div className="space-y-3">
+              <Skeleton className="aspect-square w-full rounded-xl" />
+              <Skeleton className="h-2 w-1/4" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className="h-5 w-1/2" />
+            </div>
+            <Skeleton className="h-9 w-full rounded-xl mt-3" />
           </div>
         ))}
       </div>

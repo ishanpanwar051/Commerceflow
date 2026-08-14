@@ -159,8 +159,11 @@ model Product {
   @@index([brand])
   @@index([categoryId])
   @@index([basePrice])
+  @@index([name, categoryId])
+  @@index([categoryId, basePrice])
   @@index([soldCount])
   @@index([trendingScore])
+  @@index([isActive, isFeatured, isBestSeller, isNewArrival, isTopRated])
   @@index([deletedAt])
   @@map("products")
 }
@@ -288,6 +291,7 @@ model Order {
 
   @@index([userId])
   @@index([status])
+  @@index([userId, status])
   @@index([createdAt])
   @@index([deletedAt])
   @@map("orders")
@@ -356,6 +360,7 @@ model Review {
 
   @@unique([userId, productId])
   @@index([productId])
+  @@index([productId, rating])
   @@index([userId])
   @@map("reviews")
 }
@@ -400,6 +405,7 @@ model AuditLog {
 
   @@index([userId])
   @@index([action])
+  @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
 }

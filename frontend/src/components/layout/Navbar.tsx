@@ -82,21 +82,22 @@ export function Navbar() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 h-14 lg:h-16 flex items-center justify-between gap-3">
+      <div className="container mx-auto px-4 h-16 lg:h-20 flex items-center justify-between gap-4">
         {/* Logo + Desktop Nav */}
-        <div className="flex items-center gap-6 lg:gap-8 shrink-0">
-          <Link href="/" className="text-lg lg:text-xl font-bold text-primary whitespace-nowrap">
-            CommerceFlow
+        <div className="flex items-center gap-8 lg:gap-12 shrink-0">
+          <Link href="/" className="text-xl lg:text-2xl font-black tracking-tight text-slate-800 dark:text-zinc-50 flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <span className="bg-primary text-white w-8 h-8 rounded-xl flex items-center justify-center font-black shadow-md shadow-primary/20 text-sm">C</span>
+            <span>Commerce<span className="text-primary font-bold">Flow</span></span>
           </Link>
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all duration-200 ${
                   pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
                     ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-foreground hover:bg-muted/60'
                 }`}
               >
                 {link.label}
@@ -108,12 +109,12 @@ export function Navbar() {
         {/* Search Bar - Desktop */}
         <form onSubmit={handleSearch} className="hidden lg:flex flex-1 max-w-xl">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               placeholder="Search for products, brands, categories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 h-10 bg-muted/50 border-transparent focus:border-primary focus:bg-background transition-colors"
+              className="pl-11 pr-4 h-11 bg-slate-100/80 dark:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-700/30 focus:border-primary/50 dark:focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all duration-300 rounded-xl font-medium shadow-inner placeholder:text-slate-400"
             />
           </div>
         </form>

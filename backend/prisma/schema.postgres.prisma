@@ -127,10 +127,10 @@ model Product {
   cashOnDelivery  Boolean   @default(false)
   emiAvailable    Boolean   @default(false)
   freeDelivery    Boolean   @default(false)
-  specifications  String?
-  keyFeatures     String?
-  whatsInTheBox   String?
-  tags            String?
+  specifications  Json?
+  keyFeatures     Json?
+  whatsInTheBox   Json?
+  tags            Json?
   videoUrl        String?
   isActive        Boolean   @default(true)
   isFeatured      Boolean   @default(false)

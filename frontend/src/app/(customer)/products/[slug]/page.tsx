@@ -139,8 +139,6 @@ export default function ProductDetailPage() {
               <Link href={`/categories/${product.category.slug || product.categoryId}`} className="hover:text-primary">{product.category.name}</Link>
             </>
           )}
-          <span>/</span>
-          <span className="text-foreground font-medium truncate max-w-[200px]">{product.name}</span>
         </nav>
 
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12">
@@ -204,7 +202,6 @@ export default function ProductDetailPage() {
               {product.brand && (
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{product.brand}</p>
               )}
-              <h1 className="text-2xl md:text-3xl font-bold leading-tight">{product.name}</h1>
 
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <div className="flex items-center gap-1">

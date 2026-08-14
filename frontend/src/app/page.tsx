@@ -226,19 +226,19 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 2. Flipkart Style Category Circles Strip */}
-      <section className="bg-white dark:bg-card border-b py-4 shadow-xs sticky top-14 lg:top-16 z-30">
+      {/* 2. Premium Category Icons Strip */}
+      <section className="bg-white/90 dark:bg-card/90 backdrop-blur-md border-b py-4 shadow-sm sticky top-14 lg:top-16 z-30 transition-all duration-300">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between gap-4 overflow-x-auto scrollbar-none py-1">
+          <div className="flex items-center justify-between gap-6 overflow-x-auto scrollbar-none py-1">
             {categoryCircles.map((cat) => (
-              <Link key={cat.slug} href={`/categories/${cat.slug}`} className="group flex flex-col items-center shrink-0 min-w-[76px] transition-transform hover:-translate-y-1">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-transparent group-hover:border-primary p-0.5 bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm transition-all flex items-center justify-center group-hover:bg-primary/10">
-                  <cat.icon className="w-7 h-7 text-primary" />
+              <Link key={cat.slug} href={`/categories/${cat.slug}`} className="group flex flex-col items-center shrink-0 min-w-[80px] transition-transform hover:-translate-y-1 duration-300">
+                <div className="relative w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800/50 border border-slate-200/50 dark:border-zinc-700/30 group-hover:bg-primary/10 group-hover:border-primary/40 group-hover:scale-108 shadow-xs group-hover:shadow-md transition-all duration-300 flex items-center justify-center">
+                  <cat.icon className="w-6 h-6 text-slate-700 dark:text-zinc-300 group-hover:text-primary group-hover:rotate-6 transition-all duration-300" />
                 </div>
-                <span className="text-xs font-medium text-foreground mt-1.5 group-hover:text-primary transition-colors text-center line-clamp-1">
+                <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 mt-2 group-hover:text-primary transition-colors text-center line-clamp-1">
                   {cat.name}
                 </span>
-                <span className="text-[10px] text-muted-foreground font-semibold">
+                <span className="text-[9px] text-primary/80 dark:text-primary font-bold bg-primary/5 dark:bg-primary/10 group-hover:bg-primary group-hover:text-white transition-all duration-350 px-1.5 py-0.5 rounded-full mt-1 border border-primary/10 shadow-xs">
                   {cat.badge}
                 </span>
               </Link>
@@ -308,59 +308,63 @@ export default function HomePage() {
         </AnimatePresence>
       </section>
 
-      {/* 4. Flipkart "Deal of the Day" Flash Sale with Live Timer */}
+      {/* 4. Deal of the Day Flash Sale with Live Timer */}
       <section className="py-6 container mx-auto px-4">
-        <div className="bg-white dark:bg-card rounded-2xl p-6 border shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-red-500/10 text-red-500">
-                <Flame className="h-6 w-6 fill-red-500" />
+        <div className="bg-white dark:bg-card rounded-3xl p-6 md:p-8 border shadow-xs transition-all duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b pb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 shadow-inner">
+                <Flame className="h-6 w-6 fill-red-500 animate-pulse" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-black tracking-tight">Deal of the Day</h2>
-                  <Badge className="bg-red-500 text-white font-bold text-xs uppercase px-2 py-0.5">Flash Sale</Badge>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-zinc-100">Deal of the Day</h2>
+                  <span className="bg-red-500 text-white font-extrabold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
+                    Flash Sale
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">Handpicked premium products at lowest price guaranteed</p>
+                <p className="text-xs text-muted-foreground mt-1 font-medium">Handpicked premium products at lowest price guaranteed</p>
               </div>
             </div>
-
+ 
             {/* Ticking Countdown Timer */}
-            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-2">
-              <Clock className="h-4 w-4 text-red-500 animate-spin" style={{ animationDuration: '4s' }} />
-              <span className="text-xs font-bold text-red-600 dark:text-red-400">Ends in:</span>
-              <div className="flex items-center gap-1 text-sm font-black text-red-600 dark:text-red-400">
-                <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs">{String(timeLeft.hours).padStart(2, '0')}h</span> :
-                <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs">{String(timeLeft.minutes).padStart(2, '0')}m</span> :
-                <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-xs">{String(timeLeft.seconds).padStart(2, '0')}s</span>
+            <div className="flex items-center gap-3 bg-red-500/5 dark:bg-red-950/20 border border-red-500/20 rounded-2xl px-4 py-2.5 shrink-0 shadow-xs">
+              <Clock className="h-4 w-4 text-red-500 animate-pulse" />
+              <span className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Ends in:</span>
+              <div className="flex items-center gap-1.5 text-sm font-black text-red-600 dark:text-red-400">
+                <span className="bg-red-500 text-white px-2.5 py-1 rounded-xl text-xs shadow-sm font-black">{String(timeLeft.hours).padStart(2, '0')}h</span>
+                <span className="text-red-500 animate-pulse">:</span>
+                <span className="bg-red-500 text-white px-2.5 py-1 rounded-xl text-xs shadow-sm font-black">{String(timeLeft.minutes).padStart(2, '0')}m</span>
+                <span className="text-red-500 animate-pulse">:</span>
+                <span className="bg-red-500 text-white px-2.5 py-1 rounded-xl text-xs shadow-sm font-black">{String(timeLeft.seconds).padStart(2, '0')}s</span>
               </div>
             </div>
           </div>
-
+ 
           <ProductGrid products={featuredProducts} isLoading={featuredLoading && fallbackLoading} onAddToCart={handleAddToCart} onToggleWishlist={handleToggleWishlist} isInWishlist={isInWishlist} onRetry={refetchFeatured} />
         </div>
       </section>
 
-      {/* 5. Amazon Style 4-in-1 Quad Spotlights */}
+      {/* 5. Quad Spotlight Grid Widgets */}
       <section className="py-6 container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {quadSpotlights.map((spotlight) => (
-            <div key={spotlight.title} className="bg-white dark:bg-card border rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div key={spotlight.title} className="bg-white dark:bg-card border border-slate-200/50 dark:border-zinc-800/50 rounded-3xl p-6 shadow-xs flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all duration-300 ease-out">
               <div>
-                <h3 className="font-bold text-lg leading-tight mb-4 text-foreground">{spotlight.title}</h3>
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <h3 className="font-black text-base text-slate-800 dark:text-zinc-100 tracking-tight leading-snug mb-5">{spotlight.title}</h3>
+                <div className="grid grid-cols-2 gap-4 mb-5">
                   {spotlight.items.map((item) => (
                     <Link key={item.name} href={item.href} className="group block">
-                      <div className="aspect-square rounded-xl bg-muted/60 overflow-hidden mb-1.5 relative border group-hover:border-primary transition-all flex items-center justify-center group-hover:bg-primary/5">
-                        <item.icon className="w-10 h-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <div className="aspect-square rounded-2xl bg-slate-50 dark:bg-zinc-800/30 overflow-hidden mb-2 relative border border-slate-100 dark:border-zinc-800/80 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all duration-350 flex items-center justify-center">
+                        <item.icon className="w-9 h-9 text-slate-400 group-hover:text-primary group-hover:scale-108 transition-all duration-300" />
                       </div>
-                      <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">{item.name}</p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-zinc-300 group-hover:text-primary transition-colors line-clamp-1">{item.name}</p>
                     </Link>
                   ))}
                 </div>
               </div>
-              <Link href={spotlight.linkHref} className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1 pt-2 border-t">
-                {spotlight.linkText} <ArrowRight className="h-3 w-3" />
+              <Link href={spotlight.linkHref} className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1 pt-3 border-t border-slate-100 dark:border-zinc-800/80 group/link">
+                {spotlight.linkText} <ArrowRight className="h-3 w-3 transition-transform group-hover/link:translate-x-1" />
               </Link>
             </div>
           ))}
