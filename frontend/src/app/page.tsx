@@ -106,10 +106,10 @@ const quadSpotlights = [
     linkText: 'See all tech offers',
     linkHref: '/categories/electronics',
     items: [
-      { name: 'Smartphones', href: '/products?search=phone', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Laptops', href: '/products?search=laptop', image: 'https://images.unsplash.com/photo-1496181130204-755241544e35?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Headphones', href: '/products?search=headphone', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Smartwatches', href: '/products?search=watch', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Smartphones', href: '/products?search=phone', image: '/images/quad/smartphones.jpg' },
+      { name: 'Laptops', href: '/products?search=laptop', image: '/images/quad/laptops.jpg' },
+      { name: 'Headphones', href: '/products?search=headphone', image: '/images/quad/headphones.jpg' },
+      { name: 'Smartwatches', href: '/products?search=watch', image: '/images/quad/smartwatches.jpg' },
     ]
   },
   {
@@ -117,10 +117,10 @@ const quadSpotlights = [
     linkText: 'Explore fashion deals',
     linkHref: '/categories/fashion',
     items: [
-      { name: "Men's Apparel", href: '/categories/men-apparel', image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=300&auto=format&fit=crop&q=80' },
-      { name: "Women's Collection", href: '/categories/women-collection', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Running Shoes', href: '/categories/running-shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Bags & Accessories', href: '/products?search=bag', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&auto=format&fit=crop&q=80' },
+      { name: "Men's Apparel", href: '/categories/men-apparel', image: '/images/quad/mens-apparel.jpg' },
+      { name: "Women's Collection", href: '/categories/women-collection', image: '/images/quad/womens-collection.jpg' },
+      { name: 'Running Shoes', href: '/categories/running-shoes', image: '/images/quad/running-shoes.jpg' },
+      { name: 'Bags & Accessories', href: '/products?search=bag', image: '/images/quad/bags-accessories.jpg' },
     ]
   },
   {
@@ -128,10 +128,10 @@ const quadSpotlights = [
     linkText: 'Shop home decor',
     linkHref: '/categories/home-living',
     items: [
-      { name: 'Home Decor', href: '/categories/home-decor', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Cookware', href: '/categories/cookware', image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Sofas & Beds', href: '/categories/sofas-beds', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Lighting & Lamps', href: '/categories/lighting-lamps', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Home Decor', href: '/categories/home-decor', image: '/images/quad/home-decor.jpg' },
+      { name: 'Cookware', href: '/categories/cookware', image: '/images/quad/cookware.jpg' },
+      { name: 'Sofas & Beds', href: '/categories/sofas-beds', image: '/images/quad/sofas-beds.jpg' },
+      { name: 'Lighting & Lamps', href: '/categories/lighting-lamps', image: '/images/quad/lighting-lamps.jpg' },
     ]
   },
   {
@@ -139,10 +139,10 @@ const quadSpotlights = [
     linkText: 'Discover essentials',
     linkHref: '/categories/essentials',
     items: [
-      { name: 'Beauty & Skincare', href: '/categories/beauty-skincare', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Fitness & Gym', href: '/categories/fitness-gym', image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Toys & Games', href: '/categories/toys-games', image: 'https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?w=300&auto=format&fit=crop&q=80' },
-      { name: 'Pet Supplies', href: '/categories/pet-supplies', image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Beauty & Skincare', href: '/categories/beauty-skincare', image: '/images/quad/beauty-skincare.jpg' },
+      { name: 'Fitness & Gym', href: '/categories/fitness-gym', image: '/images/quad/fitness-gym.jpg' },
+      { name: 'Toys & Games', href: '/categories/toys-games', image: '/images/quad/toys-games.jpg' },
+      { name: 'Pet Supplies', href: '/categories/pet-supplies', image: '/images/quad/pet-supplies.jpg' },
     ]
   }
 ];
@@ -157,12 +157,12 @@ const budgetStores = [
 
 // Top Brand Logos
 const topBrands = [
-  { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
-  { name: 'Samsung', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg' },
-  { name: 'Nike', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg' },
-  { name: 'Adidas', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg' },
-  { name: 'Sony', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg' },
-  { name: 'HP', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg' },
+  { name: 'Apple', logo: '/images/brands/apple.svg' },
+  { name: 'Samsung', logo: '/images/brands/samsung.svg' },
+  { name: 'Nike', logo: '/images/brands/nike.svg' },
+  { name: 'Adidas', logo: '/images/brands/adidas.svg' },
+  { name: 'Sony', logo: '/images/brands/sony.svg' },
+  { name: 'HP', logo: '/images/brands/hp.svg' },
 ];
 
 export default function HomePage() {
