@@ -37,12 +37,24 @@ body {
   }
 }
 
-/* Hide floating stripe test badges */
+/* Hide floating stripe test badges and Link buttons */
 iframe[src*="stripe"],
-iframe[name*="__privateStripe"],
+iframe[src*="stripe.com"],
+iframe[src*="stripe.network"],
+iframe[name*="stripe"],
+iframe[id*="stripe"],
+iframe[class*="stripe"],
+iframe[src*="link-button"],
 .stripe-badge,
-[id*="stripe-badge"] {
+[id*="stripe-badge"],
+[class*="stripe-badge"],
+#stripe-badge,
+div[class*="stripe-badge"],
+div[id*="stripe-badge"] {
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

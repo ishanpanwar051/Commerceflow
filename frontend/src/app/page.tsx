@@ -46,6 +46,7 @@ const heroSlides = [
     badge: 'Limited Time Deal',
     icon: Smartphone,
     categorySlug: 'smartphones',
+    image: '/images/smartphone.jpg',
   },
   {
     title: 'Fashion & Apparel Carnival',
@@ -57,6 +58,7 @@ const heroSlides = [
     badge: 'Style Fest',
     icon: Shirt,
     categorySlug: 'men-apparel',
+    image: '/images/fashion.jpg',
   },
   {
     title: 'Home & Kitchen Upgrades',
@@ -68,17 +70,29 @@ const heroSlides = [
     badge: 'Home Special',
     icon: Home,
     categorySlug: 'home-decor',
+    image: '/images/home_kitchen.jpg',
   },
 ];
 
-function HeroVisual({ slide, featured }: { slide: { icon: any; categorySlug?: string }; featured: Product[] }) {
-  const product = featured.find((p) => p.category?.slug === slide.categorySlug) || featured[0];
-  const imageUrl = product?.images?.[0]?.url;
-  if (!imageUrl) return <slide.icon className="w-40 h-40 text-white/90" />;
+function HeroVisual({ slide, featured }: { slide: { icon: any; categorySlug?: string; image?: string; title?: string }; featured: Product[] }) {
+  const imageUrl = slide.image;
+  if (!imageUrl) {
+    const product = featured.find((p) => p.category?.slug === slide.categorySlug) || featured[0];
+    const fallbackUrl = product?.images?.[0]?.url;
+    if (!fallbackUrl) return <slide.icon className="w-40 h-40 text-white/90" />;
+    return (
+      <ProductImage
+        src={fallbackUrl}
+        alt={product?.name || 'Featured product'}
+        eager
+        className="absolute inset-0 w-full h-full"
+      />
+    );
+  }
   return (
     <ProductImage
       src={imageUrl}
-      alt={product?.name || 'Featured product'}
+      alt={slide.title || 'Featured banner image'}
       eager
       className="absolute inset-0 w-full h-full"
     />
@@ -92,10 +106,10 @@ const quadSpotlights = [
     linkText: 'See all tech offers',
     linkHref: '/categories/electronics',
     items: [
-      { name: 'Smartphones', href: '/products?search=phone', icon: Smartphone },
-      { name: 'Laptops', href: '/products?search=laptop', icon: Laptop },
-      { name: 'Headphones', href: '/products?search=headphone', icon: HeadphonesIcon },
-      { name: 'Smartwatches', href: '/products?search=watch', icon: Watch },
+      { name: 'Smartphones', href: '/products?search=phone', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Laptops', href: '/products?search=laptop', image: 'https://images.unsplash.com/photo-1496181130204-755241544e35?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Headphones', href: '/products?search=headphone', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Smartwatches', href: '/products?search=watch', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80' },
     ]
   },
   {
@@ -103,10 +117,10 @@ const quadSpotlights = [
     linkText: 'Explore fashion deals',
     linkHref: '/categories/fashion',
     items: [
-      { name: "Men's Apparel", href: '/categories/men-apparel', icon: Shirt },
-      { name: "Women's Collection", href: '/categories/women-collection', icon: ShoppingBag },
-      { name: 'Running Shoes', href: '/categories/running-shoes', icon: Footprints },
-      { name: 'Bags & Accessories', href: '/products?search=bag', icon: Backpack },
+      { name: "Men's Apparel", href: '/categories/men-apparel', image: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=300&auto=format&fit=crop&q=80' },
+      { name: "Women's Collection", href: '/categories/women-collection', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Running Shoes', href: '/categories/running-shoes', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Bags & Accessories', href: '/products?search=bag', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&auto=format&fit=crop&q=80' },
     ]
   },
   {
@@ -114,10 +128,10 @@ const quadSpotlights = [
     linkText: 'Shop home decor',
     linkHref: '/categories/home-living',
     items: [
-      { name: 'Home Decor', href: '/categories/home-decor', icon: Lamp },
-      { name: 'Cookware', href: '/categories/cookware', icon: CookingPot },
-      { name: 'Sofas & Beds', href: '/categories/sofas-beds', icon: Armchair },
-      { name: 'Lighting & Lamps', href: '/categories/lighting-lamps', icon: Lightbulb },
+      { name: 'Home Decor', href: '/categories/home-decor', image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Cookware', href: '/categories/cookware', image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Sofas & Beds', href: '/categories/sofas-beds', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Lighting & Lamps', href: '/categories/lighting-lamps', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&auto=format&fit=crop&q=80' },
     ]
   },
   {
@@ -125,10 +139,10 @@ const quadSpotlights = [
     linkText: 'Discover essentials',
     linkHref: '/categories/essentials',
     items: [
-      { name: 'Beauty & Skincare', href: '/categories/beauty-skincare', icon: Sparkles },
-      { name: 'Fitness & Gym', href: '/categories/fitness-gym', icon: Dumbbell },
-      { name: 'Toys & Games', href: '/categories/toys-games', icon: Gamepad2 },
-      { name: 'Pet Supplies', href: '/categories/pet-supplies', icon: PawPrint },
+      { name: 'Beauty & Skincare', href: '/categories/beauty-skincare', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Fitness & Gym', href: '/categories/fitness-gym', image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Toys & Games', href: '/categories/toys-games', image: 'https://images.unsplash.com/photo-1531525645387-7f14be1bdbbd?w=300&auto=format&fit=crop&q=80' },
+      { name: 'Pet Supplies', href: '/categories/pet-supplies', image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=300&auto=format&fit=crop&q=80' },
     ]
   }
 ];
@@ -143,12 +157,12 @@ const budgetStores = [
 
 // Top Brand Logos
 const topBrands = [
-  { name: 'Apple', initials: 'A', color: 'bg-gray-800' },
-  { name: 'Samsung', initials: 'S', color: 'bg-blue-600' },
-  { name: 'Nike', initials: 'N', color: 'bg-black' },
-  { name: 'Adidas', initials: 'A', color: 'bg-zinc-800' },
-  { name: 'Sony', initials: 'S', color: 'bg-amber-500' },
-  { name: 'HP', initials: 'HP', color: 'bg-teal-600' },
+  { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
+  { name: 'Samsung', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg' },
+  { name: 'Nike', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg' },
+  { name: 'Adidas', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg' },
+  { name: 'Sony', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg' },
+  { name: 'HP', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg' },
 ];
 
 export default function HomePage() {
@@ -397,7 +411,12 @@ export default function HomePage() {
                   {spotlight.items.map((item) => (
                     <Link key={item.name} href={item.href} className="group block">
                       <div className="aspect-square rounded-2xl bg-slate-50 dark:bg-zinc-800/30 overflow-hidden mb-2 relative border border-slate-100 dark:border-zinc-800/80 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all duration-350 flex items-center justify-center">
-                        <item.icon className="w-9 h-9 text-slate-400 group-hover:text-primary group-hover:scale-108 transition-all duration-300" />
+                        <img 
+                          src={item.image} 
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-108 transition-all duration-300"
+                          loading="lazy"
+                        />
                       </div>
                       <p className="text-xs font-bold text-slate-700 dark:text-zinc-300 group-hover:text-primary transition-colors line-clamp-1">{item.name}</p>
                     </Link>
@@ -466,8 +485,13 @@ export default function HomePage() {
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
             {topBrands.map((b) => (
               <div key={b.name} className="border rounded-xl p-3 flex flex-col items-center justify-center gap-2 bg-muted/20 hover:border-primary transition-colors group">
-                <div className={`w-12 h-12 rounded-full overflow-hidden ${b.color} text-white shadow-xs p-1 flex items-center justify-center`}>
-                  <span className="text-sm font-black">{b.initials}</span>
+                <div className="w-full max-w-[120px] h-12 bg-white rounded-xl border border-slate-100/80 p-2.5 flex items-center justify-center shadow-xs">
+                  <img 
+                    src={b.logo} 
+                    alt={b.name}
+                    className="h-full object-contain transition-transform group-hover:scale-108 duration-300"
+                    loading="lazy"
+                  />
                 </div>
                 <span className="text-xs font-bold text-foreground">{b.name}</span>
               </div>
